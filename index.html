@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KalkyleApp</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#10131a;
+      --muted:#6b7280;
+      --line:#e8ebf0;
+      --blue:#0a84ff;
+      --blue-soft:#eaf3ff;
+      --green:#18a957;
+      --yellow:#f0a202;
+      --red:#df3c30;
+      --shadow:0 10px 24px rgba(16,19,26,.06);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);color:var(--text)}
+    .app{max-width:1080px;margin:0 auto;padding:18px 14px 96px}
+    .hidden{display:none!important}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin:8px 0 18px;gap:12px}
+    .title{font-size:30px;font-weight:800;letter-spacing:-.02em}
+    .subtitle{color:var(--muted);font-size:14px;margin-top:2px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{appearance:none;border:none;border-radius:14px;padding:12px 16px;font-weight:700;font-size:14px;cursor:pointer;transition:.18s transform,.18s opacity,.18s background;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn:active{transform:scale(.98)}
+    .btn.primary{background:var(--text);color:#fff}
+    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .btn.soft{background:var(--blue-soft);color:var(--blue)}
+    .btn.danger{background:#fff1f0;color:var(--red);border:1px solid #ffd8d3}
+    .btn.small{padding:9px 12px;border-radius:12px;font-size:13px}
+    .grid{display:grid;gap:14px}
+    .grid.cols-4{grid-template-columns:repeat(4,1fr)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.7);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .metric{padding:16px;border-radius:18px;background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);border:1px solid var(--line)}
+    .metric .label{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .metric .value{font-size:28px;font-weight:800;letter-spacing:-.03em}
+    .metric .sub{font-size:12px;color:var(--muted);margin-top:6px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .section-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+    .muted{color:var(--muted)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .item h4{margin:0 0 4px;font-size:15px}
+    .item p{margin:0;color:var(--muted);font-size:13px}
+    .pills{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{padding:7px 10px;background:#f3f6fb;border:1px solid #e6ebf3;border-radius:999px;font-size:12px;font-weight:700;color:#364152}
+    .status-Utkast{background:#eef3ff;color:#3b5ad8}
+    .status-Sendt{background:#fff5df;color:#a96800}
+    .status-Vunnet,.status-Pågår{background:#e9fbf0;color:#167a42}
+    .status-Tapt{background:#fff0ef;color:#b42318}
+    .status-Ferdig{background:#eff1f5;color:#4b5565}
+    .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px;background:#fbfcfe}
+    .search{width:100%;border:none;background:#f5f7fb;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15px;outline:none}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(6,10,16,.35);display:flex;align-items:flex-end;justify-content:center;padding:14px;z-index:50}
+    .modal{width:100%;max-width:680px;background:#fff;border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.18);max-height:92vh;overflow:auto}
+    label{display:block;font-size:13px;color:#475063;font-weight:700;margin:8px 0 6px}
+    input,select,textarea{width:100%;padding:12px 13px;border-radius:14px;border:1px solid var(--line);background:#fff;font:inherit;color:inherit;outline:none}
+    textarea{min-height:92px;resize:vertical}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .step{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+    .step-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:linear-gradient(180deg,#ffffff 0%,#fbfcfe 100%);cursor:pointer}
+    .step-title{font-size:16px;font-weight:800}
+    .step-body{padding:16px;border-top:1px solid var(--line)}
+    .row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}
+    th{font-size:12px;color:var(--muted);font-weight:800}
+    .table-wrap{overflow:auto}
+    .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .summary-card{padding:16px;border-radius:18px;background:linear-gradient(180deg,#0f1728 0%,#10131a 100%);color:#fff;position:sticky;bottom:14px;box-shadow:0 16px 36px rgba(16,19,26,.18)}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+    .summary-grid .mini{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);padding:12px;border-radius:14px}
+    .summary-grid .mini .k{font-size:12px;color:rgba(255,255,255,.72)}
+    .summary-grid .mini .v{font-size:20px;font-weight:800;margin-top:4px}
+    .accent-box{background:linear-gradient(180deg,#f7fbff 0%,#eef6ff 100%);border:1px solid #d8e9ff;border-radius:18px;padding:14px}
+    .toggle-group{display:inline-flex;background:#eef2f7;border-radius:14px;padding:4px;gap:4px}
+    .toggle-group button{border:none;background:transparent;color:#435066;padding:10px 14px;border-radius:10px;font-weight:800}
+    .toggle-group button.active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);color:#111827}
+    .tag-btn{padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;cursor:pointer}
+    .tag-btn.active{background:var(--blue-soft);border-color:#cde2ff;color:var(--blue)}
+    .package-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .package-btn{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:#fff;cursor:pointer;text-align:left;font-weight:700}
+    .package-btn small{display:block;color:var(--muted);font-weight:600;margin-top:4px}
+    .footer-note{font-size:12px;color:var(--muted);margin-top:8px}
+    @media (max-width:900px){
+      .grid.cols-4,.grid.cols-3,.grid.cols-2,.row,.row-3,.summary-grid,.package-grid{grid-template-columns:1fr}
+      .topbar{align-items:flex-start;flex-direction:column}
+      .summary-card{position:static}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="dashboardView">
+      <div class="topbar">
+        <div>
+          <div class="title">Oversikt</div>
+          <div class="subtitle">Kunder, prosjekter og tilbud samlet på ett sted.</div>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="backupBtn">Eksporter data</button>
+          <button class="btn soft" id="importBtn">Importer data</button>
+          <button class="btn primary" id="newCustomerBtn">+ Ny kunde</button>
+          <button class="btn primary" id="newProjectBtn">+ Nytt prosjekt</button>
+          <input type="file" id="importFile" class="hidden" accept="application/json" />
+        </div>
+      </div>
+
+      <div class="grid cols-4">
+        <div class="metric"><div class="label">Kunder</div><div class="value" id="metricCustomers">0</div><div class="sub">Lagrede kunder</div></div>
+        <div class="metric"><div class="label">Prosjekter</div><div class="value" id="metricProjects">0</div><div class="sub">Alle prosjekter</div></div>
+        <div class="metric"><div class="label">Tilbud sendt</div><div class="value" id="metricSent">0</div><div class="sub">Status = sendt</div></div>
+        <div class="metric"><div class="label">Vinnerate</div><div class="value" id="metricWinRate">0%</div><div class="sub">Vunnet av sendt</div></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:14px">
+        <div class="card">
+          <div class="section-head">
+            <div class="section-title">Kunder</div>
+            <button class="btn small secondary" id="newCustomerBtn2">+ Kunde</button>
+          </div>
+          <input class="search" id="customerSearch" placeholder="Søk kunde, telefon eller e-post" />
+          <div id="customerList" class="list" style="margin-top:12px"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <div class="section-title">Prosjekter og tilbud</div>
+            <button class="btn small secondary" id="newProjectBtn2">+ Prosjekt</button>
+          </div>
+          <input class="search" id="projectSearch" placeholder="Søk prosjekt, kunde eller status" />
+          <div id="projectList" class="list" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="projectView" class="hidden">
+      <div class="topbar">
+        <div>
+          <button class="btn secondary small" id="backToDashboard">← Til oversikt</button>
+          <div class="title" id="projectTitle" style="margin-top:10px">Prosjekt</div>
+          <div class="subtitle" id="projectSubtitle"></div>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="saveProjectBtn">Lagre prosjekt</button>
+          <button class="btn danger" id="deleteProjectBtn">Slett prosjekt</button>
+        </div>
+      </div>
+
+      <div class="card accent-box" style="margin-bottom:14px">
+        <div class="section-head" style="margin-bottom:8px">
+          <div class="section-title">Prosjektoversikt</div>
+          <div class="toggle-group">
+            <button id="toggleEx" class="active">Eks mva</button>
+            <button id="toggleInc">Inkl mva</button>
+          </div>
+        </div>
+        <div class="pills" id="projectTopPills"></div>
+      </div>
+
+      <div id="stepsContainer"></div>
+
+      <div class="summary-card">
+        <div style="font-size:13px;color:rgba(255,255,255,.7)">Prosjektsammendrag</div>
+        <div style="font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px" id="summaryTotal">0 kr</div>
+        <div class="summary-grid">
+          <div class="mini"><div class="k">Kostpris</div><div class="v" id="summaryCost">0 kr</div></div>
+          <div class="mini"><div class="k">Fortjeneste</div><div class="v" id="summaryProfit">0 kr</div></div>
+          <div class="mini"><div class="k">Margin</div><div class="v" id="summaryMargin">0%</div></div>
+          <div class="mini"><div class="k">DB</div><div class="v" id="summaryDb">0%</div></div>
+        </div>
+        <div class="footer-note" id="summaryModeNote">Viser eks. mva</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalHost"></div>
+
+  <script>
+    const STORAGE_KEY = 'kalkyleapp_v8';
+    const defaultSettings = {
+      timeRate: 850,
+      internalCost: 450,
+      materialMarkup: 20,
+      driveCost: 650,
+      vatMode: 'ex'
+    };
+
+    const templates = {
+      Terrasse: {
+        type:'Terrasse',
+        laborHours:24,
+        people:2,
+        materials:[
+          {name:'Terrassebord 28x120', qty:60, unit:'lm', cost:39, waste:10, markup:20},
+          {name:'Bjelkelag 48x198', qty:28, unit:'lm', cost:68, waste:8, markup:20},
+          {name:'Terrasseskruer', qty:6, unit:'pk', cost:179, waste:0, markup:20},
+          {name:'Fundament / stolpesko', qty:8, unit:'stk', cost:165, waste:0, markup:20}
+        ]
+      },
+      Lettvegg: {
+        type:'Lettvegg',
+        laborHours:14,
+        people:1,
+        materials:[
+          {name:'Stender 48x98', qty:18, unit:'stk', cost:92, waste:8, markup:20},
+          {name:'Gips 13 mm', qty:14, unit:'pl', cost:129, waste:10, markup:20},
+          {name:'Mineralull 100 mm', qty:10, unit:'pk', cost:139, waste:5, markup:20},
+          {name:'Gipsskruer', qty:2, unit:'pk', cost:119, waste:0, markup:20}
+        ]
+      },
+      Vindu: {
+        type:'Vindu',
+        laborHours:10,
+        people:2,
+        materials:[
+          {name:'Karmskruer', qty:1, unit:'pk', cost:229, waste:0, markup:20},
+          {name:'Fugeskum', qty:2, unit:'stk', cost:119, waste:0, markup:20},
+          {name:'Lister', qty:16, unit:'lm', cost:31, waste:10, markup:20},
+          {name:'Beslag / tetting', qty:1, unit:'pakke', cost:480, waste:0, markup:20}
+        ]
+      },
+      Listing: {
+        type:'Listing',
+        laborHours:8,
+        people:1,
+        materials:[
+          {name:'Fotlist 12x58', qty:28, unit:'lm', cost:24, waste:10, markup:20},
+          {name:'Dykkert', qty:1, unit:'pk', cost:149, waste:0, markup:20},
+          {name:'Acryl/fug', qty:2, unit:'stk', cost:69, waste:0, markup:20}
+        ]
+      }
+    };
+
+    const addOnPackages = [
+      {name:'Sparkelpakke', desc:'Sparkel, papirremse, slipepapir', items:[
+        {name:'Sparkel', qty:3, unit:'spann', cost:189, waste:0, markup:20},
+        {name:'Papirremse', qty:2, unit:'rull', cost:79, waste:0, markup:20},
+        {name:'Slipepapir', qty:1, unit:'pk', cost:89, waste:0, markup:20}
+      ]},
+      {name:'Listverkspakke', desc:'Lister og festemidler', items:[
+        {name:'Listverk standard', qty:20, unit:'lm', cost:26, waste:10, markup:20},
+        {name:'Dykkert', qty:1, unit:'pk', cost:149, waste:0, markup:20}
+      ]},
+      {name:'Fug og tetting', desc:'Skum, fug og tetting', items:[
+        {name:'Fugemasse', qty:4, unit:'stk', cost:69, waste:0, markup:20},
+        {name:'Fugeskum', qty:2, unit:'stk', cost:119, waste:0, markup:20}
+      ]},
+      {name:'Riving og avfall', desc:'Bortkjøring og avfall', items:[
+        {name:'Avfallshåndtering', qty:1, unit:'jobb', cost:1200, waste:0, markup:10}
+      ]}
+    ];
+
+    let state = loadState();
+    let currentProjectId = null;
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    function uid(){ return Math.random().toString(36).slice(2,10); }
+    function currency(n){ return `${Math.round(Number(n)||0).toLocaleString('nb-NO')} kr`; }
+    function percent(n){ return `${Math.round((Number(n)||0)*10)/10}%`; }
+    function safe(v){ return v==null ? '' : String(v); }
+
+    function blankProject(){
+      return {
+        id:uid(),
+        name:'', customerId:'', address:'', type:'Annet', startPref:'Snarest', status:'Utkast',
+        description:'', note:'',
+        settings:{...state.settings},
+        work:{people:1, hours:8, timeRate:state.settings.timeRate, internalCost:state.settings.internalCost, risk:'Normal', actualHours:0},
+        materials:[],
+        extras:{driveCost:state.settings.driveCost, rental:0, waste:0, subcontractor:0, rigPercent:10, misc:0},
+        offer:{included:'Arbeid, standard materialer og rydding.', excluded:'Skjulte feil og ekstraarbeid.', validity:'14 dager'},
+        ui:{openSteps:[1,2,3,4,5,6]}
+      };
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          return {
+            customers: parsed.customers || [],
+            projects: parsed.projects || [],
+            settings: {...defaultSettings, ...(parsed.settings||{})}
+          };
+        }
+      }catch(e){}
+      return {customers:[], projects:[], settings:{...defaultSettings}};
+    }
+
+    function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    function exportData(){
+      const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'kalkyleapp-backup.json'; a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importData(file){
+      const reader = new FileReader();
+      reader.onload = e => {
+        try{
+          const parsed = JSON.parse(e.target.result);
+          state = {customers: parsed.customers||[], projects: parsed.projects||[], settings: {...defaultSettings, ...(parsed.settings||{})}};
+          saveState(); renderDashboard();
+          alert('Data importert.');
+        }catch(err){ alert('Kunne ikke lese filen.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function getCustomer(id){ return state.customers.find(c=>c.id===id); }
+    function getProject(id){ return state.projects.find(p=>p.id===id); }
+
+    function compute(project){
+      const mvaMode = project.settings.vatMode || 'ex';
+      const riskFactor = {Lav:1, Normal:1.1, Høy:1.2}[project.work.risk] || 1.1;
+      const hoursTotal = (Number(project.work.people)||0) * (Number(project.work.hours)||0);
+      const laborCost = hoursTotal * (Number(project.work.internalCost)||0);
+      const laborSaleEx = hoursTotal * (Number(project.work.timeRate)||0) * riskFactor;
+
+      let matCost = 0, matSaleEx = 0;
+      project.materials.forEach(m=>{
+        const qty = Number(m.qty)||0, cost = Number(m.cost)||0, waste = Number(m.waste)||0, markup = Number(m.markup)||0;
+        const base = qty * cost;
+        const withWaste = base * (1 + waste/100);
+        matCost += withWaste;
+        matSaleEx += withWaste * (1 + markup/100);
+      });
+
+      const extrasBase = (Number(project.extras.driveCost)||0) + (Number(project.extras.rental)||0) + (Number(project.extras.waste)||0) + (Number(project.extras.subcontractor)||0) + (Number(project.extras.misc)||0);
+      const rigEx = (laborSaleEx + matSaleEx) * ((Number(project.extras.rigPercent)||0)/100);
+      const costPrice = laborCost + matCost + extrasBase + rigEx;
+      const saleEx = laborSaleEx + matSaleEx + extrasBase + rigEx;
+      const vat = saleEx * 0.25;
+      const saleInc = saleEx + vat;
+      const profit = saleEx - costPrice;
+      const margin = saleEx ? (profit / saleEx * 100) : 0;
+      const db = saleEx ? (profit / saleEx * 100) : 0;
+      const breakEven = costPrice;
+      const actualHours = Number(project.work.actualHours)||0;
+      const actualDelta = actualHours ? actualHours - hoursTotal : 0;
+      return {mvaMode,hoursTotal,laborCost,laborSaleEx,matCost,matSaleEx,extrasBase,rigEx,costPrice,saleEx,saleInc,vat,profit,margin,db,breakEven,actualDelta};
+    }
+
+    function renderDashboard(){
+      $('#metricCustomers').textContent = state.customers.length;
+      $('#metricProjects').textContent = state.projects.length;
+      const sent = state.projects.filter(p=>p.status==='Sendt').length;
+      const won = state.projects.filter(p=>p.status==='Vunnet' || p.status==='Pågår' || p.status==='Ferdig').length;
+      $('#metricSent').textContent = sent;
+      $('#metricWinRate').textContent = sent ? `${Math.round((won/sent)*100)}%` : '0%';
+
+      const customerQ = $('#customerSearch').value.trim().toLowerCase();
+      const projectQ = $('#projectSearch').value.trim().toLowerCase();
+
+      const customerList = $('#customerList');
+      customerList.innerHTML='';
+      const customers = state.customers.filter(c => [c.name,c.phone,c.email].join(' ').toLowerCase().includes(customerQ));
+      if(!customers.length) customerList.innerHTML = `<div class="empty">Ingen kunder enda.</div>`;
+      customers.forEach(c=>{
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <div>
+            <h4>${safe(c.name)}</h4>
+            <p>${safe(c.phone)} ${c.phone && c.email ? '•' : ''} ${safe(c.email)}</p>
+          </div>
+          <div class="inline-actions">
+            <button class="btn small secondary" onclick="editCustomer('${c.id}')">Rediger</button>
+            <button class="btn small danger" onclick="deleteCustomer('${c.id}')">Slett</button>
+          </div>`;
+        customerList.appendChild(div);
+      });
+
+      const projectList = $('#projectList');
+      projectList.innerHTML='';
+      const projects = state.projects.filter(p => {
+        const cust = getCustomer(p.customerId);
+        return [p.name,p.type,p.status,cust?.name||''].join(' ').toLowerCase().includes(projectQ);
+      }).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+      if(!projects.length) projectList.innerHTML = `<div class="empty">Ingen prosjekter enda.</div>`;
+      projects.forEach(p=>{
+        const calc = compute(p);
+        const cust = getCustomer(p.customerId);
+        const div = document.createElement('div');
+        div.className='item';
+        div.innerHTML = `
+          <div>
+            <h4>${safe(p.name)}</h4>
+            <p>${safe(cust?.name || 'Ingen kunde valgt')} • ${safe(p.type)}</p>
+            <div class="pills" style="margin-top:8px">
+              <span class="pill status-${p.status}">${p.status}</span>
+              <span class="pill">${currency(calc.saleEx)}</span>
+            </div>
+          </div>
+          <div class="inline-actions">
+            <button class="btn small primary" onclick="openProject('${p.id}')">Åpne</button>
+          </div>`;
+        projectList.appendChild(div);
+      });
+      saveState();
+    }
+
+    function openCustomerModal(existing){
+      const c = existing || {id:uid(), name:'', phone:'', email:'', address:''};
+      showModal(`
+        <div class="section-head"><div class="section-title">${existing?'Rediger kunde':'Ny kunde'}</div><button class="btn small secondary" onclick="closeModal()">Lukk</button></div>
+        <label>Navn</label><input id="mCustomerName" value="${escapeAttr(c.name)}" />
+        <label>Telefon</label><input id="mCustomerPhone" value="${escapeAttr(c.phone)}" />
+        <label>E-post</label><input id="mCustomerEmail" value="${escapeAttr(c.email)}" />
+        <label>Adresse</label><input id="mCustomerAddress" value="${escapeAttr(c.address)}" />
+        <div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveCustomerModal">Lagre kunde</button></div>
+      `);
+      $('#saveCustomerModal').onclick = ()=>{
+        c.name = $('#mCustomerName').value.trim();
+        c.phone = $('#mCustomerPhone').value.trim();
+        c.email = $('#mCustomerEmail').value.trim();
+        c.address = $('#mCustomerAddress').value.trim();
+        if(!c.name){ alert('Skriv inn kundenavn.'); return; }
+        const idx = state.customers.findIndex(x=>x.id===c.id);
+        if(idx>-1) state.customers[idx]=c; else state.customers.unshift(c);
+        saveState(); closeModal(); renderDashboard();
+      };
+    }
+
+    function editCustomer(id){ const c = getCustomer(id); if(c) openCustomerModal({...c}); }
+    function deleteCustomer(id){
+      if(!confirm('Slette denne kunden?')) return;
+      state.customers = state.customers.filter(c=>c.id!==id);
+      state.projects = state.projects.map(p => p.customerId===id ? {...p, customerId:''} : p);
+      saveState(); renderDashboard();
+    }
+
+    function openProjectModal(){
+      const p = blankProject();
+      const customerOptions = ['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`)).join('');
+      showModal(`
+        <div class="section-head"><div class="section-title">Nytt prosjekt</div><button class="btn small secondary" onclick="closeModal()">Lukk</button></div>
+        <div class="row">
+          <div><label>Prosjektnavn</label><input id="mProjectName" /></div>
+          <div><label>Kunde</label><select id="mProjectCustomer">${customerOptions}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Adresse</label><input id="mProjectAddress" /></div>
+          <div><label>Type jobb</label><select id="mProjectType"><option>Terrasse</option><option>Lettvegg</option><option>Vindu</option><option>Listing</option><option>Annet</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>Ønsket oppstart</label><select id="mProjectStart"><option>Snarest</option><option>Innen 2 uker</option><option>Innen 1 måned</option><option>Etter avtale</option></select></div>
+          <div><label>Status</label><select id="mProjectStatus"><option>Utkast</option><option>Sendt</option><option>Vunnet</option><option>Tapt</option><option>Pågår</option><option>Ferdig</option></select></div>
+        </div>
+        <label>Beskrivelse</label><textarea id="mProjectDesc"></textarea>
+        <div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveProjectModal">Opprett prosjekt</button></div>
+      `);
+      $('#saveProjectModal').onclick = ()=>{
+        p.name = $('#mProjectName').value.trim();
+        p.customerId = $('#mProjectCustomer').value;
+        p.address = $('#mProjectAddress').value.trim();
+        p.type = $('#mProjectType').value;
+        p.startPref = $('#mProjectStart').value;
+        p.status = $('#mProjectStatus').value;
+        p.description = $('#mProjectDesc').value.trim();
+        if(!p.name){ alert('Skriv inn prosjektnavn.'); return; }
+        if(templates[p.type]) applyTemplateToProject(p, p.type);
+        p.updatedAt = Date.now();
+        state.projects.unshift(p); saveState(); closeModal(); renderDashboard(); openProject(p.id);
+      };
+    }
+
+    function applyTemplateToProject(project, name){
+      const t = templates[name]; if(!t) return;
+      project.type = t.type;
+      project.work.hours = t.laborHours;
+      project.work.people = t.people;
+      project.work.timeRate = project.settings.timeRate;
+      project.work.internalCost = project.settings.internalCost;
+      project.materials = t.materials.map(m=>({...m,id:uid()}));
+    }
+
+    function openProject(id){
+      currentProjectId = id;
+      const p = getProject(id);
+      if(!p) return;
+      $('#dashboardView').classList.add('hidden');
+      $('#projectView').classList.remove('hidden');
+      renderProjectView();
+    }
+
+    function renderProjectView(){
+      const p = getProject(currentProjectId); if(!p) return;
+      const cust = getCustomer(p.customerId);
+      $('#projectTitle').textContent = p.name || 'Prosjekt';
+      $('#projectSubtitle').textContent = `${cust?.name || 'Ingen kunde valgt'} • ${p.type} • ${p.address || 'Ingen adresse'}`;
+      $('#toggleEx').classList.toggle('active', p.settings.vatMode==='ex');
+      $('#toggleInc').classList.toggle('active', p.settings.vatMode==='inc');
+      $('#projectTopPills').innerHTML = `
+        <span class="pill status-${p.status}">${p.status}</span>
+        <span class="pill">Oppstart: ${escapeHtml(p.startPref)}</span>
+        <span class="pill">Kunde: ${escapeHtml(cust?.name || 'Ingen')}</span>
+      `;
+
+      const steps = [
+        {n:1,title:'Prosjektinfo',body:renderStepProjectInfo(p)},
+        {n:2,title:'Standardoppsett og maler',body:renderStepSettings(p)},
+        {n:3,title:'Arbeid',body:renderStepWork(p)},
+        {n:4,title:'Materialer og tilleggspakker',body:renderStepMaterials(p)},
+        {n:5,title:'Andre kostnader',body:renderStepExtras(p)},
+        {n:6,title:'Tilbud og oppsummering',body:renderStepOffer(p)}
+      ];
+      $('#stepsContainer').innerHTML = steps.map(s=>`
+        <div class="step">
+          <div class="step-header" onclick="toggleStep(${s.n})">
+            <div class="step-title">${s.n}. ${s.title}</div>
+            <div class="muted">${p.ui.openSteps.includes(s.n) ? 'Lukk' : 'Åpne'}</div>
+          </div>
+          <div class="step-body ${p.ui.openSteps.includes(s.n)?'':'hidden'}" id="stepBody${s.n}">${s.body}</div>
+        </div>
+      `).join('');
+
+      bindProjectEvents();
+      updateSummary();
+    }
+
+    function renderStepProjectInfo(p){
+      const customerOptions = ['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
+      return `
+        <div class="row">
+          <div><label>Prosjektnavn</label><input id="fName" value="${escapeAttr(p.name)}" /></div>
+          <div><label>Kunde</label><select id="fCustomer">${customerOptions}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Adresse</label><input id="fAddress" value="${escapeAttr(p.address)}" /></div>
+          <div><label>Type jobb</label><select id="fType"><option ${sel(p.type,'Terrasse')}>Terrasse</option><option ${sel(p.type,'Lettvegg')}>Lettvegg</option><option ${sel(p.type,'Vindu')}>Vindu</option><option ${sel(p.type,'Listing')}>Listing</option><option ${sel(p.type,'Annet')}>Annet</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>Ønsket oppstart</label><select id="fStart"><option ${sel(p.startPref,'Snarest')}>Snarest</option><option ${sel(p.startPref,'Innen 2 uker')}>Innen 2 uker</option><option ${sel(p.startPref,'Innen 1 måned')}>Innen 1 måned</option><option ${sel(p.startPref,'Etter avtale')}>Etter avtale</option></select></div>
+          <div><label>Status</label><select id="fStatus"><option ${sel(p.status,'Utkast')}>Utkast</option><option ${sel(p.status,'Sendt')}>Sendt</option><option ${sel(p.status,'Vunnet')}>Vunnet</option><option ${sel(p.status,'Tapt')}>Tapt</option><option ${sel(p.status,'Pågår')}>Pågår</option><option ${sel(p.status,'Ferdig')}>Ferdig</option></select></div>
+        </div>
+        <label>Beskrivelse</label><textarea id="fDescription">${escapeHtml(p.description)}</textarea>
+        <label>Notat</label><textarea id="fNote">${escapeHtml(p.note||'')}</textarea>
+      `;
+    }
+
+    function renderStepSettings(p){
+      return `
+        <div class="row-3">
+          <div><label>Standard timepris</label><input id="sTimeRate" type="number" value="${p.settings.timeRate}" /></div>
+          <div><label>Standard intern timekost</label><input id="sInternalCost" type="number" value="${p.settings.internalCost}" /></div>
+          <div><label>Standard kjøring</label><input id="sDriveCost" type="number" value="${p.settings.driveCost}" /></div>
+        </div>
+        <label>Velg mal</label>
+        <div class="toolbar">
+          ${Object.keys(templates).map(name=>`<button class="tag-btn" onclick="applyTemplate('${name}')">${name}</button>`).join('')}
+        </div>
+        <div class="footer-note">Når du endrer standard timepris, internkost eller kjøring her, oppdateres prosjektet med en gang.</div>
+      `;
+    }
+
+    function renderStepWork(p){
+      return `
+        <div class="row-3">
+          <div><label>Antall personer</label><input id="wPeople" type="number" value="${p.work.people}" /></div>
+          <div><label>Timer per person</label><input id="wHours" type="number" value="${p.work.hours}" /></div>
+          <div><label>Faktiske timer</label><input id="wActualHours" type="number" value="${p.work.actualHours||0}" /></div>
+        </div>
+        <div class="row-3">
+          <div><label>Timepris</label><input id="wTimeRate" type="number" value="${p.work.timeRate}" /></div>
+          <div><label>Intern timekost</label><input id="wInternalCost" type="number" value="${p.work.internalCost}" /></div>
+          <div><label>Risiko</label><select id="wRisk"><option ${sel(p.work.risk,'Lav')}>Lav</option><option ${sel(p.work.risk,'Normal')}>Normal</option><option ${sel(p.work.risk,'Høy')}>Høy</option></select></div>
+        </div>
+      `;
+    }
+
+    function renderStepMaterials(p){
+      return `
+        <div class="section-head"><div class="section-title">Tilleggspakker</div></div>
+        <div class="package-grid">
+          ${addOnPackages.map((pkg,idx)=>`<button class="package-btn" onclick="addPackage(${idx})">${pkg.name}<small>${pkg.desc}</small></button>`).join('')}
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn small secondary" onclick="setAllMarkup(10)">Alle påslag 10%</button>
+          <button class="btn small secondary" onclick="setAllMarkup(15)">15%</button>
+          <button class="btn small secondary" onclick="setAllMarkup(20)">20%</button>
+          <button class="btn small secondary" onclick="setAllMarkup(25)">25%</button>
+          <button class="btn small secondary" onclick="addMaterial()">+ Legg til materiale</button>
+        </div>
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead><tr><th>Navn</th><th>Antall</th><th>Enhet</th><th>Innpris</th><th>Svinn %</th><th>Påslag %</th><th></th></tr></thead>
+            <tbody>
+              ${p.materials.length ? p.materials.map(m=>`
+                <tr>
+                  <td><input value="${escapeAttr(m.name)}" onchange="updMaterial('${m.id}','name',this.value)" /></td>
+                  <td><input type="number" value="${m.qty}" onchange="updMaterial('${m.id}','qty',this.value)" /></td>
+                  <td><input value="${escapeAttr(m.unit)}" onchange="updMaterial('${m.id}','unit',this.value)" /></td>
+                  <td><input type="number" value="${m.cost}" onchange="updMaterial('${m.id}','cost',this.value)" /></td>
+                  <td><input type="number" value="${m.waste}" onchange="updMaterial('${m.id}','waste',this.value)" /></td>
+                  <td><input type="number" value="${m.markup}" onchange="updMaterial('${m.id}','markup',this.value)" /></td>
+                  <td><button class="btn small danger" onclick="removeMaterial('${m.id}')">Slett</button></td>
+                </tr>`).join('') : `<tr><td colspan="7"><div class="empty">Ingen materialer lagt til enda.</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderStepExtras(p){
+      return `
+        <div class="row-3">
+          <div><label>Kjøring</label><input id="eDrive" type="number" value="${p.extras.driveCost}" /></div>
+          <div><label>Leie av utstyr</label><input id="eRental" type="number" value="${p.extras.rental}" /></div>
+          <div><label>Avfall/deponi</label><input id="eWaste" type="number" value="${p.extras.waste}" /></div>
+        </div>
+        <div class="row-3">
+          <div><label>Underentreprenør</label><input id="eSub" type="number" value="${p.extras.subcontractor}" /></div>
+          <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
+          <div><label>Diverse</label><input id="eMisc" type="number" value="${p.extras.misc}" /></div>
+        </div>
+      `;
+    }
+
+    function renderStepOffer(p){
+      const c = compute(p);
+      return `
+        <div class="row">
+          <div><label>Inkludert</label><textarea id="oIncluded">${escapeHtml(p.offer.included)}</textarea></div>
+          <div><label>Ikke inkludert</label><textarea id="oExcluded">${escapeHtml(p.offer.excluded)}</textarea></div>
+        </div>
+        <div class="row">
+          <div><label>Gyldighet</label><input id="oValidity" value="${escapeAttr(p.offer.validity)}" /></div>
+          <div></div>
+        </div>
+        <div class="card" style="margin-top:14px;background:#fafcff">
+          <div class="section-head"><div class="section-title">Oppsummering</div></div>
+          <div class="row-3">
+            <div><strong>Arbeid salg</strong><div>${currency(c.laborSaleEx)}</div></div>
+            <div><strong>Materialer salg</strong><div>${currency(c.matSaleEx)}</div></div>
+            <div><strong>Andre kostnader</strong><div>${currency(c.extrasBase + c.rigEx)}</div></div>
+          </div>
+          <div class="row-3" style="margin-top:12px">
+            <div><strong>Kostpris</strong><div>${currency(c.costPrice)}</div></div>
+            <div><strong>Salgspris eks. mva</strong><div>${currency(c.saleEx)}</div></div>
+            <div><strong>Salgspris inkl. mva</strong><div>${currency(c.saleInc)}</div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindProjectEvents(){
+      const p = getProject(currentProjectId); if(!p) return;
+      bindVal('#fName', v=>p.name=v);
+      bindVal('#fCustomer', v=>p.customerId=v);
+      bindVal('#fAddress', v=>p.address=v);
+      bindVal('#fType', v=>p.type=v);
+      bindVal('#fStart', v=>p.startPref=v);
+      bindVal('#fStatus', v=>p.status=v);
+      bindVal('#fDescription', v=>p.description=v);
+      bindVal('#fNote', v=>p.note=v);
+
+      bindNum('#sTimeRate', v=>{ p.settings.timeRate=v; p.work.timeRate=v; persistAndRenderProject(); });
+      bindNum('#sInternalCost', v=>{ p.settings.internalCost=v; p.work.internalCost=v; persistAndRenderProject(); });
+      bindNum('#sDriveCost', v=>{ p.settings.driveCost=v; p.extras.driveCost=v; persistAndRenderProject(); });
+
+      bindNum('#wPeople', v=>p.work.people=v);
+      bindNum('#wHours', v=>p.work.hours=v);
+      bindNum('#wActualHours', v=>p.work.actualHours=v);
+      bindNum('#wTimeRate', v=>p.work.timeRate=v);
+      bindNum('#wInternalCost', v=>p.work.internalCost=v);
+      bindVal('#wRisk', v=>p.work.risk=v);
+
+      bindNum('#eDrive', v=>p.extras.driveCost=v);
+      bindNum('#eRental', v=>p.extras.rental=v);
+      bindNum('#eWaste', v=>p.extras.waste=v);
+      bindNum('#eSub', v=>p.extras.subcontractor=v);
+      bindNum('#eRig', v=>p.extras.rigPercent=v);
+      bindNum('#eMisc', v=>p.extras.misc=v);
+
+      bindVal('#oIncluded', v=>p.offer.included=v);
+      bindVal('#oExcluded', v=>p.offer.excluded=v);
+      bindVal('#oValidity', v=>p.offer.validity=v);
+    }
+
+    function bindVal(sel, fn){ const el = $(sel); if(el) el.addEventListener('input', ()=>{ fn(el.value); persistAndUpdate(); }); }
+    function bindNum(sel, fn){ const el = $(sel); if(el) el.addEventListener('input', ()=>{ fn(Number(el.value)||0); persistAndUpdate(); }); }
+    function persistAndUpdate(){ const p = getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); updateSummary(); renderDashboard(); }
+    function persistAndRenderProject(){ const p = getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); renderProjectView(); renderDashboard(); }
+
+    function updateSummary(){
+      const p = getProject(currentProjectId); if(!p) return;
+      const c = compute(p);
+      const total = p.settings.vatMode==='inc' ? c.saleInc : c.saleEx;
+      $('#summaryTotal').textContent = currency(total);
+      $('#summaryCost').textContent = currency(c.costPrice);
+      $('#summaryProfit').textContent = currency(c.profit);
+      $('#summaryMargin').textContent = percent(c.margin);
+      $('#summaryDb').textContent = percent(c.db);
+      $('#summaryModeNote').textContent = p.settings.vatMode==='inc' ? 'Viser inkl. mva' : 'Viser eks. mva';
+    }
+
+    function toggleStep(n){
+      const p = getProject(currentProjectId); if(!p) return;
+      if(p.ui.openSteps.includes(n)) p.ui.openSteps = p.ui.openSteps.filter(x=>x!==n);
+      else p.ui.openSteps.push(n);
+      saveState(); renderProjectView();
+    }
+
+    function addMaterial(){
+      const p = getProject(currentProjectId); if(!p) return;
+      p.materials.push({id:uid(), name:'Nytt materiale', qty:1, unit:'stk', cost:0, waste:0, markup:p.settings.materialMarkup});
+      persistAndRenderProject();
+    }
+    function updMaterial(id, key, value){
+      const p = getProject(currentProjectId); if(!p) return;
+      const m = p.materials.find(x=>x.id===id); if(!m) return;
+      m[key] = ['qty','cost','waste','markup'].includes(key) ? (Number(value)||0) : value;
+      persistAndUpdate();
+    }
+    function removeMaterial(id){
+      const p = getProject(currentProjectId); if(!p) return;
+      p.materials = p.materials.filter(m=>m.id!==id);
+      persistAndRenderProject();
+    }
+    function addPackage(idx){
+      const p = getProject(currentProjectId); if(!p) return;
+      addOnPackages[idx].items.forEach(item => p.materials.push({...item,id:uid()}));
+      persistAndRenderProject();
+    }
+    function setAllMarkup(v){
+      const p = getProject(currentProjectId); if(!p) return;
+      p.materials = p.materials.map(m=>({...m,markup:v}));
+      persistAndRenderProject();
+    }
+    function applyTemplate(name){
+      const p = getProject(currentProjectId); if(!p) return;
+      applyTemplateToProject(p,name);
+      persistAndRenderProject();
+    }
+
+    function openDashboard(){
+      currentProjectId = null;
+      $('#projectView').classList.add('hidden');
+      $('#dashboardView').classList.remove('hidden');
+      renderDashboard();
+    }
+
+    function deleteCurrentProject(){
+      if(!confirm('Slette prosjektet?')) return;
+      state.projects = state.projects.filter(p=>p.id!==currentProjectId);
+      saveState(); openDashboard();
+    }
+
+    function showModal(html){ $('#modalHost').innerHTML = `<div class="modal-backdrop" onclick="backdropClose(event)"><div class="modal">${html}</div></div>`; }
+    function closeModal(){ $('#modalHost').innerHTML=''; }
+    function backdropClose(e){ if(e.target.classList.contains('modal-backdrop')) closeModal(); }
+
+    function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+    function escapeAttr(str=''){ return escapeHtml(str); }
+    function sel(a,b){ return a===b ? 'selected' : ''; }
+
+    document.addEventListener('click', e=>{
+      const t = e.target;
+      if(t.id==='newCustomerBtn' || t.id==='newCustomerBtn2') openCustomerModal();
+      if(t.id==='newProjectBtn' || t.id==='newProjectBtn2') openProjectModal();
+      if(t.id==='backToDashboard') openDashboard();
+      if(t.id==='saveProjectBtn'){ persistAndRenderProject(); alert('Prosjekt lagret.'); }
+      if(t.id==='deleteProjectBtn') deleteCurrentProject();
+      if(t.id==='backupBtn') exportData();
+      if(t.id==='importBtn') $('#importFile').click();
+      if(t.id==='toggleEx'){ const p=getProject(currentProjectId); if(p){ p.settings.vatMode='ex'; persistAndRenderProject(); } }
+      if(t.id==='toggleInc'){ const p=getProject(currentProjectId); if(p){ p.settings.vatMode='inc'; persistAndRenderProject(); } }
+    });
+    $('#importFile').addEventListener('change', e=>{ const file = e.target.files[0]; if(file) importData(file); e.target.value=''; });
+    $('#customerSearch').addEventListener('input', renderDashboard);
+    $('#projectSearch').addEventListener('input', renderDashboard);
+
+    window.editCustomer = editCustomer;
+    window.deleteCustomer = deleteCustomer;
+    window.openProject = openProject;
+    window.toggleStep = toggleStep;
+    window.updMaterial = updMaterial;
+    window.removeMaterial = removeMaterial;
+    window.addMaterial = addMaterial;
+    window.addPackage = addPackage;
+    window.setAllMarkup = setAllMarkup;
+    window.applyTemplate = applyTemplate;
+    window.closeModal = closeModal;
+    window.backdropClose = backdropClose;
+
+    renderDashboard();
+  </script>
+</body>
+</html>
