@@ -543,7 +543,18 @@
         </div>
         <div class="row">
           <div><label>Adresse</label><input id="fAddress" value="${escapeAttr(p.address)}" /></div>
-          <div><label>Type jobb</label><select id="fType"><option ${sel(p.type,'Terrasse')}>Terrasse</option><option ${sel(p.type,'Lettvegg')}>Lettvegg</option><option ${sel(p.type,'Vindu')}>Vindu</option><option ${sel(p.type,'Listing')}>Listing</option><option ${sel(p.type,'Annet')}>Annet</option></select></div>
+          <div><label>Type jobb</label><select id="fType">
+<option ${sel(p.type,'Terrasse')}>Terrasse</option>
+<option ${sel(p.type,'Lettvegg')}>Lettvegg</option>
+<option ${sel(p.type,'Vindu')}>Vindu</option>
+<option ${sel(p.type,'Listing')}>Listing</option>
+<option ${sel(p.type,'Kledning')}>Kledning</option>
+<option ${sel(p.type,'Etterisolering')}>Etterisolering</option>
+<option ${sel(p.type,'Rehabilitering')}>Rehabilitering</option>
+<option ${sel(p.type,'Bad')}>Bad</option>
+<option ${sel(p.type,'Tak')}>Tak</option>
+<option ${sel(p.type,'Annet')}>Annet</option>
+</select><option ${sel(p.type,'Terrasse')}>Terrasse</option><option ${sel(p.type,'Lettvegg')}>Lettvegg</option><option ${sel(p.type,'Vindu')}>Vindu</option><option ${sel(p.type,'Listing')}>Listing</option><option ${sel(p.type,'Annet')}>Annet</option></select></div>
         </div>
         <div class="row">
           <div><label>Ønsket oppstart</label><select id="fStart"><option ${sel(p.startPref,'Snarest')}>Snarest</option><option ${sel(p.startPref,'Innen 2 uker')}>Innen 2 uker</option><option ${sel(p.startPref,'Innen 1 måned')}>Innen 1 måned</option><option ${sel(p.startPref,'Etter avtale')}>Etter avtale</option></select></div>
@@ -662,7 +673,15 @@
     function bindProjectEvents(){
       const p = getProject(currentProjectId); if(!p) return;
       bindVal('#fName', v=>p.name=v);
-      bindVal('#fCustomer', v=>p.customerId=v);
+      bindVal('#fCustomer', v=>{
+  p.customerId = v;
+  const cust = getCustomer(v);
+  if(cust && (!p.address || p.address.trim()==='')){
+    p.address = cust.address || '';
+    const addrInput = document.querySelector('#fAddress');
+    if(addrInput) addrInput.value = p.address;
+  }
+});
       bindVal('#fAddress', v=>p.address=v);
       bindVal('#fType', v=>p.type=v);
       bindVal('#fStart', v=>p.startPref=v);
@@ -696,7 +715,7 @@
     function bindVal(sel, fn){ const el = $(sel); if(el) el.addEventListener('input', ()=>{ fn(el.value); persistAndUpdate(); }); }
     function bindNum(sel, fn){ const el = $(sel); if(el) el.addEventListener('input', ()=>{ fn(Number(el.value)||0); persistAndUpdate(); }); }
     function persistAndUpdate(){ const p = getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); updateSummary(); renderDashboard(); }
-    function persistAndRenderProject(){ const p = getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); renderProjectView(); renderDashboard(); }
+    function persistAndRenderProject(){ const p = getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); renderProjectView(); }
 
     function updateSummary(){
       const p = getProject(currentProjectId); if(!p) return;
