@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KalkyleApp v7B</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont;padding:20px;background:#f5f5f7;}
+.card{background:white;padding:16px;border-radius:14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ddd;}
+button{padding:10px;border:none;border-radius:10px;background:black;color:white;margin-top:6px;}
+.result{font-size:18px;font-weight:600;}
+.green{color:green;}
+.yellow{color:orange;}
+.red{color:red;}
+.toggle{display:flex;gap:10px;margin-bottom:10px;}
+</style>
+</head>
+
+<body>
+
+<h2>Kalkyle</h2>
+
+<div class="card">
+<label>Timer</label>
+<input id="timer" type="number" value="20">
+
+<label>Timepris</label>
+<input id="timepris" type="number" value="700">
+
+<label>Materialkost</label>
+<input id="material" type="number" value="10000">
+
+<label>Materialpåslag (%)</label>
+<input id="påslag" type="number" value="20">
+
+<label>Rigg & drift (%)</label>
+<input id="rigg" type="number" value="10">
+
+<label>Ønsket margin (%)</label>
+<input id="margin" type="number" value="25">
+
+<label>Risiko</label>
+<select id="risiko">
+<option value="1">Lav</option>
+<option value="1.1">Normal</option>
+<option value="1.2">Høy</option>
+</select>
+</div>
+
+<div class="toggle">
+<button onclick="toggleMva(false)">Eks mva</button>
+<button onclick="toggleMva(true)">Inkl mva</button>
+</div>
+
+<div class="card">
+<div id="resultat" class="result"></div>
+</div>
+
+<script>
+let visMva=false;
+
+function toggleMva(val){
+visMva=val;
+calc();
+}
+
+function calc(){
+let t=+timer.value;
+let tp=+timepris.value;
+let mat=+material.value;
+let p=+påslag.value/100;
+let rigg=+rigg.value/100;
+let margin=+margin.value/100;
+let risiko=+risiko.value;
+
+let arbeid=t*tp*risiko;
+let materialsalg=mat*(1+p);
+let riggkost=(arbeid+materialsalg)*rigg;
+
+let kost=arbeid+mat+riggkost;
+let salgspris=kost/(1-margin);
+
+let vis=visMva?salgspris*1.25:salgspris;
+
+let fortj=salgspris-kost;
+let fortjProsent=(fortj/salgspris)*100;
+
+let color="green";
+if(fortjProsent<20) color="yellow";
+if(fortjProsent<10) color="red";
+
+resultat.innerHTML=
+"Pris: "+Math.round(vis)+" kr<br>"+
+"Fortjeneste: "+Math.round(fortjProsent)+"%";
+resultat.className="result "+color;
+}
+
+document.querySelectorAll("input,select").forEach(el=>{
+el.addEventListener("input",calc);
+});
+
+calc();
+</script>
+
+</body>
+</html>
