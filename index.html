@@ -1,826 +1,127 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KalkyleApp MVP</title>
-  <style>
-    :root {
-      --bg: #f6f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --accent: #2563eb;
-      --good: #166534;
-      --warn: #a16207;
-      --bad: #b91c1c;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .app {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px 16px 110px;
-    }
-    .topbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 1.6rem;
-    }
-    .sub {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 4px;
-    }
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    button, select, input, textarea {
-      font: inherit;
-    }
-    button {
-      border: 0;
-      background: var(--accent);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button.secondary {
-      background: #111827;
-    }
-    button.ghost {
-      background: #e5e7eb;
-      color: #111827;
-    }
-    button.danger {
-      background: #b91c1c;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 8px 24px rgba(17, 24, 39, 0.04);
-    }
-    .span-12 { grid-column: span 12; }
-    .span-8 { grid-column: span 8; }
-    .span-6 { grid-column: span 6; }
-    .span-4 { grid-column: span 4; }
-    .span-3 { grid-column: span 3; }
-    h2 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
-    }
-    .section-note {
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 12px;
-    }
-    .fields {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .fields-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .field.full { grid-column: 1 / -1; }
-    label {
-      font-size: 0.9rem;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: white;
-      border-radius: 10px;
-      padding: 10px 12px;
-      color: var(--text);
-    }
-    textarea { min-height: 90px; resize: vertical; }
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      background: #fbfdff;
-    }
-    .stat .label {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-bottom: 6px;
-    }
-    .stat .value {
-      font-size: 1.15rem;
-      font-weight: 700;
-    }
-    .margin-good .value { color: var(--good); }
-    .margin-warn .value { color: var(--warn); }
-    .margin-bad .value { color: var(--bad); }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-    }
-    th, td {
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: top;
-      font-size: 0.94rem;
-    }
-    th { color: var(--muted); font-weight: 700; }
-    .small-btn {
-      padding: 8px 10px;
-      font-size: 0.9rem;
-      border-radius: 8px;
-    }
-    .row-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    .history-item {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: start;
-      background: #fcfcfd;
-    }
-    .history-item h3 {
-      margin: 0 0 4px;
-      font-size: 1rem;
-    }
-    .history-item p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-    .pill {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-    .footerbar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--line);
-      padding: 10px 14px;
-      z-index: 10;
-    }
-    .footerinner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      align-items: center;
-    }
-    .footerstat {
-      border: 1px solid var(--line);
-      background: white;
-      border-radius: 12px;
-      padding: 10px;
-    }
-    .footerstat .label {
-      color: var(--muted);
-      font-size: 0.78rem;
-    }
-    .footerstat .value {
-      font-weight: 800;
-      font-size: 1rem;
-      margin-top: 4px;
-    }
-    .offer-preview {
-      border: 1px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 16px;
-      background: #fff;
-      line-height: 1.6;
-    }
-    .muted { color: var(--muted); }
-    @media (max-width: 900px) {
-      .span-8, .span-6, .span-4, .span-3 { grid-column: span 12; }
-      .fields, .fields-3, .stat-grid, .footerinner { grid-template-columns: 1fr; }
-      .footerbar { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-    }
-    @media print {
-      .topbar, .card:not(.printable), .footerbar { display: none !important; }
-      body, .app { background: white; padding: 0; }
-      .offer-preview { border: none; padding: 0; }
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <div class="topbar">
-      <div>
-        <h1>KalkyleApp MVP</h1>
-        <div class="sub">Første brukbare prototype for bygg/snekker — med kalkyle, maler, historikk og tilbud.</div>
-      </div>
-      <div class="actions">
-        <button onclick="applyTemplate()">Bruk mal</button>
-        <button class="secondary" onclick="saveEstimate()">Lagre kalkyle</button>
-        <button class="ghost" onclick="newEstimate()">Ny kalkyle</button>
-        <button class="ghost" onclick="window.print()">Skriv ut tilbud</button>
-      </div>
-    </div>
+KalkyleApp v2
+Mer mobil, raskere å bruke og med tydeligere margin-kontroll.
+Lagre kalkyle
+Skriv ut / PDF
+Ny kalkyle
+1. Grunninfo
+Prosjektnavn
 
-    <div class="grid">
-      <section class="card span-8 printable">
-        <h2>1. Grunninfo</h2>
-        <div class="fields">
-          <div class="field"><label>Prosjektnavn</label><input id="projectName" placeholder="F.eks. Ny terrasse hos Hansen" /></div>
-          <div class="field"><label>Kunde</label><input id="customerName" placeholder="Navn på kunde" /></div>
-          <div class="field"><label>Adresse</label><input id="address" placeholder="Adresse" /></div>
-          <div class="field"><label>Jobbtype</label>
-            <select id="jobType">
-              <option value="Terrasse">Terrasse</option>
-              <option value="Lettvegg">Lettvegg</option>
-              <option value="Skifte vindu">Skifte vindu</option>
-              <option value="Gipse rom">Gipse rom</option>
-              <option value="Legge gulv">Legge gulv</option>
-              <option value="Annet">Annet</option>
-            </select>
-          </div>
-          <div class="field full"><label>Beskrivelse</label><textarea id="description" placeholder="Kort beskrivelse av jobben"></textarea></div>
-        </div>
-      </section>
+Kunde
 
-      <aside class="card span-4">
-        <h2>Dashbord</h2>
-        <div class="section-note">Rask oversikt over kalkylen akkurat nå.</div>
-        <div class="stat-grid" id="dashboardStats"></div>
-      </aside>
+Adresse
 
-      <section class="card span-6">
-        <h2>2. Arbeid</h2>
-        <div class="fields-3">
-          <div class="field"><label>Antall personer</label><input id="workers" type="number" min="1" step="1" value="1" /></div>
-          <div class="field"><label>Timer per person</label><input id="hoursPerWorker" type="number" min="0" step="0.5" value="8" /></div>
-          <div class="field"><label>Intern timekost (kr)</label><input id="internalRate" type="number" min="0" step="1" value="450" /></div>
-          <div class="field"><label>Timepris kunde (kr)</label><input id="hourlyRate" type="number" min="0" step="1" value="850" /></div>
-          <div class="field"><label>Vanskelighetsgrad</label>
-            <select id="difficulty">
-              <option value="1">Enkel</option>
-              <option value="1.1" selected>Normal</option>
-              <option value="1.2">Krevende</option>
-              <option value="1.35">Svært krevende</option>
-            </select>
-          </div>
-          <div class="field"><label>Usikkerhet %</label><input id="uncertainty" type="number" min="0" step="1" value="10" /></div>
-        </div>
-      </section>
+Jobbtype
+              Terrasse
+              Lettvegg
+              Skifte vindu
+              Gipse rom
+              Legge gulv
+              Annet
+            
+Beskrivelse
+Rask status
+Denne boksen er laget for å kunne leses raskt ute på jobb.
+Margin 0 % Normal jobb
+2. Standardoppsett og maler
+Sett standardverdier én gang. Du kan også bruke ferdige maler for vanlige jobber.
+Standard timepris
 
-      <section class="card span-6">
-        <h2>3. Andre kostnader</h2>
-        <div class="fields-3">
-          <div class="field"><label>Kjøring (kr)</label><input class="otherCost" data-key="driving" type="number" min="0" step="1" value="0" /></div>
-          <div class="field"><label>Bom/parkering (kr)</label><input class="otherCost" data-key="parking" type="number" min="0" step="1" value="0" /></div>
-          <div class="field"><label>Verktøyslitasje (kr)</label><input class="otherCost" data-key="tools" type="number" min="0" step="1" value="0" /></div>
-          <div class="field"><label>Maskinleie (kr)</label><input class="otherCost" data-key="rental" type="number" min="0" step="1" value="0" /></div>
-          <div class="field"><label>Avfall/deponi (kr)</label><input class="otherCost" data-key="waste" type="number" min="0" step="1" value="0" /></div>
-          <div class="field"><label>UE / innleid hjelp (kr)</label><input class="otherCost" data-key="subcontractor" type="number" min="0" step="1" value="0" /></div>
-          <div class="field full"><label>Diverse / rigg / drift (kr)</label><input class="otherCost" data-key="misc" type="number" min="0" step="1" value="0" /></div>
-        </div>
-      </section>
+Standard intern timekost
 
-      <section class="card span-12">
-        <h2>4. Materialer</h2>
-        <div class="section-note">Legg inn materialer linje for linje. Appen regner kost, svinn og salgspris automatisk.</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Navn</th>
-              <th>Antall</th>
-              <th>Enhet</th>
-              <th>Innkjøpspris</th>
-              <th>Svinn %</th>
-              <th>Påslag %</th>
-              <th>Kost</th>
-              <th>Salg</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="materialsBody"></tbody>
-        </table>
-        <div class="row-actions">
-          <button class="ghost small-btn" onclick="addMaterialRow()">+ Legg til materiale</button>
-          <button class="ghost small-btn" onclick="quickMarkup(5)">+5 % påslag alle</button>
-          <button class="ghost small-btn" onclick="quickMarkup(10)">+10 % påslag alle</button>
-        </div>
-      </section>
+Standard materialpåslag %
 
-      <section class="card span-6">
-        <h2>5. Oppsummering</h2>
-        <div class="stat-grid" id="summaryStats"></div>
-      </section>
+Standard kjøring
 
-      <section class="card span-6 printable">
-        <h2>6. Tilbud</h2>
-        <div class="fields">
-          <div class="field"><label>Gyldig i dager</label><input id="validDays" type="number" value="14" /></div>
-          <div class="field"><label>Kontaktperson / signatur</label><input id="signature" value="Thomas Solberg" /></div>
-          <div class="field full"><label>Hva er inkludert</label><textarea id="included">Arbeid, materialer og normal opprydding.</textarea></div>
-          <div class="field full"><label>Hva er ikke inkludert</label><textarea id="excluded">Ekstraarbeid utover beskrevet omfang, skjulte feil og andre fag dersom ikke spesifisert.</textarea></div>
-          <div class="field full"><label>Forbehold</label><textarea id="terms">Pris gjelder for beskrevet omfang. Endringer eller tillegg prises separat etter avtale.</textarea></div>
-        </div>
-      </section>
+Bruk standardverdier på denne kalkylen
+Lagre standardverdier på denne enheten
+Terrasse
+Bjelkelag, bord, skruer
+Lettvegg
+Stendere, isolasjon, gips
+Skifte vindu
+Vindu, list, fug
+Gipse rom
+Gips, skruer, sparkel
+Legge gulv
+Gulv, underlag, list
+3. Arbeid
+Antall personer
 
-      <section class="card span-8 printable">
-        <h2>Tilbudsvisning</h2>
-        <div id="offerPreview" class="offer-preview"></div>
-      </section>
+Timer per person
 
-      <aside class="card span-4">
-        <h2>Lagrede kalkyler</h2>
-        <div class="section-note">Lagres lokalt i nettleseren på denne enheten.</div>
-        <div id="historyList"></div>
-      </aside>
-    </div>
-  </div>
+Intern timekost (kr)
 
-  <div class="footerbar">
-    <div class="footerinner">
-      <div class="footerstat"><div class="label">Kostpris</div><div class="value" id="footerCost">0 kr</div></div>
-      <div class="footerstat"><div class="label">Salgspris eks. mva</div><div class="value" id="footerSales">0 kr</div></div>
-      <div class="footerstat"><div class="label">Fortjeneste</div><div class="value" id="footerProfit">0 kr</div></div>
-      <div class="footerstat"><div class="label">Margin</div><div class="value" id="footerMargin">0 %</div></div>
-      <div><button style="width:100%" onclick="window.print()">Skriv ut / PDF</button></div>
-    </div>
-  </div>
+Timepris kunde (kr)
 
-  <script>
-    const templates = {
-      'Terrasse': {
-        projectName: 'Terrasse prosjekt',
-        description: 'Bygging av terrasse med bjelkelag, terrassebord og festemidler.',
-        workers: 2,
-        hoursPerWorker: 16,
-        internalRate: 450,
-        hourlyRate: 850,
-        difficulty: 1.1,
-        uncertainty: 10,
-        materials: [
-          { name: '48x148 konstruksjonsvirke', qty: 35, unit: 'stk', purchase: 129, waste: 8, markup: 18 },
-          { name: 'Terrassebord 28x120', qty: 90, unit: 'lm', purchase: 38, waste: 10, markup: 18 },
-          { name: 'Terrasseskruer', qty: 8, unit: 'pk', purchase: 165, waste: 0, markup: 20 }
-        ],
-        otherCosts: { driving: 450, parking: 0, tools: 250, rental: 0, waste: 600, subcontractor: 0, misc: 500 }
-      },
-      'Lettvegg': {
-        projectName: 'Lettvegg prosjekt',
-        description: 'Oppsetting av lettvegg med stendere, isolasjon og gips.',
-        workers: 1,
-        hoursPerWorker: 10,
-        internalRate: 450,
-        hourlyRate: 850,
-        difficulty: 1.1,
-        uncertainty: 8,
-        materials: [
-          { name: '48x98 stendere', qty: 20, unit: 'stk', purchase: 78, waste: 5, markup: 18 },
-          { name: 'Gipsplater', qty: 12, unit: 'stk', purchase: 129, waste: 8, markup: 18 },
-          { name: 'Isolasjon', qty: 18, unit: 'm²', purchase: 72, waste: 5, markup: 15 }
-        ],
-        otherCosts: { driving: 250, parking: 0, tools: 150, rental: 0, waste: 250, subcontractor: 0, misc: 200 }
-      },
-      'Skifte vindu': {
-        projectName: 'Vindusbytte',
-        description: 'Demontering av eksisterende vindu og montering av nytt vindu med listing og fuging.',
-        workers: 1,
-        hoursPerWorker: 8,
-        internalRate: 450,
-        hourlyRate: 900,
-        difficulty: 1.2,
-        uncertainty: 12,
-        materials: [
-          { name: 'Vindu', qty: 1, unit: 'stk', purchase: 5800, waste: 0, markup: 15 },
-          { name: 'Fug/skum', qty: 3, unit: 'stk', purchase: 129, waste: 0, markup: 20 },
-          { name: 'Listverk', qty: 12, unit: 'lm', purchase: 32, waste: 8, markup: 18 }
-        ],
-        otherCosts: { driving: 250, parking: 0, tools: 150, rental: 0, waste: 300, subcontractor: 0, misc: 250 }
-      },
-      'Gipse rom': {
-        projectName: 'Gipsing av rom',
-        description: 'Montering av gipsplater med standard sparkling som opsjon.',
-        workers: 2,
-        hoursPerWorker: 12,
-        internalRate: 450,
-        hourlyRate: 850,
-        difficulty: 1.1,
-        uncertainty: 10,
-        materials: [
-          { name: 'Gipsplater', qty: 30, unit: 'stk', purchase: 129, waste: 10, markup: 18 },
-          { name: 'Gipsskruer', qty: 6, unit: 'pk', purchase: 110, waste: 0, markup: 20 },
-          { name: 'Sparkel', qty: 5, unit: 'sekk', purchase: 179, waste: 5, markup: 18 }
-        ],
-        otherCosts: { driving: 300, parking: 0, tools: 150, rental: 0, waste: 350, subcontractor: 0, misc: 250 }
-      },
-      'Legge gulv': {
-        projectName: 'Gulvlegging',
-        description: 'Legging av nytt gulv med underlag og listing.',
-        workers: 1,
-        hoursPerWorker: 12,
-        internalRate: 450,
-        hourlyRate: 850,
-        difficulty: 1.1,
-        uncertainty: 8,
-        materials: [
-          { name: 'Gulv', qty: 35, unit: 'm²', purchase: 289, waste: 7, markup: 18 },
-          { name: 'Underlag', qty: 35, unit: 'm²', purchase: 28, waste: 5, markup: 18 },
-          { name: 'Listverk', qty: 28, unit: 'lm', purchase: 32, waste: 8, markup: 18 }
-        ],
-        otherCosts: { driving: 250, parking: 0, tools: 100, rental: 0, waste: 250, subcontractor: 0, misc: 150 }
-      }
-    };
+Vanskelighetsgrad
+              Enkel
+              Normal
+              Vanskelig
+              Svært vanskelig
+            
+Usikkerhet %
 
-    let materials = [];
+Hurtigvalg
++2 timer
++50 kr/t
+Vanskelig jobb
++5 % usikkerhet
+4. Andre kostnader
+Kjøring
 
-    function currency(value) {
-      return new Intl.NumberFormat('no-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(value || 0);
-    }
+Bom / parkering
 
-    function number(v) {
-      return Number(v) || 0;
-    }
+Verktøyslitasje
 
-    function getOtherCosts() {
-      const inputs = document.querySelectorAll('.otherCost');
-      const costs = {};
-      inputs.forEach(input => costs[input.dataset.key] = number(input.value));
-      return costs;
-    }
+Maskinleie
 
-    function setOtherCosts(costs) {
-      document.querySelectorAll('.otherCost').forEach(input => {
-        input.value = costs?.[input.dataset.key] ?? 0;
-      });
-    }
+Avfall / deponi
 
-    function materialCost(item) {
-      const base = number(item.qty) * number(item.purchase);
-      return base * (1 + number(item.waste) / 100);
-    }
+UE / innleid hjelp
 
-    function materialSale(item) {
-      return materialCost(item) * (1 + number(item.markup) / 100);
-    }
+Diverse / rigg / drift
 
-    function calculate() {
-      const workers = number(document.getElementById('workers').value);
-      const hoursPerWorker = number(document.getElementById('hoursPerWorker').value);
-      const internalRate = number(document.getElementById('internalRate').value);
-      const hourlyRate = number(document.getElementById('hourlyRate').value);
-      const difficulty = number(document.getElementById('difficulty').value);
-      const uncertainty = number(document.getElementById('uncertainty').value) / 100;
+5. Materialer
+Linjene arver standardpåslag som utgangspunkt. På mobil kan du scrolle sidelengs i tabellen.
+NAVN
+ANTALL
+ENHET
+INNKJØPSPRIS
+SVINN %
+PÅSLAG %
+KOST
+SALG
 
-      const totalHours = workers * hoursPerWorker;
-      const laborCost = totalHours * internalRate;
-      const laborSale = totalHours * hourlyRate * difficulty * (1 + uncertainty);
 
-      const materialsCost = materials.reduce((sum, item) => sum + materialCost(item), 0);
-      const materialsSale = materials.reduce((sum, item) => sum + materialSale(item), 0);
++ Legg til materiale
++5 % påslag alle
++10 % påslag alle
+Kopier siste linje
+6. Oppsummering
+Margin-guide
+Grønn = sterk jobb, gul = må vurderes, rød = tynn margin.
+7. Tilbud
+Gyldig i dager
 
-      const otherCostsObj = getOtherCosts();
-      const otherCosts = Object.values(otherCostsObj).reduce((a, b) => a + number(b), 0);
+Kontaktperson / signatur
+Thomas Solberg
+Hva er inkludert
+Arbeid, materialer og normal opprydding.
+Hva er ikke inkludert
+Ekstraarbeid utover beskrevet omfang, skjulte feil og andre fag dersom ikke spesifisert.
+Forbehold
+Pris gjelder for beskrevet omfang. Endringer eller tillegg prises separat etter avtale.
+Tilbudsvisning
 
-      const totalCost = laborCost + materialsCost + otherCosts;
-      const salesExVat = laborSale + materialsSale + otherCosts;
-      const profit = salesExVat - totalCost;
-      const margin = salesExVat > 0 ? (profit / salesExVat) * 100 : 0;
-      const vat = salesExVat * 0.25;
-      const totalIncVat = salesExVat + vat;
+Lagrede kalkyler
+Lagres lokalt i nettleseren på denne enheten.
 
-      return {
-        totalHours, laborCost, laborSale, materialsCost, materialsSale, otherCosts,
-        totalCost, salesExVat, profit, margin, vat, totalIncVat
-      };
-    }
-
-    function renderMaterials() {
-      const tbody = document.getElementById('materialsBody');
-      tbody.innerHTML = '';
-      materials.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input value="${item.name || ''}" onchange="updateMaterial(${index}, 'name', this.value)" /></td>
-          <td><input type="number" min="0" step="0.1" value="${item.qty ?? 0}" onchange="updateMaterial(${index}, 'qty', this.value)" /></td>
-          <td><input value="${item.unit || ''}" onchange="updateMaterial(${index}, 'unit', this.value)" /></td>
-          <td><input type="number" min="0" step="0.1" value="${item.purchase ?? 0}" onchange="updateMaterial(${index}, 'purchase', this.value)" /></td>
-          <td><input type="number" min="0" step="0.1" value="${item.waste ?? 0}" onchange="updateMaterial(${index}, 'waste', this.value)" /></td>
-          <td><input type="number" min="0" step="0.1" value="${item.markup ?? 0}" onchange="updateMaterial(${index}, 'markup', this.value)" /></td>
-          <td>${currency(materialCost(item))}</td>
-          <td>${currency(materialSale(item))}</td>
-          <td><button class="danger small-btn" onclick="removeMaterial(${index})">Slett</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      updateUI();
-    }
-
-    function updateMaterial(index, key, value) {
-      materials[index][key] = ['name', 'unit'].includes(key) ? value : number(value);
-      renderMaterials();
-    }
-
-    function addMaterialRow(item = { name: '', qty: 1, unit: 'stk', purchase: 0, waste: 0, markup: 15 }) {
-      materials.push(item);
-      renderMaterials();
-    }
-
-    function removeMaterial(index) {
-      materials.splice(index, 1);
-      renderMaterials();
-    }
-
-    function quickMarkup(inc) {
-      materials = materials.map(item => ({ ...item, markup: number(item.markup) + inc }));
-      renderMaterials();
-    }
-
-    function marginClass(margin) {
-      if (margin >= 25) return 'margin-good';
-      if (margin >= 15) return 'margin-warn';
-      return 'margin-bad';
-    }
-
-    function updateUI() {
-      const c = calculate();
-      const summary = [
-        ['Arbeid kost', currency(c.laborCost)],
-        ['Arbeid salg', currency(c.laborSale)],
-        ['Materialkost', currency(c.materialsCost)],
-        ['Materialsalg', currency(c.materialsSale)],
-        ['Andre kostnader', currency(c.otherCosts)],
-        ['Kostpris total', currency(c.totalCost)],
-        ['Salgspris eks. mva', currency(c.salesExVat)],
-        ['MVA', currency(c.vat)],
-        ['Pris inkl. mva', currency(c.totalIncVat)],
-        ['Fortjeneste', currency(c.profit)],
-        ['Margin', c.margin.toFixed(1) + ' %']
-      ];
-
-      document.getElementById('summaryStats').innerHTML = summary.map(([label, value]) => `
-        <div class="stat ${label === 'Margin' ? marginClass(c.margin) : ''}">
-          <div class="label">${label}</div>
-          <div class="value">${value}</div>
-        </div>
-      `).join('');
-
-      document.getElementById('dashboardStats').innerHTML = `
-        <div class="stat"><div class="label">Totale timer</div><div class="value">${c.totalHours.toFixed(1)} t</div></div>
-        <div class="stat"><div class="label">Materiallinjer</div><div class="value">${materials.length}</div></div>
-        <div class="stat ${marginClass(c.margin)}"><div class="label">Margin</div><div class="value">${c.margin.toFixed(1)} %</div></div>
-        <div class="stat"><div class="label">Tilbudssum inkl. mva</div><div class="value">${currency(c.totalIncVat)}</div></div>
-      `;
-
-      document.getElementById('footerCost').textContent = currency(c.totalCost);
-      document.getElementById('footerSales').textContent = currency(c.salesExVat);
-      document.getElementById('footerProfit').textContent = currency(c.profit);
-      document.getElementById('footerMargin').textContent = c.margin.toFixed(1) + ' %';
-      renderOffer();
-    }
-
-    function getEstimateData() {
-      return {
-        id: crypto.randomUUID(),
-        savedAt: new Date().toISOString(),
-        projectName: document.getElementById('projectName').value,
-        customerName: document.getElementById('customerName').value,
-        address: document.getElementById('address').value,
-        jobType: document.getElementById('jobType').value,
-        description: document.getElementById('description').value,
-        workers: number(document.getElementById('workers').value),
-        hoursPerWorker: number(document.getElementById('hoursPerWorker').value),
-        internalRate: number(document.getElementById('internalRate').value),
-        hourlyRate: number(document.getElementById('hourlyRate').value),
-        difficulty: number(document.getElementById('difficulty').value),
-        uncertainty: number(document.getElementById('uncertainty').value),
-        otherCosts: getOtherCosts(),
-        materials,
-        validDays: number(document.getElementById('validDays').value),
-        signature: document.getElementById('signature').value,
-        included: document.getElementById('included').value,
-        excluded: document.getElementById('excluded').value,
-        terms: document.getElementById('terms').value
-      };
-    }
-
-    function loadEstimate(data) {
-      document.getElementById('projectName').value = data.projectName || '';
-      document.getElementById('customerName').value = data.customerName || '';
-      document.getElementById('address').value = data.address || '';
-      document.getElementById('jobType').value = data.jobType || 'Terrasse';
-      document.getElementById('description').value = data.description || '';
-      document.getElementById('workers').value = data.workers ?? 1;
-      document.getElementById('hoursPerWorker').value = data.hoursPerWorker ?? 8;
-      document.getElementById('internalRate').value = data.internalRate ?? 450;
-      document.getElementById('hourlyRate').value = data.hourlyRate ?? 850;
-      document.getElementById('difficulty').value = String(data.difficulty ?? 1.1);
-      document.getElementById('uncertainty').value = data.uncertainty ?? 10;
-      setOtherCosts(data.otherCosts || {});
-      materials = Array.isArray(data.materials) ? data.materials : [];
-      document.getElementById('validDays').value = data.validDays ?? 14;
-      document.getElementById('signature').value = data.signature || 'Thomas Solberg';
-      document.getElementById('included').value = data.included || '';
-      document.getElementById('excluded').value = data.excluded || '';
-      document.getElementById('terms').value = data.terms || '';
-      renderMaterials();
-    }
-
-    function saveEstimate() {
-      const all = JSON.parse(localStorage.getItem('kalkyleapp_estimates') || '[]');
-      const data = getEstimateData();
-      all.unshift(data);
-      localStorage.setItem('kalkyleapp_estimates', JSON.stringify(all.slice(0, 30)));
-      renderHistory();
-      alert('Kalkyle lagret lokalt i nettleseren.');
-    }
-
-    function renderHistory() {
-      const all = JSON.parse(localStorage.getItem('kalkyleapp_estimates') || '[]');
-      const el = document.getElementById('historyList');
-      if (!all.length) {
-        el.innerHTML = '<p class="muted">Ingen lagrede kalkyler ennå.</p>';
-        return;
-      }
-      el.innerHTML = all.map((item, index) => {
-        const c = previewCalc(item);
-        const date = new Date(item.savedAt).toLocaleString('no-NO');
-        return `
-          <div class="history-item">
-            <div>
-              <h3>${item.projectName || 'Uten navn'}</h3>
-              <p>${item.customerName || 'Ukjent kunde'} · ${item.jobType || 'Jobb'}</p>
-              <p>${date}</p>
-              <p><span class="pill">${currency(c.totalIncVat)}</span></p>
-            </div>
-            <div class="actions">
-              <button class="ghost small-btn" onclick="openHistory(${index})">Åpne</button>
-              <button class="danger small-btn" onclick="deleteHistory(${index})">Slett</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function previewCalc(item) {
-      const totalHours = number(item.workers) * number(item.hoursPerWorker);
-      const laborCost = totalHours * number(item.internalRate);
-      const laborSale = totalHours * number(item.hourlyRate) * number(item.difficulty) * (1 + number(item.uncertainty) / 100);
-      const materialsCost = (item.materials || []).reduce((sum, mat) => sum + ((number(mat.qty) * number(mat.purchase)) * (1 + number(mat.waste) / 100)), 0);
-      const materialsSale = (item.materials || []).reduce((sum, mat) => sum + (((number(mat.qty) * number(mat.purchase)) * (1 + number(mat.waste) / 100)) * (1 + number(mat.markup) / 100)), 0);
-      const otherCosts = Object.values(item.otherCosts || {}).reduce((a, b) => a + number(b), 0);
-      const salesExVat = laborSale + materialsSale + otherCosts;
-      return { totalIncVat: salesExVat * 1.25 };
-    }
-
-    function openHistory(index) {
-      const all = JSON.parse(localStorage.getItem('kalkyleapp_estimates') || '[]');
-      if (all[index]) loadEstimate(all[index]);
-    }
-
-    function deleteHistory(index) {
-      const all = JSON.parse(localStorage.getItem('kalkyleapp_estimates') || '[]');
-      all.splice(index, 1);
-      localStorage.setItem('kalkyleapp_estimates', JSON.stringify(all));
-      renderHistory();
-    }
-
-    function newEstimate() {
-      loadEstimate({
-        projectName: '', customerName: '', address: '', jobType: 'Terrasse', description: '',
-        workers: 1, hoursPerWorker: 8, internalRate: 450, hourlyRate: 850, difficulty: 1.1, uncertainty: 10,
-        materials: [], otherCosts: { driving: 0, parking: 0, tools: 0, rental: 0, waste: 0, subcontractor: 0, misc: 0 },
-        validDays: 14, signature: 'Thomas Solberg', included: 'Arbeid, materialer og normal opprydding.',
-        excluded: 'Ekstraarbeid utover beskrevet omfang, skjulte feil og andre fag dersom ikke spesifisert.',
-        terms: 'Pris gjelder for beskrevet omfang. Endringer eller tillegg prises separat etter avtale.'
-      });
-    }
-
-    function applyTemplate() {
-      const key = document.getElementById('jobType').value;
-      const t = templates[key];
-      if (!t) return;
-      loadEstimate({
-        projectName: t.projectName,
-        customerName: document.getElementById('customerName').value,
-        address: document.getElementById('address').value,
-        jobType: key,
-        description: t.description,
-        workers: t.workers,
-        hoursPerWorker: t.hoursPerWorker,
-        internalRate: t.internalRate,
-        hourlyRate: t.hourlyRate,
-        difficulty: t.difficulty,
-        uncertainty: t.uncertainty,
-        materials: t.materials,
-        otherCosts: t.otherCosts,
-        validDays: 14,
-        signature: document.getElementById('signature').value || 'Thomas Solberg',
-        included: 'Arbeid, materialer og normal opprydding.',
-        excluded: 'Ekstraarbeid utover beskrevet omfang, skjulte feil og andre fag dersom ikke spesifisert.',
-        terms: 'Pris gjelder for beskrevet omfang. Endringer eller tillegg prises separat etter avtale.'
-      });
-    }
-
-    function renderOffer() {
-      const c = calculate();
-      const today = new Date();
-      const validDays = number(document.getElementById('validDays').value);
-      const validTo = new Date(today.getTime() + validDays * 24 * 60 * 60 * 1000).toLocaleDateString('no-NO');
-      const projectName = document.getElementById('projectName').value || 'Uten prosjektnavn';
-      const customerName = document.getElementById('customerName').value || 'Kunde';
-      const address = document.getElementById('address').value || 'Adresse ikke oppgitt';
-      const description = document.getElementById('description').value || 'Beskrivelse kommer her.';
-      const included = document.getElementById('included').value || '-';
-      const excluded = document.getElementById('excluded').value || '-';
-      const terms = document.getElementById('terms').value || '-';
-      const signature = document.getElementById('signature').value || 'Signatur';
-
-      document.getElementById('offerPreview').innerHTML = `
-        <h2 style="margin-top:0">Tilbud</h2>
-        <p><strong>Dato:</strong> ${today.toLocaleDateString('no-NO')}<br>
-        <strong>Kunde:</strong> ${customerName}<br>
-        <strong>Adresse:</strong> ${address}<br>
-        <strong>Prosjekt:</strong> ${projectName}</p>
-
-        <p><strong>Beskrivelse av arbeid:</strong><br>${description}</p>
-
-        <p><strong>Inkludert:</strong><br>${included.replaceAll('\n','<br>')}</p>
-        <p><strong>Ikke inkludert:</strong><br>${excluded.replaceAll('\n','<br>')}</p>
-
-        <p><strong>Pris eks. mva:</strong> ${currency(c.salesExVat)}<br>
-        <strong>MVA 25 %:</strong> ${currency(c.vat)}<br>
-        <strong>Totalpris inkl. mva:</strong> ${currency(c.totalIncVat)}</p>
-
-        <p><strong>Forbehold:</strong><br>${terms.replaceAll('\n','<br>')}</p>
-
-        <p>Tilbudet er gyldig til <strong>${validTo}</strong>.</p>
-
-        <p>Med vennlig hilsen<br><strong>${signature}</strong></p>
-      `;
-    }
-
-    document.querySelectorAll('input, select, textarea').forEach(el => {
-      el.addEventListener('input', updateUI);
-      el.addEventListener('change', updateUI);
-    });
-    document.querySelectorAll('.otherCost').forEach(el => {
-      el.addEventListener('input', updateUI);
-      el.addEventListener('change', updateUI);
-    });
-
-    newEstimate();
-    addMaterialRow();
-    renderHistory();
-  </script>
-</body>
-</html>
+Kostpris
+0 kr
+Salg eks. mva
+0 kr
+Fortjeneste
+0 kr
+Margin
+0 %
+Skriv ut / PDF
