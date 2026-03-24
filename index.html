@@ -3,17 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KalkyleApp v7B</title>
+<title>KalkyleApp</title>
+
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont;padding:20px;background:#f5f5f7;}
-.card{background:white;padding:16px;border-radius:14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ddd;}
-button{padding:10px;border:none;border-radius:10px;background:black;color:white;margin-top:6px;}
-.result{font-size:18px;font-weight:600;}
-.green{color:green;}
-.yellow{color:orange;}
-.red{color:red;}
-.toggle{display:flex;gap:10px;margin-bottom:10px;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont;
+  background:#f2f2f7;
+  padding:16px;
+}
+
+.card{
+  background:white;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+
+h2{
+  margin-bottom:10px;
+}
+
+input,select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-bottom:8px;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:12px;
+  background:black;
+  color:white;
+  margin-right:6px;
+}
+
+.toggle{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.result{
+  font-size:20px;
+  font-weight:600;
+}
+
+.green{color:#2ecc71;}
+.yellow{color:#f39c12;}
+.red{color:#e74c3c;}
 </style>
 </head>
 
@@ -55,17 +96,19 @@ button{padding:10px;border:none;border-radius:10px;background:black;color:white;
 
 <div class="card">
 <div id="resultat" class="result"></div>
+<div id="info"></div>
 </div>
 
 <script>
 let visMva=false;
 
 function toggleMva(val){
-visMva=val;
-calc();
+  visMva=val;
+  calc();
 }
 
 function calc(){
+
 let t=+timer.value;
 let tp=+timepris.value;
 let mat=+material.value;
@@ -74,26 +117,49 @@ let rigg=+rigg.value/100;
 let margin=+margin.value/100;
 let risiko=+risiko.value;
 
+// arbeid
 let arbeid=t*tp*risiko;
+
+// material
 let materialsalg=mat*(1+p);
+
+// rigg
 let riggkost=(arbeid+materialsalg)*rigg;
 
+// kostpris
 let kost=arbeid+mat+riggkost;
+
+// salgspris basert på ønsket margin
 let salgspris=kost/(1-margin);
 
+// visning
 let vis=visMva?salgspris*1.25:salgspris;
 
+// fortjeneste
 let fortj=salgspris-kost;
 let fortjProsent=(fortj/salgspris)*100;
 
+// dekningsbidrag
+let db=fortj;
+
+// break-even
+let breakEven=kost;
+
+// farge
 let color="green";
 if(fortjProsent<20) color="yellow";
 if(fortjProsent<10) color="red";
 
 resultat.innerHTML=
-"Pris: "+Math.round(vis)+" kr<br>"+
-"Fortjeneste: "+Math.round(fortjProsent)+"%";
+"Pris: "+Math.round(vis)+" kr";
+
+info.innerHTML=
+"Fortjeneste: "+Math.round(fortj)+" kr ("+Math.round(fortjProsent)+"%)<br>"+
+"Dekningsbidrag: "+Math.round(db)+" kr<br>"+
+"Break-even: "+Math.round(breakEven)+" kr";
+
 resultat.className="result "+color;
+
 }
 
 document.querySelectorAll("input,select").forEach(el=>{
