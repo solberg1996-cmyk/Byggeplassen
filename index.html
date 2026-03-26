@@ -1777,12 +1777,13 @@
 
       var logoSrc=co.logo||window._fallbackLogo||'';
       var logoHtml=logoSrc?'<div style="width:350px;height:140px;display:flex;align-items:center"><img src="'+logoSrc+'" style="max-width:100%;max-height:100%;object-fit:contain"></div>':'';
-      var coBlock=(co.name?'<strong style="display:block">'+esc(co.name)+'</strong>':'')
-        +(co.address?esc(co.address)+'<br>':'')
-        +((co.zip||co.city)?(esc(co.zip||'')+' '+esc(co.city||'')).trim()+'<br>':'')
-        +(co.phone?'Tlf: '+esc(co.phone)+'<br>':'')
-        +(co.email?esc(co.email)+'<br>':'')
-        +(co.orgNr?'Org.nr: '+esc(co.orgNr):'');
+      var coBlock=
+  (co.name?'<strong style="display:block;margin-bottom:4px">'+esc(co.name)+'</strong>':'')
+  +(co.address?'<div>'+esc(co.address)+'</div>':'')
+  +((co.zip||co.city)?'<div>'+ (esc(co.zip||'')+' '+esc(co.city||'')).trim() +'</div>':'')
+  +(co.phone?'<div>Tlf: '+esc(co.phone)+'</div>':'')
+  +(co.email?'<div>'+esc(co.email)+'</div>':'')
+  +(co.orgNr?'<div>Org.nr: '+esc(co.orgNr)+'</div>':'');
       var custBlock=(cust?'<b>'+esc(cust.name)+'</b>':'NAVN')+'<br>'
         +(cust&&cust.phone?esc(cust.phone)+'<br>':'')
         +(p.address?esc(p.address)+'<br>':'')
@@ -1881,12 +1882,13 @@
       var logoSrc=co.logo||window._fallbackLogo||'';
       var logoHtml=logoSrc?'<div style="width:350px;height:140px;display:flex;align-items:center"><img src="'+logoSrc+'" style="max-width:100%;max-height:100%;object-fit:contain"></div>':'';
       // Company block
-      var coBlock=(co.name?'<strong>'+esc(co.name)+'</strong><br>':'')
-        +(co.address?esc(co.address)+'<br>':'')
-        +((co.zip||co.city)?(esc(co.zip||'')+' '+esc(co.city||'')).trim()+'<br>':'')
-        +(co.phone?'Tlf: '+esc(co.phone)+'<br>':'')
-        +(co.email?esc(co.email)+'<br>':'')
-        +(co.orgNr?'Org.nr: '+esc(co.orgNr):'');
+     var coBlock=
+  (co.name?'<strong style="display:block;margin-bottom:4px">'+esc(co.name)+'</strong>':'')
+  +(co.address?'<div>'+esc(co.address)+'</div>':'')
+  +((co.zip||co.city)?'<div>'+ (esc(co.zip||'')+' '+esc(co.city||'')).trim() +'</div>':'')
+  +(co.phone?'<div>Tlf: '+esc(co.phone)+'</div>':'')
+  +(co.email?'<div>'+esc(co.email)+'</div>':'')
+  +(co.orgNr?'<div>Org.nr: '+esc(co.orgNr)+'</div>':'');
 
       var custBlock=(cust?esc(cust.name):'NAVN')+'<br>'
         +(cust&&cust.phone?esc(cust.phone)+'<br>':'')
