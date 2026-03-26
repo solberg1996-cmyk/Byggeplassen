@@ -1832,7 +1832,7 @@
         +sec('prisogbetaling','Pris og betaling',
           '<p>Arbeidet utføres '+(os.prisType==='fastpris'?'til avtalt fastpris':os.prisType==='begge'?'etter medgått tid og fastpris':'etter medgått tid og materialer')+'. Betalingsfrist er 10 dager netto. Ved større arbeider kan det faktureres delbetaling underveis.</p>'
           +'<p>Timepris tømrer: kr '+Math.round(p.work.timeRate||850)+' eks. mva pr time</p>'
-          +'<p>- Påslag på materiell: '+(p.settings.materialMarkup||15)+'%</p>'
+          +'<p>Påslag på materiell: '+(p.settings.materialMarkup||15)+'%</p>'
           +'<p>Arbeid utover beskrevet omfang regnes som tilleggsarbeid og utføres etter avtale med kunde.</p>'
         )
         +sec('fremdrift','Fremdrift',
