@@ -87,6 +87,478 @@
       return match ? (match.userPrice||0) : 0;
     }
 
+    window.copyArtikkelNummer=function(artnr,el){
+      navigator.clipboard.writeText(artnr).then(()=>{
+        if(el){
+          const original=el.textContent;
+          el.textContent='✓';
+          setTimeout(()=>{ el.textContent=original; },1000);
+        }
+      }).catch(err=>console.error('Copy failed:',err));
+    };
+
+    window.openPriceSearchForCalc=function(matId){
+      window._calcMatIdActive=matId;
+      window._calcMatSearchActive=0;
+      let modal=document.getElementById('calcMatModal');
+      if(!modal){
+        modal=document.createElement('div');
+        modal.id='calcMatModal';
+        modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:2000;display:flex;flex-direction:column;overflow:hidden';
+        document.body.appendChild(modal);
+      }
+      let backdrop=document.getElementById('calcMatBackdrop');
+      if(!backdrop){
+        backdrop=document.createElement('div');
+        backdrop.id='calcMatBackdrop';
+        backdrop.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:1999;cursor:pointer;pointer-events:auto';
+        backdrop.addEventListener('click',function(e){
+          if(e.target===backdrop) closeCalcMatModal();
+        });
+        document.body.appendChild(backdrop);
+      }
+      backdrop.style.display='block';
+      modal.innerHTML=`
+        <div style="padding:16px;border-bottom:1px solid #eee">
+          <input type="text" id="calcMatModalSearchInput" placeholder="Søk materiale..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:12px" oninput="showCalcMatSearchModal(this.value)" onkeydown="handleCalcMatModalKeydown(event)" />
+        </div>
+        <div id="calcMatModalResults" style="flex:1;overflow-y:auto;padding:0"></div>
+      `;
+      modal.style.display='block';
+      modal.onclick=function(e){
+  e.stopPropagation();
+};
+      // Remove any stale outside-click listener before adding a new one
+      if(window._calcMatOutsideClick){
+        document.removeEventListener('click',window._calcMatOutsideClick);
+      }
+      setTimeout(()=>{
+        window._calcMatOutsideClick=function(e){
+          const modal=document.getElementById('calcMatModal');
+          if(modal && modal.style.display!=='none' && !modal.contains(e.target)){
+            closeCalcMatModal();
+          }
+        };
+        document.addEventListener('click',window._calcMatOutsideClick);
+      },0);
+      // Global Escape handler so Escape works even before typing
+      if(window._calcMatEscHandler){
+        document.removeEventListener('keydown',window._calcMatEscHandler);
+      }
+      window._calcMatEscHandler=function(e){
+        if(e.key==='Escape'){
+          e.preventDefault();
+          e.stopPropagation();
+          closeCalcMatModal();
+        }
+      };
+      document.addEventListener('keydown',window._calcMatEscHandler);
+      document.body.style.overflow='hidden';
+      document.getElementById('calcMatModalSearchInput').focus();
+      showCalcMatSearchModal('');
+    };
+
+    window.showCalcMatSearchModal=function(query){
+      const resultsDiv=document.getElementById('calcMatModalResults');
+      if(!resultsDiv) return;
+
+      const results=searchPriceCatalog(query).slice(0,15);
+      if(!query.trim() || !results.length){
+        resultsDiv.innerHTML=query.trim()?'<div style="padding:16px;text-align:center;color:#999;font-size:12px">Ingen treff</div>':'<div style="padding:16px;text-align:center;color:#bbb;font-size:12px">Skriv for å søke</div>';
+        window._calcMatSearchActive=0;
+        return;
+      }
+
+      resultsDiv.innerHTML=results.map((item,idx)=>`
+        <div class="calcMatSearchItem" data-idx="${idx}" style="padding:14px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='#f5f8ff';window._calcMatSearchActive=${idx}" onmouseout="this.style.background='#fff'" onclick="selectCalcMatFromModal('${escapeHtml(item.id)}')">
+          <div style="font-weight:700;color:#333;margin-bottom:4px;font-size:12px">${escapeHtml(item.productName||item.name)}</div>
+          <div style="font-size:11px;color:#666;display:flex;gap:16px;align-items:center">
+            <span>${escapeHtml(item.unit||'stk')}</span>
+            <span style="color:#0a84ff;font-weight:600">${currency(item.userPrice||0)}</span>
+            ${item.itemNo?'<span style="color:#999;font-size:10px;display:flex;align-items:center;gap:6px">Art.nr: '+escapeHtml(item.itemNo)+'<button style="background:none;border:none;cursor:pointer;padding:0;font-size:12px" onclick="copyCalcItemNo(\''+escapeHtml(item.itemNo)+'\');event.stopPropagation()">📋</button></span>':''}
+          </div>
+        </div>
+      `).join('');
+      if(typeof window._calcMatSearchActive!=='number'){
+        window._calcMatSearchActive=0;
+      }
+      updateCalcMatSearchActiveStyle();
+    };
+
+    window.selectCalcMatFromModal=function(itemId){
+      const matId=window._calcMatIdActive;
+      if(!matId) return;
+      const item=getCatalogItem(itemId);
+      if(!item) return;
+
+      const row=document.querySelector('tr[data-mat-id="'+matId+'"]');
+      if(!row) return;
+
+      row.querySelector('.calcMatName').value=item.name||'';
+      row.querySelector('.calcMatCost').value=(item.userPrice||0).toFixed(2);
+      row.querySelector('.calcMatUnit').value=item.unit||'stk';
+      row.querySelector('.calcMatUnit').dispatchEvent(new Event('change'));
+      row.querySelector('.calcMatUnit').style.background='#e8f4ff';
+      setTimeout(()=>{
+        row.querySelector('.calcMatUnit').style.background='';
+      },800);
+
+      recalcCalcMaterials();
+      closeCalcMatModal();
+    };
+
+    window.handleCalcMatModalKeydown=function(e){
+      const resultsDiv=document.getElementById('calcMatModalResults');
+      const items=resultsDiv?.querySelectorAll('.calcMatSearchItem')||[];
+      if(!items.length) return;
+
+      if(e.key==='ArrowDown'){
+        e.preventDefault();
+        window._calcMatSearchActive=Math.min(window._calcMatSearchActive+1,items.length-1);
+        updateCalcMatSearchActiveStyle();
+      }else if(e.key==='ArrowUp'){
+        e.preventDefault();
+        window._calcMatSearchActive=Math.max(window._calcMatSearchActive-1,0);
+        updateCalcMatSearchActiveStyle();
+      }else if(e.key==='Enter'){
+        e.preventDefault();
+        const active=items[window._calcMatSearchActive];
+        if(active) active.click();
+      }else if(e.key==='Escape'){
+        e.preventDefault();
+        closeCalcMatModal();
+      }
+    };
+
+    window.updateCalcMatSearchActiveStyle=function(){
+      const items=document.querySelectorAll('.calcMatSearchItem');
+      items.forEach((item,idx)=>{
+        if(idx===window._calcMatSearchActive){
+          item.style.background='#e8f4ff';
+          item.style.borderLeft='4px solid #0a84ff';
+          item.style.paddingLeft='12px';
+          item.scrollIntoView({block:'nearest'});
+        }else{
+          item.style.background='#fff';
+          item.style.borderLeft='none';
+          item.style.paddingLeft='16px';
+        }
+      });
+    };
+
+    window.closeCalcMatModal=function(){
+      const modal=document.getElementById('calcMatModal');
+      if(modal) modal.style.display='none';
+      const backdrop=document.getElementById('calcMatBackdrop');
+      if(backdrop) backdrop.style.display='none';
+      // Clean up outside-click listener so it doesn't block reopen
+      if(window._calcMatOutsideClick){
+        document.removeEventListener('click',window._calcMatOutsideClick);
+        window._calcMatOutsideClick=null;
+      }
+      // Clean up global Escape handler
+      if(window._calcMatEscHandler){
+        document.removeEventListener('keydown',window._calcMatEscHandler);
+        window._calcMatEscHandler=null;
+      }
+      // Blur modal input so the material row input can receive click cleanly
+      const searchInput=document.getElementById('calcMatModalSearchInput');
+      if(searchInput) searchInput.blur();
+      document.body.style.overflow='auto';
+      window._calcMatIdActive=null;
+      window._calcMatSearchActive=0;
+    };
+
+    window.copyCalcItemNo=function(itemNo){
+      navigator.clipboard.writeText(itemNo).then(()=>{
+        console.log('Artikkelnummer kopiert: '+itemNo);
+      }).catch(err=>console.error('Copy failed:',err));
+    };
+
+    window.getCalcFavorites=function(){
+      try {
+        return JSON.parse(localStorage.getItem('calcFavoriteMaterials'))||[];
+      } catch(e) { return []; }
+    };
+
+    window.saveCalcFavorites=function(fav){
+      localStorage.setItem('calcFavoriteMaterials',JSON.stringify(fav));
+    };
+
+    window.addCalcFavorite=function(name,unit,cost,itemNo){
+      const fav=getCalcFavorites();
+      if(!fav.find(f=>f.name===name)){
+        fav.unshift({name,unit,cost,itemNo});
+        fav=fav.slice(0,20);
+        saveCalcFavorites(fav);
+      }
+    };
+
+    window.removeCalcFavorite=function(name){
+      let fav=getCalcFavorites();
+      fav=fav.filter(f=>f.name!==name);
+      saveCalcFavorites(fav);
+    };
+
+    window.isCalcFavorite=function(name){
+      return getCalcFavorites().some(f=>f.name===name);
+    };
+
+    window.toggleFavoriteMaterial=function(matId,name){
+      if(isCalcFavorite(name)){
+        removeCalcFavorite(name);
+      } else {
+        const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
+        const item=priceCatalogMap[name];
+        if(item) addCalcFavorite(name,item.unit||'stk',item.cost||0,item.itemNo||item.artnr||item.articleNumber||'');
+      }
+      showMatAutocomplete(matId,document.querySelector('.calcMatName[data-mat-id="'+matId+'"]')?.value||'');
+    };
+
+    window.showMatAutocomplete=function(matId,query){
+      const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
+      if(!dropdown) return;
+      const q=query?query.toLowerCase().trim():'';
+      const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
+
+      let matches=[];
+      if(q.length>0){
+        matches=Object.entries(priceCatalogMap).filter(([name,item])=>{
+          const artnr=(item.itemNo||item.artnr||item.articleNumber||'').toLowerCase();
+          return name.toLowerCase().includes(q)||artnr.includes(q);
+        });
+
+        // Sort: name start > artnr match > contains
+        matches.sort((a,b)=>{
+          const aName=a[0].toLowerCase();
+          const bName=b[0].toLowerCase();
+          const aArtnr=(a[1].itemNo||a[1].artnr||a[1].articleNumber||'').toLowerCase();
+          const bArtnr=(b[1].itemNo||b[1].artnr||b[1].articleNumber||'').toLowerCase();
+          const isNumQuery=/^\d+$/.test(q);
+
+          const aNameStart=aName.startsWith(q);
+          const bNameStart=bName.startsWith(q);
+          if(aNameStart!==bNameStart) return bNameStart?1:-1;
+
+          const aArtnrMatch=aArtnr.includes(q);
+          const bArtnrMatch=bArtnr.includes(q);
+          if(isNumQuery&&aArtnrMatch!==bArtnrMatch) return bArtnrMatch?1:-1;
+
+          return aName.localeCompare(bName);
+        });
+
+        matches=matches.slice(0,8);
+      }
+
+      // Add favorites at top if no search
+      let allItems=matches;
+      if(!q){
+        const favs=getCalcFavorites();
+        const favMatches=favs.map(f=>{
+          const cat=Object.entries(priceCatalogMap).find(([n])=>n===f.name);
+          return cat?cat:[f.name,{unit:f.unit,cost:f.cost,itemNo:f.itemNo}];
+        });
+        allItems=[...favMatches,...matches].slice(0,8);
+      }
+
+      if(!allItems.length){
+        dropdown.style.display='none';
+        return;
+      }
+      dropdown.style.minWidth='400px';
+      dropdown.style.maxHeight='250px';
+      dropdown.innerHTML=allItems.map(([name,item],idx)=>{
+        const artnr=item.itemNo||item.artnr||item.articleNumber;
+        const isFav=isCalcFavorite(name);
+        return `<div class="matDropdownItem" data-idx="${idx}" data-name="${escapeHtml(name)}" style="padding:12px 14px;border-bottom:1px solid #e8e8e8;cursor:pointer;font-size:11px;transition:background 0.15s;background:${isFav?'#fffbea':'#fff'}" onmouseover="setMatAutocompleteActive('${matId}',${idx})" onclick="selectMatByIndex('${matId}',${idx})">
+          <div style="font-weight:700;color:#333;margin-bottom:4px;display:flex;gap:8px;align-items:center">
+            <span style="cursor:pointer;font-size:14px;user-select:none" onclick="event.stopPropagation(); toggleFavoriteMaterial('${matId}','${escapeHtml(name)}')" title="Favoritt">${isFav?'⭐':'☆'}</span>
+            ${escapeHtml(name)}
+          </div>
+          <div style="font-size:10px;color:#666;display:flex;gap:12px;align-items:center">
+            <span>${escapeHtml(item.unit||'stk')}</span>
+            <span style="color:#0a84ff;font-weight:600">${currency(item.cost||0)}</span>
+            ${artnr?'<span style="color:#999;cursor:pointer;display:flex;gap:4px;align-items:center" onclick="event.stopPropagation(); copyArtikkelNummer(\''+escapeHtml(artnr)+'\', this)">Art.nr: '+escapeHtml(artnr)+' 📋</span>':''}
+          </div>
+        </div>`;
+      }).join('');
+      dropdown.style.display='block';
+      window._matAutocompleteActive={matId,idx:0};
+      setMatAutocompleteActive(matId,0);
+    };
+
+    window.selectMat=function(matId,name){
+      const row=document.querySelector('tr[data-mat-id="'+matId+'"]');
+      const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
+      const item=priceCatalogMap[name];
+      if(!item) return;
+
+      row.querySelector('.calcMatName').value=name;
+      row.querySelector('.calcMatCost').value=(item.cost||0).toFixed(2);
+      row.querySelector('.calcMatUnit').value=item.unit||'stk';
+
+      document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]').style.display='none';
+      recalcCalcMaterials();
+    };
+
+    window.selectMatByIndex=function(matId,idx){
+      const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
+      if(!dropdown) return;
+      const items=dropdown.querySelectorAll('.matDropdownItem');
+      if(items[idx]){
+        const name=items[idx].dataset.name;
+        if(name) selectMat(matId,name);
+      }
+    };
+
+    window.setMatAutocompleteActive=function(matId,idx){
+      const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
+      if(!dropdown) return;
+      const items=dropdown.querySelectorAll('.matDropdownItem');
+      items.forEach((item,i)=>{
+        if(i===idx){
+          item.style.background='#e3f2fd';
+          item.style.borderLeft='3px solid #0a84ff';
+        } else {
+          item.style.background='#fff';
+          item.style.borderLeft='3px solid transparent';
+        }
+      });
+      window._matAutocompleteActive={matId,idx};
+    };
+
+    // ── MATERIAL AUTOCOMPLETE ────────────────────────────────
+
+        window.addCalcMaterial=function(){
+      const result=window._lastCalcResult;
+      if(!result) return;
+      const p=getProject(currentProjectId);
+      const calcMarkup=(p?.settings?.materialMarkup)||20;
+      const newMat={matId:uid(),name:'',qty:1,cost:0,waste:0,markup:calcMarkup,unit:'stk',totalCost:0};
+      result.materialsWithPrices.push(newMat);
+      const tbody=document.getElementById('calcMaterialsTableBody');
+      if(tbody){
+        const newRow=document.createElement('tr');
+        newRow.style.borderBottom='1px solid #eef2ff';
+        newRow.dataset.matId=newMat.matId;
+        newRow.innerHTML=`<td style="padding:8px;min-width:200px;position:relative">
+          <input type="text" class="calcMatName" data-mat-id="${newMat.matId}" value="" placeholder="Søk materiale..." style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer" onclick="openPriceSearchForCalc('${newMat.matId}')" readonly />
+        </td>
+        <td style="text-align:center;padding:8px">
+          <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+        </td>
+        <td style="text-align:center;padding:8px">
+          <select class="calcMatUnit" data-mat-id="${newMat.matId}" style="padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;width:60px" onchange="recalcCalcMaterials()">
+            ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u==='stk'?'selected':'')+'> '+u+'</option>').join('')}
+          </select>
+        </td>
+        <td style="text-align:right;padding:8px">
+          <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="0.00" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+        </td>
+        <td style="text-align:center;padding:8px">
+          <input type="number" class="calcMatWaste" data-mat-id="${newMat.matId}" value="0" step="1" min="0" max="100" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+        </td>
+        <td style="text-align:center;padding:8px">
+          <input type="number" class="calcMatMarkup" data-mat-id="${newMat.matId}" value="${calcMarkup}" step="1" min="0" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+        </td>
+        <td style="text-align:right;padding:8px;font-weight:700;min-width:75px">
+          <span class="calcMatRowTotal" data-mat-id="${newMat.matId}" style="color:#0a84ff">kr 0</span>
+        </td>
+        <td style="text-align:center;padding:8px">
+          <button class="btn small" style="padding:4px 8px;font-size:10px;background:#ffebee;color:#c62828;border:1px solid #ef5350;border-radius:4px;cursor:pointer" onclick="deleteCalcMaterial('${newMat.matId}')">✕</button>
+        </td>`;
+        tbody.appendChild(newRow);
+        newRow.querySelector('.calcMatName').focus();
+      }
+    };
+
+
+    window.closeMatAutocomplete=function(matId){
+      const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
+      if(dropdown) dropdown.style.display='none';
+    };
+
+    window.handleMatKeydown=function(e,matId){
+      const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
+      if(!dropdown||dropdown.style.display==='none'){
+        if(e.key==='Escape') return;
+        return;
+      }
+
+      const active=window._matAutocompleteActive;
+      const items=dropdown.querySelectorAll('.matDropdownItem');
+      if(!items.length) return;
+
+      if(e.key==='ArrowDown'){
+        e.preventDefault();
+        const nextIdx=Math.min((active?.idx||0)+1,items.length-1);
+        setMatAutocompleteActive(matId,nextIdx);
+      } else if(e.key==='ArrowUp'){
+        e.preventDefault();
+        const prevIdx=Math.max((active?.idx||0)-1,0);
+        setMatAutocompleteActive(matId,prevIdx);
+      } else if(e.key==='Enter'){
+        e.preventDefault();
+        selectMatByIndex(matId,active?.idx||0);
+      } else if(e.key==='Escape'){
+        closeMatAutocomplete(matId);
+      }
+    };
+
+    window.calcMatRowTotal=function(m){
+      const qty=Number(m.qty)||0;
+      const cost=Number(m.cost)||0;
+      const waste=Number(m.waste)||0;
+      const markup=Number(m.markup)||0;
+      return Math.round(qty*cost*(1+waste/100)*(1+markup/100));
+    };
+
+     window.recalcCalcMaterials=function(){
+      const result=window._lastCalcResult;
+      if(!result||!result.materialsWithPrices) return;
+      const rows=Array.from(document.querySelectorAll('tr[data-mat-id]'));
+      const newMaterials=[];
+      rows.forEach(row=>{
+        const matId=row.dataset.matId;
+        const name=row.querySelector('.calcMatName')?.value||'';
+        const qty=parseFloat(row.querySelector('.calcMatQty')?.value)||0;
+        const cost=parseFloat(row.querySelector('.calcMatCost')?.value)||0;
+        const waste=parseFloat(row.querySelector('.calcMatWaste')?.value)||0;
+        const markup=parseFloat(row.querySelector('.calcMatMarkup')?.value)||0;
+        const unit=row.querySelector('.calcMatUnit')?.value||'stk';
+        const totalCost=Math.round(qty*cost*(1+waste/100)*(1+markup/100));
+        newMaterials.push({matId,name,qty,cost,waste,markup,unit,totalCost});
+        const totalSpan=row.querySelector('.calcMatRowTotal');
+        if(totalSpan) totalSpan.textContent=currency(totalCost);
+      });
+      result.materialsWithPrices=newMaterials;
+      result.totalMatCost=newMaterials.reduce((s,m)=>s+(m.totalCost||0),0);
+      const p=getProject(currentProjectId);
+      const laborSaleEx=result.laborSaleEx;
+      const totalSaleEx=laborSaleEx+result.totalMatCost;
+      const laborCost=Math.round(result.directTimer*(p?.work.internalCost||450));
+      const totalCost=laborCost+result.totalMatCost;
+      const profit=totalSaleEx-totalCost;
+      const margin=totalSaleEx>0?Math.round(profit/totalSaleEx*100):0;
+      result.profit=profit; result.margin=margin; result.totalSaleEx=totalSaleEx; result.totalCost=totalCost;
+      const matGridDiv=document.querySelector('div[style*="grid-template-columns:repeat(3"]');
+      if(matGridDiv){
+        matGridDiv.innerHTML=`<div><div style="font-size:11px;color:var(--muted);font-weight:700">🔨 Arbeid (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#0a84ff;margin-top:2px">${currency(laborSaleEx)}</div></div>
+          <div><div style="font-size:11px;color:var(--muted);font-weight:700">🪵 Materialer</div><div style="font-size:16px;font-weight:800;color:#167a42;margin-top:2px">${currency(result.totalMatCost)}</div></div>
+          <div><div style="font-size:11px;color:var(--muted);font-weight:700">💰 Totalt (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#2e7d32;margin-top:2px">${currency(totalSaleEx)}</div></div>`;
+      }
+      const marginDiv=document.querySelector('div[style*="background:#f0f7ff"][style*="margin"]');
+      if(marginDiv){
+        const marginValueEl=marginDiv.querySelector('div[style*="font-size:22px"]');
+        const profitEl=marginDiv.querySelector('div[style*="font-size:10px"]');
+        if(marginValueEl) marginValueEl.textContent=margin+'%';
+        if(profitEl) profitEl.textContent='Fortjeneste: '+currency(profit);
+      }
+      result.sentToOffer=false;
+      updateCalcSendButtonUI();
+    };
+
+
     function parsePriceCsv(text){
       const rows = text.split(/\r?\n/).filter(Boolean);
       const catalog = [];
@@ -116,16 +588,61 @@
 
     function clearPriceCatalog(){ state.priceCatalog=[]; state.priceFileName=''; saveState(); renderProjectView(); }
 
+    function normalizeSearchText(str){
+      return (str||'').toLowerCase().trim()
+        .replace(/\s+/g,' ')
+        .replace(/\b0+(\d)/g,'$1');           // 048x098 → 48x98
+    }
+
     function searchPriceCatalog(query){
-      const q=(query||'').trim().toLowerCase(); if(!q) return [];
-      const exact=[],starts=[],contains=[];
-      state.priceCatalog.forEach(item => {
-        const itemNo=(item.itemNo||'').toLowerCase(), name=(item.productName||item.name||'').toLowerCase(), description=(item.description||'').toLowerCase();
-        if(itemNo===q) exact.push(item);
-        else if(itemNo.startsWith(q)||name.startsWith(q)) starts.push(item);
-        else if(name.includes(q)||description.includes(q)) contains.push(item);
+      const raw=(query||'').trim(); if(!raw) return [];
+      const q=normalizeSearchText(raw);
+      const words=q.split(/\s+/).filter(Boolean);
+      if(!words.length) return [];
+
+      const scored=[];
+      state.priceCatalog.forEach(item=>{
+        const name=normalizeSearchText(item.productName||item.name||'');
+        const desc=normalizeSearchText(item.description||'');
+        const itemNo=normalizeSearchText(item.itemNo||'');
+        const full=name+' '+desc+' '+itemNo;
+
+        // Check all words match somewhere
+        const allMatch=words.every(w=>full.includes(w));
+        if(!allMatch) return;
+
+        let score=0;
+
+        // Exact full query in text
+        if(full.includes(q)) score+=100;
+
+        // Name starts with full query
+        if(name.startsWith(q)) score+=50;
+
+        // Name starts with first search word (bonus)
+        if(name.startsWith(words[0])) score+=15;
+
+        // All words matched (base)
+        score+=30;
+
+        // Per-word bonus
+        words.forEach(w=>{
+          if(full.includes(w)) score+=10;
+        });
+
+        // Exact dimension match (e.g. 48x98)
+        words.forEach(w=>{
+          if(/\d+x\d+/.test(w) && full.includes(w)) score+=20;
+        });
+
+        // Exact itemNo match
+        if(itemNo===q) score+=80;
+
+        scored.push({item,score});
       });
-      return [...exact,...starts,...contains].slice(0,20);
+
+      scored.sort((a,b)=>b.score-a.score);
+      return scored.slice(0,20).map(s=>s.item);
     }
 
     function renderPriceSearchResults(query){
@@ -899,33 +1416,6 @@
             </div>`).join('')}
         </div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
-          <div style="font-weight:800;font-size:12px;color:var(--muted);margin-bottom:10px">⚙️ Prosjektfaktorer</div>
-          <div class="row-3" style="margin-bottom:10px">
-            <div>
-              <label>Tilkomst</label>
-              <select id="calcAccess" onchange="runCalcWidget()" style="padding:10px 12px">
-                <option value="easy">Lett (×1.0)</option>
-                <option value="normal" selected>Normal (×1.1)</option>
-                <option value="difficult">Vanskelig (×1.3)</option>
-              </select>
-            </div>
-            <div>
-              <label>Høyde</label>
-              <select id="calcHeight" onchange="runCalcWidget()" style="padding:10px 12px">
-                <option value="ground" selected>Bakke (×1.0)</option>
-                <option value="elevated">Opphøyd (×1.2)</option>
-                <option value="high">Høyt (×1.5)</option>
-              </select>
-            </div>
-            <div>
-              <label>Kompleksitet</label>
-              <select id="calcComplexity" onchange="runCalcWidget()" style="padding:10px 12px">
-                <option value="simple">Enkel (×1.0)</option>
-                <option value="normal" selected>Normal (×1.1)</option>
-                <option value="complex">Kompleks (×1.3)</option>
-              </select>
-            </div>
-          </div>
           <div class="row-3">
             <div>
               <label>Avstand (km)</label>
@@ -993,12 +1483,9 @@
       // Get project factors
       const difficulty=window._calcDifficulty||'normal';
       const diffFactor=difficultyFactors[difficulty]?.factor||1;
-      const access=document.getElementById('calcAccess')?.value||'normal';
-      const accessFactor=accessFactors[access]?.factor||1;
-      const height=document.getElementById('calcHeight')?.value||'ground';
-      const heightFactor=heightFactors[height]?.factor||1;
-      const complexity=document.getElementById('calcComplexity')?.value||'normal';
-      const complexityFactor=complexityFactors[complexity]?.factor||1;
+      const accessFactor=1; // Fixed to normal
+      const heightFactor=1; // Fixed to ground
+      const complexityFactor=1; // Fixed to normal
       const distance=parseFloat(document.getElementById('calcDistance')?.value)||0;
       const occupied=document.getElementById('calcOccupied')?.checked||false;
       const occupiedFactor=occupied?1.25:1;
@@ -1046,7 +1533,7 @@
         materialsWithPrices, totalMatCost,
         laborSaleEx, totalSaleEx, profit, margin,
         type, sentToOffer:false,
-        factors:{difficulty,access,height,complexity,distance,occupied}
+        factors:{difficulty,distance,occupied}
       };
 
       // Build results HTML
@@ -1068,50 +1555,47 @@
             </div>
           </div>
 
-          <table style="margin-bottom:12px;width:100%;border-collapse:collapse;font-size:11px">
-            <thead><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px">Materiale</th><th style="text-align:right;padding:6px">Mnd</th><th style="text-align:right;padding:6px">Pris</th><th style="text-align:right;padding:6px">Svinn%</th><th style="text-align:right;padding:6px">Total</th><th style="text-align:center;padding:6px">Handling</th></tr></thead>
+           <table style="margin-bottom:12px;width:100%;border-collapse:collapse;font-size:11px">
+            <thead><tr style="border-bottom:2px solid var(--line);background:#f8faff"><th style="text-align:left;padding:8px;font-weight:700">Materiale</th><th style="text-align:center;padding:8px;font-weight:700">Antall</th><th style="text-align:center;padding:8px;font-weight:700">Enhet</th><th style="text-align:right;padding:8px;font-weight:700">Pris</th><th style="text-align:center;padding:8px;font-weight:700">Svinn%</th><th style="text-align:center;padding:8px;font-weight:700">Påslag%</th><th style="text-align:right;padding:8px;font-weight:700">Total</th><th style="text-align:center;padding:8px"></th></tr></thead>
             <tbody id="calcMaterialsTableBody">
-              ${materialsWithPrices.map(m=>`<tr style="border-bottom:1px solid #eef2ff" data-mat-id="${m.matId}">
-                <td style="padding:6px">
-                  <div style="display:flex;gap:4px;align-items:center">
-                    <input type="text" class="calcMatName" data-mat-id="${m.matId}" value="${escapeHtml(m.name||'')}"
-                           style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px"
-                           onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                    <select class="calcMatCatalog" data-mat-id="${m.matId}" style="padding:4px;font-size:11px;border:1px solid #0a84ff;border-radius:4px;background:#fff;width:70px"
-                            onchange="const v=this.value; if(v) applyCatalogMatch('${m.matId}',v); this.value=''" title="Velg fra katalog">
-                      <option value="">🔍 Kat</option>
-                      ${Object.entries(window.buildPriceCatalogMap?.()??{})
-                        .filter(([name])=>name.toLowerCase().includes((m.name||'').toLowerCase()))
-                        .slice(0,4)
-                        .map(([name,item])=>'<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>')
-                        .join('')}
+              ${materialsWithPrices.map(m=>{
+                const p=getProject(currentProjectId);
+                const calcMarkup=(p?.settings?.materialMarkup)||20;
+                return `<tr style="border-bottom:1px solid #eef2ff" data-mat-id="${m.matId}">
+                  <td style="padding:8px;min-width:200px;position:relative">
+                    <input type="text" class="calcMatName" data-mat-id="${m.matId}" value="${escapeHtml(m.name||'')}" placeholder="Søk materiale..." style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer" onclick="openPriceSearchForCalc('${m.matId}')" readonly />
+                  </td>
+                  <td style="text-align:center;padding:8px">
+                    <input type="number" class="calcMatQty" data-mat-id="${m.matId}" value="${(m.qty||0).toFixed(1)}" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  </td>
+                  <td style="text-align:center;padding:8px">
+                    <select class="calcMatUnit" data-mat-id="${m.matId}" style="padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;width:60px" onchange="recalcCalcMaterials()">
+                      ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===(m.unit||'stk')?'selected':'')+'> '+u+'</option>').join('')}
                     </select>
-                  </div>
-                </td>
-                <td style="text-align:right;padding:6px">
-                  <input type="number" class="calcMatQty" data-mat-id="${m.matId}" value="${(m.qty||0).toFixed(1)}" step="0.1" min="0"
-                         style="width:55px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right"
-                         onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                </td>
-                <td style="text-align:right;padding:6px">
-                  <input type="number" class="calcMatCost" data-mat-id="${m.matId}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0"
-                         style="width:60px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right"
-                         onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                </td>
-                <td style="text-align:right;padding:6px">
-                  <input type="number" class="calcMatWaste" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100"
-                         style="width:50px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right"
-                         onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                </td>
-                <td style="text-align:right;padding:6px;font-weight:700">
-                  <span class="calcMatRowTotal" data-mat-id="${m.matId}" style="color:#0a84ff">${currency((m.qty||0)*(m.cost||0))}</span>
-                </td>
-                <td style="text-align:center;padding:6px">
-                  <button class="btn" style="padding:2px 6px;font-size:10px;background:#fff3cd;border:1px solid #ffc107;cursor:pointer" onclick="deleteCalcMaterial('${m.matId}')">🗑️</button>
-                </td>
-              </tr>`).join('')}
+                  </td>
+                  <td style="text-align:right;padding:8px">
+                    <input type="number" class="calcMatCost" data-mat-id="${m.matId}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  </td>
+                  <td style="text-align:center;padding:8px">
+                    <input type="number" class="calcMatWaste" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  </td>
+                  <td style="text-align:center;padding:8px">
+                    <input type="number" class="calcMatMarkup" data-mat-id="${m.matId}" value="${m.markup||calcMarkup}" step="1" min="0" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  </td>
+                  <td style="text-align:right;padding:8px;font-weight:700;min-width:75px">
+                    <span class="calcMatRowTotal" data-mat-id="${m.matId}" style="color:#0a84ff">${currency(calcMatRowTotal(m))}</span>
+                  </td>
+                  <td style="text-align:center;padding:8px">
+                    <button class="btn small" style="padding:4px 8px;font-size:10px;background:#ffebee;color:#c62828;border:1px solid #ef5350;border-radius:4px;cursor:pointer" onclick="deleteCalcMaterial('${m.matId}')">✕</button>
+                  </td>
+                </tr>`
+              }).join('')}
             </tbody>
           </table>
+          <div style="margin-bottom:12px">
+            <button class="btn secondary" style="width:100%;padding:10px;font-size:12px;background:#f0f7ff;border:1px dashed #0a84ff;cursor:pointer" onclick="addCalcMaterial()">➕ Legg til materiale</button>
+          </div>
+
           <div style="margin-bottom:12px">
             <button class="btn secondary" style="width:100%;padding:8px;font-size:11px;background:#f0f7ff;border:1px dashed #0a84ff;cursor:pointer" onclick="addCalcMaterial()">➕ Legg til materiale</button>
           </div>
@@ -1158,119 +1642,6 @@
             :''
           }
         </div>`;
-    };
-
-    // Recalculate material totals and update pricing
-    window.recalcCalcMaterials=function(){
-      const result=window._lastCalcResult;
-      if(!result||!result.materialsWithPrices) return;
-      const rows=Array.from(document.querySelectorAll('tr[data-mat-id]'));
-      const newMaterials=[];
-      rows.forEach(row=>{
-        const matId=row.dataset.matId;
-        const name=row.querySelector('.calcMatName')?.value||'';
-        const qty=parseFloat(row.querySelector('.calcMatQty')?.value)||0;
-        const cost=parseFloat(row.querySelector('.calcMatCost')?.value)||0;
-        const waste=parseFloat(row.querySelector('.calcMatWaste')?.value)||0;
-        const unit=(result.materialsWithPrices.find(m=>m.matId===matId)?.unit)||'stk';
-        const totalCost=Math.round(qty*cost);
-        newMaterials.push({matId,name,qty,cost,waste,unit,totalCost});
-        const totalSpan=row.querySelector('.calcMatRowTotal');
-        if(totalSpan) totalSpan.textContent=currency(totalCost);
-      });
-      result.materialsWithPrices=newMaterials;
-      result.totalMatCost=newMaterials.reduce((s,m)=>s+(m.totalCost||0),0);
-      const p=getProject(currentProjectId);
-      const laborSaleEx=result.laborSaleEx;
-      const totalSaleEx=laborSaleEx+result.totalMatCost;
-      const laborCost=Math.round(result.directTimer*(p?.work.internalCost||450));
-      const totalCost=laborCost+result.totalMatCost;
-      const profit=totalSaleEx-totalCost;
-      const margin=totalSaleEx>0?Math.round(profit/totalSaleEx*100):0;
-      result.profit=profit; result.margin=margin; result.totalSaleEx=totalSaleEx; result.totalCost=totalCost;
-      const matGridDiv=document.querySelector('div[style*="grid-template-columns:repeat(3"]');
-      if(matGridDiv){
-        matGridDiv.innerHTML=`<div><div style="font-size:11px;color:var(--muted);font-weight:700">🔨 Arbeid (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#0a84ff;margin-top:2px">${currency(laborSaleEx)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700">🪵 Materialer</div><div style="font-size:16px;font-weight:800;color:#167a42;margin-top:2px">${currency(result.totalMatCost)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700">💰 Totalt (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#2e7d32;margin-top:2px">${currency(totalSaleEx)}</div></div>`;
-      }
-      const marginDiv=document.querySelector('div[style*="background:#f0f7ff"][style*="margin"]');
-      if(marginDiv){
-        const marginValueEl=marginDiv.querySelector('div[style*="font-size:22px"]');
-        const profitEl=marginDiv.querySelector('div[style*="font-size:10px"]');
-        if(marginValueEl) marginValueEl.textContent=margin+'%';
-        if(profitEl) profitEl.textContent='Fortjeneste: '+currency(profit);
-      }
-      result.sentToOffer=false;
-      updateCalcSendButtonUI();
-    };
-
-    // Apply catalog selection to material
-    window.applyCatalogMatch=function(matId,productName){
-      const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
-      const item=priceCatalogMap[productName];
-      if(!item) return;
-      const row=document.querySelector('tr[data-mat-id="'+matId+'"]');
-      if(row){
-        row.querySelector('.calcMatName').value=item.name||'';
-        row.querySelector('.calcMatCost').value=(item.cost||0).toFixed(2);
-        recalcCalcMaterials();
-      }
-    };
-
-    // Delete material row
-    window.deleteCalcMaterial=function(matId){
-      const row=document.querySelector('tr[data-mat-id="'+matId+'"]');
-      if(row) row.remove();
-      recalcCalcMaterials();
-    };
-
-    // Add new material row
-    window.addCalcMaterial=function(){
-      const result=window._lastCalcResult;
-      if(!result) return;
-      const newMat={matId:uid(),name:'',qty:1,cost:0,waste:0,unit:'stk',totalCost:0};
-      result.materialsWithPrices.push(newMat);
-      const tbody=document.getElementById('calcMaterialsTableBody');
-      if(tbody){
-        const newRow=document.createElement('tr');
-        newRow.style.borderBottom='1px solid #eef2ff';
-        newRow.dataset.matId=newMat.matId;
-        newRow.innerHTML=`<td style="padding:6px">
-          <div style="display:flex;gap:4px;align-items:center">
-            <input type="text" class="calcMatName" data-mat-id="${newMat.matId}" value="" style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-            <select class="calcMatCatalog" data-mat-id="${newMat.matId}" style="padding:4px;font-size:11px;border:1px solid #0a84ff;border-radius:4px;background:#fff;width:70px" onchange="const v=this.value; if(v) applyCatalogMatch('${newMat.matId}',v); this.value=''" title="Velg fra katalog">
-              <option value="">🔍 Kat</option>
-            </select>
-          </div>
-        </td>
-        <td style="text-align:right;padding:6px">
-          <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:right;padding:6px">
-          <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="0.00" step="0.01" min="0" style="width:60px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:right;padding:6px">
-          <input type="number" class="calcMatWaste" data-mat-id="${newMat.matId}" value="0" step="1" min="0" max="100" style="width:50px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:right;padding:6px;font-weight:700">
-          <span class="calcMatRowTotal" data-mat-id="${newMat.matId}" style="color:#0a84ff">kr 0</span>
-        </td>
-        <td style="text-align:center;padding:6px">
-          <button class="btn" style="padding:2px 6px;font-size:10px;background:#fff3cd;border:1px solid #ffc107;cursor:pointer" onclick="deleteCalcMaterial('${newMat.matId}')">🗑️</button>
-        </td>`;
-        tbody.appendChild(newRow);
-      }
-    };
-
-    // Update send button state
-    window.updateCalcSendButtonUI=function(){
-      const result=window._lastCalcResult;
-      const btnsDiv=document.querySelector('div[style*="display:flex"][style*="gap:8px"]');
-      if(!btnsDiv||!result) return;
-      btnsDiv.innerHTML=result.sentToOffer
-        ?`<button class="btn" style="flex:1;background:#e8f5e9;color:#2e7d32;border:1px solid #b7e7bb;cursor:not-allowed" disabled>✅ Sendt til tilbud</button><button class="btn secondary" style="flex:1" onclick="doAddCalcToMaterials()">➕ Legg i materialliste</button>`
-        :`<button class="btn primary" style="flex:1;background:#0a84ff" onclick="doSendCalcToOffer()">📤 Send til tilbud</button><button class="btn secondary" style="flex:1" onclick="doAddCalcToMaterials()">➕ Legg i materialliste</button>`;
     };
 
     window.doSendCalcToOffer=function(){
@@ -1956,3 +2327,23 @@
     // Hide app until auth verified
     document.querySelector('.app').style.display='none';
     initAuth();
+
+    // ── DELETE MATERIAL FROM CALC ──────────────────────
+window.deleteCalcMaterial=function(matId){
+  const result=window._lastCalcResult;
+  if(!result || !result.materialsWithPrices) return;
+
+  // fjern fra data
+  result.materialsWithPrices = result.materialsWithPrices.filter(m => m.matId !== matId);
+
+  // fjern fra UI
+  const row=document.querySelector('tr[data-mat-id="'+matId+'"]');
+  if(row) row.remove();
+
+  // recalc etter slett
+  recalcCalcMaterials();
+};
+
+window.updateCalcSendButtonUI=function(){
+  // gjør ingenting foreløpig – bare unngår crash
+};
