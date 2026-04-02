@@ -87,6 +87,37 @@
       return match ? (match.userPrice||0) : 0;
     }
 
+    // Auto-kalkyle: smart price matching against priceCatalogMap
+    function autoMatchPrice(name, priceCatalogMap){
+      if(!name) return null;
+      // 1. Exact match
+      if(priceCatalogMap[name]) return priceCatalogMap[name];
+      // 2. Substring match (key contains name or name contains key)
+      const q=name.toLowerCase();
+      const keys=Object.keys(priceCatalogMap);
+      for(let i=0;i<keys.length;i++){
+        const k=keys[i].toLowerCase();
+        if(q.includes(k) && k.length>3) return priceCatalogMap[keys[i]];
+        if(k.includes(q) && q.length>3) return priceCatalogMap[keys[i]];
+      }
+      // 3. Token-based: match if ≥50% of tokens hit
+      const tokens=q.split(/[\s×\/\-]+/).filter(t=>t.length>2);
+      if(tokens.length===0) return null;
+      let bestMatch=null, bestScore=0;
+      for(let i=0;i<keys.length;i++){
+        const k=keys[i].toLowerCase();
+        let score=0;
+        for(let j=0;j<tokens.length;j++){
+          if(k.includes(tokens[j])) score++;
+        }
+        if(score>bestScore && score>=Math.ceil(tokens.length*0.4)){
+          bestScore=score;
+          bestMatch=priceCatalogMap[keys[i]];
+        }
+      }
+      return bestMatch;
+    }
+
     window.copyArtikkelNummer=function(artnr,el){
       navigator.clipboard.writeText(artnr).then(()=>{
         if(el){
@@ -892,7 +923,7 @@
       const rows=mats.length ? mats.map((m,i)=>`
         <div style="display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;background:${m.cost===0?'#fffbea':'#f8faff'};border:1px solid ${m.cost===0?'#fde68a':'var(--line)'};border-radius:12px;margin-bottom:5px">
           <div>
-            <div style="font-weight:700;font-size:13px">${escapeHtml(m.name)}</div>
+            <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn..." style="font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;width:100%" onchange="window._cpm[${i}].name=this.value" />
             ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">🔖 ${escapeHtml(m.itemNo)}</div>`:''}
           </div>
           <input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" />
@@ -977,8 +1008,13 @@
     window.rerenderCalcModal=rerenderCalcModal;
 
     window.addBlankToCalcModal=function(){
-      window._cpm.push({id:(Math.random().toString(36).slice(2,10)),name:'Nytt materiale',qty:1,unit:'stk',cost:0,waste:0,markup:20});
+      window._cpm.push({id:(Math.random().toString(36).slice(2,10)),name:'',qty:1,unit:'stk',cost:0,waste:0,markup:20});
       rerenderCalcModal();
+      setTimeout(()=>{
+        const rows=document.querySelectorAll('#calcMatRows > div');
+        const last=rows[rows.length-1];
+        if(last){ const inp=last.querySelector('input'); if(inp){ inp.focus(); inp.placeholder='Skriv materialenavn...'; } }
+      },50);
     };
 
     window.adjustTotalHours=function(delta){
@@ -1508,16 +1544,22 @@
       const indirectTimer=rigTimer+planTimer+drivingTimer+cleanupTimer;
       const totalTimer=directTimer+indirectTimer;
 
-      // Get materials with prices
+      // Get materials with prices (auto-kalkyle: smart matching + markup + waste)
       const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
+      const p=getProject(currentProjectId);
+      const calcMarkup=(p?.settings?.materialMarkup)||20;
       const materialsWithPrices=result.materialer.map(m=>{
-        const cost=priceCatalogMap[m.name]?.cost||lookupPriceForMaterial(m.name)||0;
-        return {...m, cost, totalCost:Math.round(m.qty*cost), matId:uid()};
+        const priceMatch=autoMatchPrice(m.name, priceCatalogMap);
+        const cost=priceMatch?.cost||lookupPriceForMaterial(m.name)||0;
+        const unit=m.unit||priceMatch?.unit||'stk';
+        const waste=m.waste||0;
+        const markup=m.markup!=null?m.markup:calcMarkup;
+        const totalCost=calcMatRowTotal({qty:m.qty,cost,waste,markup});
+        return {...m, cost, unit, waste, markup, totalCost, matId:uid()};
       });
       const totalMatCost=materialsWithPrices.reduce((s,m)=>s+m.totalCost,0);
 
       // Calculate prices
-      const p=getProject(currentProjectId);
       const timeRate=(p?.work.timeRate)||850;
       const laborSaleEx=Math.round(directTimer*timeRate*occupiedFactor);
       const totalSaleEx=laborSaleEx+totalMatCost;
@@ -1596,10 +1638,6 @@
             <button class="btn secondary" style="width:100%;padding:10px;font-size:12px;background:#f0f7ff;border:1px dashed #0a84ff;cursor:pointer" onclick="addCalcMaterial()">➕ Legg til materiale</button>
           </div>
 
-          <div style="margin-bottom:12px">
-            <button class="btn secondary" style="width:100%;padding:8px;font-size:11px;background:#f0f7ff;border:1px dashed #0a84ff;cursor:pointer" onclick="addCalcMaterial()">➕ Legg til materiale</button>
-          </div>
-
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;padding:12px;background:#f5f8ff;border-radius:10px">
             <div>
               <div style="font-size:11px;color:var(--muted);font-weight:700">🔨 Arbeid (eks. mva)</div>
@@ -1670,13 +1708,15 @@
 
       if(!p.offerPosts) p.offerPosts=[];
 
-      // Create offer post from calculation
-      const calcName=window.calcDefs[result.type]?.label||result.type||'Kalkyle';
+      // Create offer post from calculation — let user edit name
+      const defaultName=window.calcDefs[result.type]?.label||result.type||'Kalkyle';
+      const calcName=prompt('Navn på posten i tilbudet:',defaultName);
+      if(calcName===null) return;
       const totalPrice=result.totalMatCost||0;
 
       p.offerPosts.push({
         id:uid(),
-        name:'Kalkyle: '+calcName,
+        name:calcName||defaultName,
         description:(result.timer||0)+'t + '+snapshotMats.length+' materialer',
         type:'calc',
         price:Math.round(totalPrice),
@@ -2006,9 +2046,10 @@
       var id=post.id;
       if(post.type==='option'){
         var chk=post.enabled?'checked':'';
-        return '<label style="display:flex;align-items:center;gap:8px;margin-top:34px">'
+        return '<label style="display:flex;align-items:center;gap:8px;margin-top:10px">'
           +'<input style="width:auto" type="checkbox" '+chk
-          +' onchange="togglePost(\x27'+id+'\x27,this.checked)" /> Valgt opsjon</label>';
+          +' onchange="togglePost(\x27'+id+'\x27,this.checked)" /> Valgt opsjon</label>'
+          +'<div style="margin-top:8px"><button class="btn small secondary" style="font-size:12px" onclick="openPostMaterialEditor(\x27'+id+'\x27)">✏️ Tilpass</button></div>';
       } else if(post.type==='calc'){
         return '<div style="margin-top:6px;font-size:12px;color:var(--muted)">📦 Materialer + ⏱️ arbeid inkludert</div>'
           +'<button class="btn small soft" style="font-size:12px;margin-top:6px" onclick="restoreCalcPost(\x27'+id+'\x27)">✏️ Tilpass</button>';
@@ -2078,8 +2119,13 @@
     function addOfferPost(){
       const p=getProject(currentProjectId); if(!p) return;
       if(!p.offerPosts) p.offerPosts=[];
-      p.offerPosts.push({id:uid(),name:'Ny post',description:'',type:'fast',price:0,enabled:true});
+      const newId=uid();
+      p.offerPosts.push({id:newId,name:'',description:'',type:'fast',price:0,enabled:true,_open:true});
       persistAndRenderProject();
+      setTimeout(()=>{
+        const nameInput=document.querySelector('input[onchange*="'+newId+'"][onchange*="name"]');
+        if(nameInput){ nameInput.focus(); nameInput.placeholder='Skriv inn postnavn...'; }
+      },50);
     }
 
     function addSuggestedMaterialsAsPost(allOperations){
@@ -2210,7 +2256,7 @@
     window.toggleOfferPost=function(id){
       const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
       const post=p.offerPosts.find(x=>x.id===id); if(!post) return;
-      post._open=(post._open===false)?true:false;
+      post._open=!post._open;
       persistAndRenderProject();
     };
 

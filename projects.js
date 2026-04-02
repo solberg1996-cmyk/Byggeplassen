@@ -277,14 +277,22 @@
       if(!state.priceCatalog || !state.priceCatalog.length) return map;
 
       state.priceCatalog.forEach(function(item){
-        var matchName = item.productName || item.name || '';
-        if(matchName){
-          matchName = matchName.trim();
-          map[matchName] = {
-            cost: item.userPrice || 0,
-            unit: item.unit || 'stk',
-            itemNo: item.itemNo || ''
-          };
+        var productName = (item.productName || '').trim();
+        var description = (item.description || '').trim();
+        var fullName = (item.name || '').trim();
+        var entry = {
+          cost: item.userPrice || 0,
+          unit: item.unit || 'stk',
+          itemNo: item.itemNo || ''
+        };
+        // Index by productName (short)
+        if(productName && !map[productName]) map[productName] = entry;
+        // Index by full name (productName + description combined)
+        if(fullName && !map[fullName]) map[fullName] = entry;
+        // Index by "productName description" if different
+        if(productName && description){
+          var combined = productName + ' ' + description;
+          if(!map[combined]) map[combined] = entry;
         }
       });
       return map;
