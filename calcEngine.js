@@ -298,8 +298,8 @@ function compute(project){
       const postHours=Number(post.hours)||post.snapshotCompute.hoursTotal||0;
       snapHours+=postHours;
       const riskFactor={Lav:1,Normal:1.1,'Høy':1.2}[work.risk]||1.1;
-      const rate=post.snapshotCompute.laborSaleEx/(post.snapshotCompute.hoursTotal||1)/riskFactor;
-      const internalRate=post.snapshotCompute.laborCost/(post.snapshotCompute.hoursTotal||1);
+      const rate=(post.snapshotCompute.laborSaleEx||0)/(post.snapshotCompute.hoursTotal||1)/riskFactor;
+      const internalRate=(post.snapshotCompute.laborCost||0)/(post.snapshotCompute.hoursTotal||1);
       snapLaborSaleEx+=postHours*rate*riskFactor;
       snapLaborCost+=postHours*internalRate;
     }

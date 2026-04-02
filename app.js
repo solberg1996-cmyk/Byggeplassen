@@ -920,10 +920,14 @@
 
       const pctOpts=[0,5,8,10,12,15,20,25,30];
 
-      const rows=mats.length ? mats.map((m,i)=>`
-        <div style="display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;background:${m.cost===0?'#fffbea':'#f8faff'};border:1px solid ${m.cost===0?'#fde68a':'var(--line)'};border-radius:12px;margin-bottom:5px">
+      const rows=mats.length ? mats.map((m,i)=>{
+        const rowBg=m.groupColor?(m.groupColor+'18'):(m.cost===0?'#fffbea':'#f8faff');
+        const rowBorder=m.groupColor?(m.groupColor+'40'):(m.cost===0?'#fde68a':'var(--line)');
+        return `
+        <div style="display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;background:${rowBg};border:1px solid ${rowBorder};border-radius:12px;margin-bottom:5px${m.groupColor?';border-left:3px solid '+m.groupColor:''}">
           <div>
             <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn..." style="font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;width:100%" onchange="window._cpm[${i}].name=this.value" />
+            ${m.groupName?`<div style="font-size:10px;color:${m.groupColor||'var(--muted)'};margin-top:1px">${escapeHtml(m.groupName)}</div>`:''}
             ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">🔖 ${escapeHtml(m.itemNo)}</div>`:''}
           </div>
           <input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" />
@@ -936,7 +940,8 @@
             ${pctOpts.map(v=>`<option value="${v}" ${(m.markup||20)==v?'selected':''}>${v}%</option>`).join('')}
           </select>
           <button style="border:none;background:#fff1f0;color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
-        </div>`).join('')
+        </div>`;
+      }).join('')
         : '<div class="empty">Ingen materialer enda.</div>';
 
       const searchResults=window._cpmSearch ? searchPriceCatalog(window._cpmSearch) : [];
@@ -957,12 +962,34 @@
       const offerPost=postId&&getProject(currentProjectId)?.offerPosts?.find(x=>x.id===postId);
       const calcHours=offerPost?.snapshotCompute?.hoursTotal||0;
       const currentHours=offerPost?Number(offerPost.hours)||calcHours:0;
+      const laborGrps=offerPost&&offerPost.laborGroups&&offerPost.laborGroups.length?offerPost.laborGroups:null;
+      const laborGroupsHtml=laborGrps?laborGrps.map((g,gi)=>`
+        <div style="background:${g.groupColor+'18'};border:1px solid ${g.groupColor+'40'};border-left:3px solid ${g.groupColor};border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:16px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;margin-bottom:2px;color:${g.groupColor}">⏱️ Timer ${escapeHtml(g.groupName)}</div>
+            <div style="font-size:12px;color:var(--muted)">Beregnet: ${g.hours||0}t</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <button onclick="adjustLaborGroupHours(${gi},1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
+            <div id="laborGroupHours_${gi}" style="font-size:28px;font-weight:800;color:${g.groupColor};min-width:70px;text-align:center">${g.hours||0}</div>
+            <button onclick="adjustLaborGroupHours(${gi},-1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">timer</div>
+        </div>`).join(''):'';
+
       const html=`
         <div class="section-head">
           <div class="section-title">✏️ Tilpass post</div>
           <button class="btn small secondary" onclick="closeModal()">Lukk</button>
         </div>
-        ${offerPost?`
+        ${laborGrps?`
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Arbeid per gruppe</div>
+        ${laborGroupsHtml}
+        <div style="padding:8px 12px;background:#f5f8ff;border-radius:10px;border:1px solid #dce8ff;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:700;color:var(--muted)">Sum timer</span>
+          <span id="laborGroupTotalHours" style="font-size:16px;font-weight:800">${laborGrps.reduce((s,g)=>s+(g.hours||0),0)}t</span>
+        </div>
+        `:(offerPost?`
         <div style="background:#fffbea;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;margin-bottom:2px">⏱️ Timer for denne posten</div>
@@ -974,7 +1001,7 @@
             <button onclick="adjustModalHours(-1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
           </div>
           <div style="font-size:12px;color:var(--muted)">timer<br><span style="font-size:10px">Fra kalkyle: ${calcHours||0}t</span></div>
-        </div>`:``}
+        </div>`:``)}
 
 
 
@@ -1713,19 +1740,28 @@
       const calcName=prompt('Navn på posten i tilbudet:',defaultName);
       if(calcName===null) return;
       const totalPrice=result.totalMatCost||0;
+      const riskFactor={Lav:1,Normal:1.1,'Høy':1.2}[p.work.risk]||1.1;
+      const calcHours=result.timer||0;
+      const calcLaborSaleEx=Math.round(calcHours*(Number(p.work.timeRate)||850)*riskFactor);
+      const calcLaborCost=Math.round(calcHours*(Number(p.work.internalCost)||0));
+      const calcSaleEx=calcLaborSaleEx+totalPrice;
 
       p.offerPosts.push({
         id:uid(),
         name:calcName||defaultName,
-        description:(result.timer||0)+'t + '+snapshotMats.length+' materialer',
+        description:calcHours+'t + '+snapshotMats.length+' materialer',
         type:'calc',
-        price:Math.round(totalPrice),
+        price:Math.round(calcSaleEx),
         enabled:true,
         snapshotMaterials:snapshotMats,
         snapshotCompute:{
-          hoursTotal:result.timer||0,
+          hoursTotal:calcHours,
+          laborSaleEx:calcLaborSaleEx,
+          laborCost:calcLaborCost,
           matSaleEx:totalPrice,
-          matCost:totalPrice
+          matCost:totalPrice,
+          saleEx:calcSaleEx,
+          costPrice:calcLaborCost+totalPrice
         }
       });
 
@@ -1742,12 +1778,15 @@
       }
 
       persistAndRenderProject();
-      document.getElementById('calcWidget')?.classList.add('hidden');
 
-      // Re-render results to update button status
-      if(document.getElementById('calcResults')){
-        runCalcWidget();
-      }
+      // Reset calc widget for next calculation (don't hide it)
+      const jobSelect=document.getElementById('calcJobType');
+      if(jobSelect) jobSelect.value='';
+      const inputsEl=document.getElementById('calcInputs');
+      if(inputsEl) inputsEl.innerHTML='';
+      const resultsEl=document.getElementById('calcResults');
+      if(resultsEl) resultsEl.innerHTML='';
+      window._lastCalcResult=null;
     };
 
     window.doAddCalcToMaterials=function(){
@@ -1867,6 +1906,22 @@
       if(el) el.textContent=newVal+'t';
     };
 
+    window.adjustLaborGroupHours=function(groupIdx,delta){
+      const p=getProject(currentProjectId); if(!p) return;
+      const postId=window._cpmPostId;
+      const post=postId&&p.offerPosts&&p.offerPosts.find(x=>x.id===postId);
+      if(!post||!post.laborGroups||!post.laborGroups[groupIdx]) return;
+      var g=post.laborGroups[groupIdx];
+      g.hours=Math.max(0,(g.hours||0)+delta);
+      var el=document.getElementById('laborGroupHours_'+groupIdx);
+      if(el) el.textContent=g.hours;
+      var totalEl=document.getElementById('laborGroupTotalHours');
+      if(totalEl){
+        var sum=post.laborGroups.reduce(function(s,lg){return s+(lg.hours||0);},0);
+        totalEl.textContent=sum+'t';
+      }
+    };
+
         window.saveCalcPostMaterials=function(){
       const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
       const post=p.offerPosts.find(x=>x.id===window._cpmPostId); if(!post) return;
@@ -1888,10 +1943,21 @@
       const timeRate=Number(p.work.timeRate)||850;
       const internalCost=Number(p.work.internalCost)||0;
       const prev=post.snapshotCompute||{};
-      // If user changed hours via ▲▼, use that; else keep existing hoursTotal
-      const hoursTotal=window._pendingPostHours!=null
-        ? window._pendingPostHours
-        : (prev.hoursTotal||0);
+
+      // If labor groups exist, sum hours from groups; otherwise use pending/existing
+      let hoursTotal;
+      if(post.laborGroups&&post.laborGroups.length){
+        hoursTotal=post.laborGroups.reduce(function(s,g){return s+(g.hours||0);},0);
+        // Recalc each group's labor values
+        post.laborGroups.forEach(function(g){
+          g.laborSaleEx=Math.round((g.hours||0)*timeRate*riskFactor);
+          g.laborCost=Math.round((g.hours||0)*internalCost);
+        });
+      } else {
+        hoursTotal=window._pendingPostHours!=null
+          ? window._pendingPostHours
+          : (prev.hoursTotal||0);
+      }
       window._pendingPostHours=null;
       // Recalculate labor from hours
       const laborSaleEx=hoursTotal*timeRate*riskFactor;
@@ -2064,12 +2130,19 @@
       if(!p.offerPosts) p.offerPosts=[];
       if(!p.offerPosts.length) return `<div class="empty">Ingen tilbudsposter lagt til enda.</div>`;
       const vatLbl='eks. mva';
-      return p.offerPosts.map(post=>{
+      const selCount=Object.keys(window._mergeSelected||{}).filter(function(id){return window._mergeSelected[id];}).length;
+      const mergeBar=p.offerPosts.length>=2?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:10px">
+        <span style="font-size:12px;color:var(--muted);flex:1">Velg poster å slå sammen (${selCount} valgt)</span>
+        <button class="btn small primary" onclick="doMergeSelected()" ${selCount<2?'disabled style="opacity:0.5"':''}>Slå sammen</button>
+      </div>`:'';
+      return mergeBar+p.offerPosts.map(post=>{
         const isOpen=post._open===true; // default closed
         const typeLabel=post.type==='calc'?'Kalkyle':post.type==='option'?'Opsjon':'Fast';
+        const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
 
-        const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'#f8faff':'#fff'};border-radius:${isOpen?'14px 14px 0 0':'14px'}" onclick="toggleOfferPost('${post.id}')">
-          <div style="flex:1;min-width:0">
+        const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'#f8faff':'#fff'};border-radius:${isOpen?'14px 14px 0 0':'14px'}">
+          <input type="checkbox" style="width:auto;flex-shrink:0" ${isMergeSel?'checked':''} onclick="event.stopPropagation();toggleMergeSelect('${post.id}')" title="Velg for sammenslåing" />
+          <div style="flex:1;min-width:0" onclick="toggleOfferPost('${post.id}')">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-weight:800;font-size:14px">${escapeHtml(post.name||'Ny post')}</span>
               <span style="font-size:11px;color:var(--muted);background:#f0f0f0;border-radius:4px;padding:1px 6px">${typeLabel}</span>
@@ -2077,11 +2150,11 @@
             </div>
             ${post.description&&!isOpen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(post.description)}</div>`:''}
           </div>
-          <div style="text-align:right;flex-shrink:0">
+          <div style="text-align:right;flex-shrink:0" onclick="toggleOfferPost('${post.id}')">
             <div style="font-size:17px;font-weight:800;color:${post.type==='option'&&!post.enabled?'var(--muted)':'#0a84ff'}">${currency(displayVatValue(p,post.price||0))}</div>
             <div style="font-size:10px;color:var(--muted)">${vatLbl}</div>
           </div>
-          <div style="color:var(--muted);font-size:13px;margin-left:2px">${isOpen?'▲':'▼'}</div>
+          <div style="color:var(--muted);font-size:13px;margin-left:2px;cursor:pointer" onclick="toggleOfferPost('${post.id}')">${isOpen?'▲':'▼'}</div>
         </div>`;
 
         const body=isOpen?`<div style="padding:12px 14px 14px;border-top:1px solid var(--line)">
@@ -2276,6 +2349,88 @@
     function togglePost(id,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post.enabled=!!val; persistAndUpdate(); }
     function removePost(id){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; p.offerPosts=p.offerPosts.filter(x=>x.id!==id); persistAndRenderProject(); }
     function movePost(id,dir){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const idx=p.offerPosts.findIndex(x=>x.id===id); if(idx<0) return; const ni=idx+dir; if(ni<0||ni>=p.offerPosts.length) return; [p.offerPosts[idx],p.offerPosts[ni]]=[p.offerPosts[ni],p.offerPosts[idx]]; persistAndRenderProject(); }
+
+    var MERGE_GROUP_COLORS=['#4a90d9','#e67e22','#27ae60','#8e44ad','#c0392b','#16a085','#d4ac0d','#2c3e50'];
+    window._mergeSelected={};
+
+    window.toggleMergeSelect=function(id){
+      if(window._mergeSelected[id]) delete window._mergeSelected[id];
+      else window._mergeSelected[id]=true;
+      persistAndRenderProject();
+    };
+
+    window.mergeOfferLines=function(postIds){
+      var p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
+      if(!postIds||postIds.length<2) return;
+      var posts=postIds.map(function(id){return p.offerPosts.find(function(x){return x.id===id;});}).filter(Boolean);
+      if(posts.length<2) return;
+
+      var mergedMats=[], mergedHours=0, mergedLaborSaleEx=0, mergedLaborCost=0;
+      var mergedMatCost=0, mergedMatSaleEx=0, mergedPrice=0;
+      var laborGroups=[];
+      var colorIdx=0;
+
+      posts.forEach(function(post){
+        var color=MERGE_GROUP_COLORS[colorIdx % MERGE_GROUP_COLORS.length];
+        colorIdx++;
+        (post.snapshotMaterials||[]).forEach(function(m){
+          var tagged={};
+          Object.keys(m).forEach(function(k){tagged[k]=m[k];});
+          tagged.groupId=post.id;
+          tagged.groupName=post.name||'Post';
+          tagged.groupColor=color;
+          mergedMats.push(tagged);
+        });
+        var sc=post.snapshotCompute||{};
+        var postHours=Number(post.hours)||sc.hoursTotal||0;
+        mergedHours+=postHours;
+        mergedLaborSaleEx+=sc.laborSaleEx||0;
+        mergedLaborCost+=sc.laborCost||0;
+        mergedMatCost+=sc.matCost||0;
+        mergedMatSaleEx+=sc.matSaleEx||0;
+        mergedPrice+=Number(post.price)||0;
+        laborGroups.push({
+          groupId:post.id,
+          groupName:post.name||'Post',
+          groupColor:color,
+          hours:postHours,
+          laborSaleEx:sc.laborSaleEx||0,
+          laborCost:sc.laborCost||0
+        });
+      });
+
+      var names=posts.map(function(post){return post.name||'Post';});
+      var mergedName=names.join(' + ');
+
+      var newPost={
+        id:uid(),
+        name:mergedName,
+        description:'Sammenslått fra '+posts.length+' poster',
+        type:'calc',
+        price:Math.round(mergedPrice),
+        enabled:true,
+        snapshotMaterials:mergedMats,
+        laborGroups:laborGroups,
+        snapshotCompute:{
+          hoursTotal:mergedHours,
+          laborSaleEx:mergedLaborSaleEx,
+          laborCost:mergedLaborCost,
+          matCost:mergedMatCost,
+          matSaleEx:mergedMatSaleEx
+        }
+      };
+
+      p.offerPosts=p.offerPosts.filter(function(x){return postIds.indexOf(x.id)===-1;});
+      p.offerPosts.push(newPost);
+      window._mergeSelected={};
+      persistAndRenderProject();
+    };
+
+    window.doMergeSelected=function(){
+      var ids=Object.keys(window._mergeSelected).filter(function(id){return window._mergeSelected[id];});
+      if(ids.length<2){alert('Velg minst 2 poster å slå sammen.');return;}
+      mergeOfferLines(ids);
+    };
 
     function bindProjectEvents(){
       const p=getProject(currentProjectId); if(!p) return;

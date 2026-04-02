@@ -85,7 +85,7 @@
       if(laborEl) laborEl.textContent=currency(vatM?c.totalLaborSaleEx*1.25:c.totalLaborSaleEx);
       const totalDisplayHours=(c.hoursTotal||0)+(ps.hours||0);
       const hoursEl=document.getElementById('summaryLaborHours');
-      if(hoursEl) hoursEl.textContent=totalDisplayHours+'t totalt';
+      if(hoursEl) hoursEl.textContent='Totalt: '+totalDisplayHours+'t | Tømrer: '+(c.hoursTotal||0)+'t | Poster: '+(ps.hours||0)+'t';
       const ohd=document.getElementById('offerTotalHoursDisplay');
       if(ohd) ohd.textContent=totalDisplayHours+'t';
       const oht=document.getElementById('offerTotalHoursText');
@@ -853,7 +853,7 @@
             <div style="padding:12px;background:#f5f8ff;border-radius:14px;border:1px solid #dce8ff">
               <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">🔨 Tømrerarbeid</div>
               <div id="summaryLaborVal" style="font-size:20px;font-weight:800">${currency(p.settings.vatMode==='inc'?c.totalLaborSaleEx*1.25:c.totalLaborSaleEx)}</div>
-              <div id="summaryLaborHours" style="font-size:12px;color:var(--muted);margin-top:4px">${c.totalHours} timer totalt</div>
+              <div id="summaryLaborHours" style="font-size:11px;color:var(--muted);margin-top:4px">Totalt: ${c.totalHours}t | Tømrer: ${c.hoursTotal}t | Poster: ${ps.hours}t</div>
             </div>
             <div style="padding:12px;background:#f5fff8;border-radius:14px;border:1px solid #c3f0d5">
               <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">🪵 Materialer</div>
