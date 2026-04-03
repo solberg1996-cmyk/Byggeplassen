@@ -135,7 +135,7 @@
       if(!modal){
         modal=document.createElement('div');
         modal.id='calcMatModal';
-        modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:2000;display:flex;flex-direction:column;overflow:hidden';
+        modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:2000;display:flex;flex-direction:column;overflow:hidden';
         document.body.appendChild(modal);
       }
       let backdrop=document.getElementById('calcMatBackdrop');
@@ -195,18 +195,18 @@
 
       const results=searchPriceCatalog(query).slice(0,15);
       if(!query.trim() || !results.length){
-        resultsDiv.innerHTML=query.trim()?'<div style="padding:16px;text-align:center;color:#999;font-size:12px">Ingen treff</div>':'<div style="padding:16px;text-align:center;color:#bbb;font-size:12px">Skriv for å søke</div>';
+        resultsDiv.innerHTML=query.trim()?'<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Ingen treff</div>':'<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Skriv for å søke</div>';
         window._calcMatSearchActive=0;
         return;
       }
 
       resultsDiv.innerHTML=results.map((item,idx)=>`
-        <div class="calcMatSearchItem" data-idx="${idx}" style="padding:14px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='#f5f8ff';window._calcMatSearchActive=${idx}" onmouseout="this.style.background='#fff'" onclick="selectCalcMatFromModal('${escapeHtml(item.id)}')">
-          <div style="font-weight:700;color:#333;margin-bottom:4px;font-size:12px">${escapeHtml(item.productName||item.name)}</div>
-          <div style="font-size:11px;color:#666;display:flex;gap:16px;align-items:center">
+        <div class="calcMatSearchItem" data-idx="${idx}" style="padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--card-hover)';window._calcMatSearchActive=${idx}" onmouseout="this.style.background='var(--card)'" onclick="selectCalcMatFromModal('${escapeHtml(item.id)}')">
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:12px">${escapeHtml(item.productName||item.name)}</div>
+          <div style="font-size:11px;color:var(--muted);display:flex;gap:16px;align-items:center">
             <span>${escapeHtml(item.unit||'stk')}</span>
-            <span style="color:#0a84ff;font-weight:600">${currency(item.userPrice||0)}</span>
-            ${item.itemNo?'<span style="color:#999;font-size:10px;display:flex;align-items:center;gap:6px">Art.nr: '+escapeHtml(item.itemNo)+'<button style="background:none;border:none;cursor:pointer;padding:0;font-size:12px" onclick="copyCalcItemNo(\''+escapeHtml(item.itemNo)+'\');event.stopPropagation()">📋</button></span>':''}
+            <span style="color:var(--accent);font-weight:600">${currency(item.userPrice||0)}</span>
+            ${item.itemNo?'<span style="color:var(--muted);font-size:10px;display:flex;align-items:center;gap:6px">Art.nr: '+escapeHtml(item.itemNo)+'<button style="background:none;border:none;cursor:pointer;padding:0;font-size:12px" onclick="copyCalcItemNo(\''+escapeHtml(item.itemNo)+'\');event.stopPropagation()">📋</button></span>':''}
           </div>
         </div>
       `).join('');
@@ -266,11 +266,11 @@
       items.forEach((item,idx)=>{
         if(idx===window._calcMatSearchActive){
           item.style.background='#e8f4ff';
-          item.style.borderLeft='4px solid #0a84ff';
+          item.style.borderLeft='4px solid var(--accent)';
           item.style.paddingLeft='12px';
           item.scrollIntoView({block:'nearest'});
         }else{
-          item.style.background='#fff';
+          item.style.background='var(--card)';
           item.style.borderLeft='none';
           item.style.paddingLeft='16px';
         }
@@ -449,15 +449,15 @@
       dropdown.innerHTML=allItems.map(([name,item],idx)=>{
         const artnr=item.itemNo||item.artnr||item.articleNumber;
         const isFav=isCalcFavorite(name);
-        return `<div class="matDropdownItem" data-idx="${idx}" data-name="${escapeHtml(name)}" style="padding:12px 14px;border-bottom:1px solid #e8e8e8;cursor:pointer;font-size:11px;transition:background 0.15s;background:${isFav?'#fffbea':'#fff'}" onmouseover="setMatAutocompleteActive('${matId}',${idx})" onclick="selectMatByIndex('${matId}',${idx})">
-          <div style="font-weight:700;color:#333;margin-bottom:4px;display:flex;gap:8px;align-items:center">
+        return `<div class="matDropdownItem" data-idx="${idx}" data-name="${escapeHtml(name)}" style="padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:11px;transition:background 0.15s;background:${isFav?'var(--yellow-soft)':'var(--card)'}" onmouseover="setMatAutocompleteActive('${matId}',${idx})" onclick="selectMatByIndex('${matId}',${idx})">
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px;display:flex;gap:8px;align-items:center">
             <span style="cursor:pointer;font-size:14px;user-select:none" onclick="event.stopPropagation(); toggleFavoriteMaterial('${matId}','${escapeHtml(name)}')" title="Favoritt">${isFav?'⭐':'☆'}</span>
             ${escapeHtml(name)}
           </div>
-          <div style="font-size:10px;color:#666;display:flex;gap:12px;align-items:center">
+          <div style="font-size:10px;color:var(--muted);display:flex;gap:12px;align-items:center">
             <span>${escapeHtml(item.unit||'stk')}</span>
-            <span style="color:#0a84ff;font-weight:600">${currency(item.cost||0)}</span>
-            ${artnr?'<span style="color:#999;cursor:pointer;display:flex;gap:4px;align-items:center" onclick="event.stopPropagation(); copyArtikkelNummer(\''+escapeHtml(artnr)+'\', this)">Art.nr: '+escapeHtml(artnr)+' 📋</span>':''}
+            <span style="color:var(--accent);font-weight:600">${currency(item.cost||0)}</span>
+            ${artnr?'<span style="color:var(--muted);cursor:pointer;display:flex;gap:4px;align-items:center" onclick="event.stopPropagation(); copyArtikkelNummer(\''+escapeHtml(artnr)+'\', this)">Art.nr: '+escapeHtml(artnr)+' 📋</span>':''}
           </div>
         </div>`;
       }).join('');
@@ -496,10 +496,10 @@
       const items=dropdown.querySelectorAll('.matDropdownItem');
       items.forEach((item,i)=>{
         if(i===idx){
-          item.style.background='#e3f2fd';
-          item.style.borderLeft='3px solid #0a84ff';
+          item.style.background='var(--accent-soft)';
+          item.style.borderLeft='3px solid var(--accent)';
         } else {
-          item.style.background='#fff';
+          item.style.background='var(--card)';
           item.style.borderLeft='3px solid transparent';
         }
       });
@@ -869,7 +869,7 @@
       function rows(){
         if(!tpl.materials.length) return '<div class="empty" style="padding:14px">Ingen materialer lagt til enda. Søk opp varer nedenfor.</div>';
         return tpl.materials.map((m,i)=>`
-          <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:8px;align-items:center;padding:10px;background:#f8faff;border:1px solid var(--line);border-radius:12px">
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:8px;align-items:center;padding:10px;background:var(--bg-warm);border:1px solid var(--line);border-radius:12px">
             <div>
               <div style="font-weight:700;font-size:14px">${escapeHtml(m.name)}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:2px">${m.itemNo?`Varenr: ${escapeHtml(m.itemNo)} • `:''}${escapeHtml(m.unit||'stk')}${m.cost?` • ${currency(m.cost)}`:'  • Pris fra prisfil ved bruk'}</div>
@@ -985,8 +985,8 @@
       const pctOpts=[0,5,8,10,12,15,20,25,30];
 
       const rows=mats.length ? mats.map((m,i)=>{
-        const rowBg=m.groupColor?(m.groupColor+'18'):(m.cost===0?'#fffbea':'#f8faff');
-        const rowBorder=m.groupColor?(m.groupColor+'40'):(m.cost===0?'#fde68a':'var(--line)');
+        const rowBg=m.groupColor?(m.groupColor+'18'):(m.cost===0?'var(--yellow-soft)':'var(--bg-warm)');
+        const rowBorder=m.groupColor?(m.groupColor+'40'):(m.cost===0?'rgba(196,162,58,.2)':'var(--line)');
         return `
         <div style="display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;background:${rowBg};border:1px solid ${rowBorder};border-radius:12px;margin-bottom:5px${m.groupColor?';border-left:3px solid '+m.groupColor:''}">
           <div>
@@ -1003,7 +1003,7 @@
           <select title="Påslag %" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
             ${pctOpts.map(v=>`<option value="${v}" ${(m.markup||20)==v?'selected':''}>${v}%</option>`).join('')}
           </select>
-          <button style="border:none;background:#fff1f0;color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
+          <button style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
         </div>`;
       }).join('')
         : '<div class="empty">Ingen materialer enda.</div>';
@@ -1012,7 +1012,7 @@
       const searchHtml = window._cpmSearch ? (
         searchResults.length
           ? searchResults.map(item=>`
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
               <div>
                 <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
                 <div style="font-size:11px;color:var(--muted)">${escapeHtml(item.itemNo||'')} • ${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</div>
@@ -1054,7 +1054,7 @@
           <span id="laborGroupTotalHours" style="font-size:16px;font-weight:800">${laborGrps.reduce((s,g)=>s+(g.hours||0),0)}t</span>
         </div>
         `:(offerPost?`
-        <div style="background:#fffbea;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
+        <div style="background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;margin-bottom:2px">⏱️ Timer for denne posten</div>
             <div style="font-size:12px;color:var(--muted)">${calcHours?'Kalkyle beregnet: '+calcHours+'t':''}</div>
@@ -1189,7 +1189,7 @@
         +_offerState.customPosts.map(function(cp,i){
           return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'
             +'<input value="'+escapeAttr(cp.name)+'" style="flex:1;font-size:12px;padding:6px 8px" oninput="_offerState.customPosts['+i+'].name=this.value;renderOfferPreview()" />'
-            +'<button onclick="removeCustomPost('+i+')" style="border:none;background:#fff1f0;color:var(--red);border-radius:6px;padding:6px 8px;cursor:pointer;font-size:12px">✕</button>'
+            +'<button onclick="removeCustomPost('+i+')" style="border:none;background:var(--red-soft);color:var(--red);border-radius:6px;padding:6px 8px;cursor:pointer;font-size:12px">✕</button>'
             +'</div>';
         }).join('')
         +'<button class="btn small soft" style="width:100%;margin-top:4px" onclick="mergeAllCustomPosts()">Slå sammen alle til én</button>';
@@ -1250,7 +1250,7 @@
         return '<div style="background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:8px">'
           +'<div style="display:flex;gap:6px;margin-bottom:6px">'
           +'<input value="'+escapeAttr(sec.title)+'" placeholder="Tittel" style="flex:1;font-size:12px;padding:5px 8px;font-weight:700" oninput="_offerState.freeSections['+i+'].title=this.value;renderOfferPreview()" />'
-          +'<button onclick="_offerState.freeSections.splice('+i+',1);renderFreeSectionList();renderOfferPreview()" style="border:none;background:#fff1f0;color:var(--red);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px">✕</button>'
+          +'<button onclick="_offerState.freeSections.splice('+i+',1);renderFreeSectionList();renderOfferPreview()" style="border:none;background:var(--red-soft);color:var(--red);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px">✕</button>'
           +'</div>'
           +'<textarea style="font-size:12px;min-height:60px" placeholder="Tekst..." oninput="_offerState.freeSections['+i+'].text=this.value;renderOfferPreview()">'+escapeHtml(sec.text||'')+'</textarea>'
           +'</div>';
@@ -1995,7 +1995,7 @@
           const res=searchPriceCatalog(q);
           if(!res.length) return '<div class="empty" style="padding:8px">Ingen treff</div>';
           return res.map(item=>`
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
               <div>
                 <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
                 <div style="font-size:11px;color:var(--muted)">${escapeHtml(item.itemNo||'')} • ${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</div>
@@ -2009,7 +2009,7 @@
             <div class="section-title">💰 Sett pris (${idx+1}/${missingMats.length})</div>
             <button class="btn small secondary" onclick="skipPriceLookup()">Hopp over alle</button>
           </div>
-          <div style="padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px;margin-bottom:12px">
+          <div style="padding:10px;background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;margin-bottom:12px">
             <div style="font-weight:800">${escapeHtml(m.name)}</div>
             <div style="font-size:12px;color:var(--muted)">${m.qty} ${m.unit} — mangler pris</div>
           </div>
@@ -2304,13 +2304,13 @@
         const typeLabel=post.type==='calc'?'Kalkyle':post.type==='option'?'Opsjon':'Fast';
         const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
 
-        const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'#f8faff':'#fff'};border-radius:${isOpen?'14px 14px 0 0':'14px'}">
+        const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'var(--bg-warm)':'var(--card)'};border-radius:${isOpen?'14px 14px 0 0':'14px'}">
           <input type="checkbox" style="width:auto;flex-shrink:0" ${isMergeSel?'checked':''} onclick="event.stopPropagation();toggleMergeSelect('${post.id}')" title="Velg for sammenslåing" />
           <div style="flex:1;min-width:0" onclick="toggleOfferPost('${post.id}')">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-weight:800;font-size:14px">${escapeHtml(post.name||'Ny post')}</span>
-              <span style="font-size:11px;color:var(--muted);background:#f0f0f0;border-radius:4px;padding:1px 6px">${typeLabel}</span>
-              ${post.type==='option'&&post.enabled?'<span style="font-size:11px;background:#edfff4;color:#167a42;border-radius:4px;padding:1px 6px;font-weight:700">✅ Valgt</span>':''}
+              <span style="font-size:11px;color:var(--muted);background:var(--bg-warm);border-radius:4px;padding:1px 6px">${typeLabel}</span>
+              ${post.type==='option'&&post.enabled?'<span style="font-size:11px;background:var(--green-soft);color:var(--green);border-radius:4px;padding:1px 6px;font-weight:700">✅ Valgt</span>':''}
             </div>
             ${post.description&&!isOpen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(post.description)}</div>`:''}
           </div>
@@ -2347,7 +2347,7 @@
           </div>
         </div>`:'';
 
-        return `<div style="border:1.5px solid ${isOpen?'#bcd0f0':'var(--line)'};border-radius:14px;overflow:hidden;background:#fff;margin-bottom:6px">${header}${body}</div>`;
+        return `<div style="border:1.5px solid ${isOpen?'rgba(107,159,204,.25)':'var(--line)'};border-radius:14px;overflow:hidden;background:var(--card);margin-bottom:6px">${header}${body}</div>`;
       }).join('');
     }
 

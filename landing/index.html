@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Byggeplassen — Kalkulasjon for handverkere</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200;12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ── NAV ─────────────────────────────────────────── -->
+  <header class="nav-bar">
+    <div class="wrap nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="nav-logo-icon">B</span>
+        Byggeplassen
+      </a>
+      <nav class="nav-links">
+        <a href="#moduler">Moduler</a>
+        <a href="#funksjoner">Funksjoner</a>
+        <a href="#om">Om</a>
+        <a href="../index.html" class="nav-cta">Logg inn &rarr;</a>
+      </nav>
+      <button class="nav-burger" aria-label="Meny" onclick="this.closest('.nav-inner').classList.toggle('open')">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── HERO ────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-grain" aria-hidden="true"></div>
+    <div class="wrap hero-content">
+      <div class="hero-badge">Bygget av tomrere, for handverkere</div>
+      <h1>Ett verktoy.<br/>Hele jobben.</h1>
+      <p class="hero-sub">
+        Kalkyle, materialer, tilbud, kunder og prosjekter — alt samlet i ett
+        program som faktisk er laget for hverdagen pa bygget.
+      </p>
+      <div class="hero-actions">
+        <a href="../index.html" class="btn btn-accent">Kom i gang gratis</a>
+        <a href="#moduler" class="btn btn-ghost">Se hva det kan &darr;</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-num">47</span>
+          <span class="hero-stat-label">Jobbtyper</span>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">NS 3420</span>
+          <span class="hero-stat-label">Basert pa</span>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">100%</span>
+          <span class="hero-stat-label">Norsk</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating UI preview -->
+    <div class="hero-preview">
+      <div class="preview-window">
+        <div class="preview-bar">
+          <div class="preview-dots"><i></i><i></i><i></i></div>
+          <span>Byggeplassen</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-sidebar">
+            <div class="ps-item ps-active"></div>
+            <div class="ps-item"></div>
+            <div class="ps-item"></div>
+            <div class="ps-item"></div>
+            <div class="ps-item"></div>
+          </div>
+          <div class="preview-main">
+            <div class="pm-metrics">
+              <div class="pm-m"><div class="pm-m-bar" style="--w:72%"></div><span>24.5 t</span></div>
+              <div class="pm-m"><div class="pm-m-bar" style="--w:45%"></div><span>kr 38 400</span></div>
+              <div class="pm-m"><div class="pm-m-bar" style="--w:88%"></div><span>12 poster</span></div>
+            </div>
+            <div class="pm-rows">
+              <div class="pm-row"></div>
+              <div class="pm-row"></div>
+              <div class="pm-row"></div>
+              <div class="pm-row pm-row-accent"></div>
+              <div class="pm-row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MODULER (bento grid) ────────────────────────── -->
+  <section id="moduler" class="modules">
+    <div class="wrap">
+      <div class="section-label">Moduler</div>
+      <h2 class="section-heading">Alt du trenger. Ingenting du ikke trenger.</h2>
+      <div class="bento">
+
+        <div class="bento-card bento-wide">
+          <div class="bc-icon">📐</div>
+          <h3>Kalkyle</h3>
+          <p>Velg jobbtype, legg inn mal, juster faktorer for tilkomst, hoyde og kompleksitet. Fa presise timerater validert mot SmartKalk og Svenn.</p>
+          <div class="bc-visual">
+            <div class="bc-pill">Kledning</div>
+            <div class="bc-pill">Terrasse</div>
+            <div class="bc-pill">Innerdor</div>
+            <div class="bc-pill bc-pill-accent">+ 44 til</div>
+          </div>
+        </div>
+
+        <div class="bento-card">
+          <div class="bc-icon">📦</div>
+          <h3>Materialer</h3>
+          <p>Automatisk mengdeberegning med svinn, paslag og priskobling. Handleliste rett fra kalkylen.</p>
+          <div class="bc-mini-table">
+            <div class="bc-mt-row"><span>Kledning 19x148</span><span>86 lm</span></div>
+            <div class="bc-mt-row"><span>Lekter 23x48</span><span>34 lm</span></div>
+            <div class="bc-mt-row bc-mt-total"><span>Totalt</span><span>kr 12 840</span></div>
+          </div>
+        </div>
+
+        <div class="bento-card">
+          <div class="bc-icon">📄</div>
+          <h3>Tilbud</h3>
+          <p>Profesjonelle tilbud med firmalogo, farger og poster. PDF-eksport og direkte sending.</p>
+          <div class="bc-doc">
+            <div class="bc-doc-line bc-doc-head"></div>
+            <div class="bc-doc-line"></div>
+            <div class="bc-doc-line"></div>
+            <div class="bc-doc-line bc-doc-short"></div>
+            <div class="bc-doc-total"></div>
+          </div>
+        </div>
+
+        <div class="bento-card">
+          <div class="bc-icon">👥</div>
+          <h3>Kunder</h3>
+          <p>Kundeoversikt med kontaktinfo, prosjekthistorikk og status. Sok og filtrer pa et blunk.</p>
+        </div>
+
+        <div class="bento-card bento-wide">
+          <div class="bc-icon">📊</div>
+          <h3>Prosjektoversikt</h3>
+          <p>Dashboard med alle prosjekter, tilbudsstatus, vinnerate og okonomi. Alt pa ett sted.</p>
+          <div class="bc-bar-chart">
+            <div class="bc-bar" style="--h:40%"></div>
+            <div class="bc-bar" style="--h:65%"></div>
+            <div class="bc-bar" style="--h:55%"></div>
+            <div class="bc-bar bc-bar-accent" style="--h:85%"></div>
+            <div class="bc-bar" style="--h:70%"></div>
+            <div class="bc-bar" style="--h:90%"></div>
+            <div class="bc-bar" style="--h:60%"></div>
+          </div>
+        </div>
+
+        <div class="bento-card bento-dark">
+          <div class="bc-icon">🤝</div>
+          <h3>Makker <span class="bc-badge">Kommer</span></h3>
+          <p>Trappekalkulator, vangeberegning og flere handverkerverktoy.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FUNKSJONER ──────────────────────────────────── -->
+  <section id="funksjoner" class="features">
+    <div class="wrap">
+      <div class="section-label">Detaljer</div>
+      <h2 class="section-heading">Bygget for ekte arbeidsdager</h2>
+      <div class="feat-grid">
+        <div class="feat">
+          <div class="feat-num">01</div>
+          <h4>Tre vanskelighetsgrader</h4>
+          <p>Lav, normal og hoy — justerer automatisk timene basert pa forholdene pa jobben.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-num">02</div>
+          <h4>Tilkomst- og hoydefaktorer</h4>
+          <p>Trang tilkomst? Stillas? Faktorer som multipliseres og gir realistiske estimat.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-num">03</div>
+          <h4>Indirekte tid</h4>
+          <p>Kjoring, rigg, planlegging, opprydding og kvalitetskontroll — beregnes automatisk.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-num">04</div>
+          <h4>Egne erfaringstall</h4>
+          <p>Overstyr standard produksjonsrater med dine egne tall. Du vet best.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-num">05</div>
+          <h4>Skylagring</h4>
+          <p>Alt lagres automatisk. Jobb fra mobil, nettbrett eller PC — alltid oppdatert.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-num">06</div>
+          <h4>Eksport og import</h4>
+          <p>Ta backup av alt. Importer data. Aldri las inne i et system.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── OM ──────────────────────────────────────────── -->
+  <section id="om" class="about">
+    <div class="wrap about-inner">
+      <div class="about-line" aria-hidden="true"></div>
+      <blockquote>
+        Jeg var lei av regneark og kalkulasjonsprogrammer som koster 15 000 i aret.
+        Sa jeg bygde mitt eget.
+      </blockquote>
+      <p class="about-author">— Tomrer og utvikler, Byggeplassen</p>
+      <p class="about-text">
+        Byggeplassen er laget av en handverker som bruker det selv hver dag.
+        Ingen konsulenter, ingen komite — bare et verktoy som fungerer
+        fordi det er bygget av noen som vet hva som trengs.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── CTA ─────────────────────────────────────────── -->
+  <section class="cta-section">
+    <div class="wrap cta-inner">
+      <h2>Klar til a prove?</h2>
+      <p>Gratis a komme i gang. Ingen kredittkort.</p>
+      <a href="../index.html" class="btn btn-accent btn-lg">Opprett konto &rarr;</a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="footer-brand">
+        <span class="nav-logo"><span class="nav-logo-icon">B</span> Byggeplassen</span>
+        <p>Kalkulasjon for handverkere</p>
+      </div>
+      <div class="footer-links">
+        <a href="#moduler">Moduler</a>
+        <a href="#funksjoner">Funksjoner</a>
+        <a href="#om">Om</a>
+        <a href="../index.html">Logg inn</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 Byggeplassen</p>
+    </div>
+  </footer>
+
+</body>
+</html>

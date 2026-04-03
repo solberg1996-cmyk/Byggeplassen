@@ -9,7 +9,7 @@ paths:
 
 ## Design Tokens
 
-This project uses CSS custom properties defined in `:root` in `style.css`. Use existing variables (`--bg`, `--card`, `--text`, `--blue`, `--radius`, etc.) — never hardcode raw color/spacing values.
+This project uses CSS custom properties defined in `:root` in `style.css`. Use existing variables (`--bg`, `--card`, `--text`, `--accent`, `--line`, `--radius`, etc.) — never hardcode raw color/spacing values. The app uses a "California beaches" light theme (#F4F7F9 ocean-tinted background, white cards) with sand accent (#FFC067) and sky blue (#66C4FF). Button text on accent backgrounds should be `#162736` (dark). Text is deep ocean (#162736). Borders use sea glass tones (#DDE6EC). Additional tokens: `--steel` (#7D99AA), `--cyan` (#66F4FF), `--blue` (#66C4FF). Fonts: Bricolage Grotesque (display) and DM Sans (body).
 
 ## Component Framework
 

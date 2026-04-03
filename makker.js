@@ -429,9 +429,9 @@ var _kledningInput = {
 };
 
 function renderKledningTool() {
-  var inp = 'width:100%;padding:12px 14px;border:1.5px solid #e0e8f5;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#f9fafe';
+  var inp = 'width:100%;padding:12px 14px;border:1.5px solid #e0e8f5;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:var(--bg-warm)';
   var lbl = 'display:block;font-size:12px;font-weight:700;margin-bottom:8px;color:#555;text-transform:uppercase;letter-spacing:0.3px';
-  var select = 'width:100%;padding:12px 14px;border:1.5px solid #e0e8f5;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#f9fafe';
+  var select = 'width:100%;padding:12px 14px;border:1.5px solid #e0e8f5;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:var(--bg-warm)';
   var helperText = 'display:block;font-size:11px;color:#999;margin-top:4px;font-weight:500';
 
   return '<div style="width:100%;max-width:540px;margin:0 auto;padding:20px 16px">'
@@ -446,7 +446,7 @@ function renderKledningTool() {
     + '</div>'
 
     // Input Card
-    + '<div style="background:#fff;border:1.5px solid #e8eef7;border-radius:14px;padding:20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">'
+    + '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">'
     + '<div style="display:grid;gap:16px">'
 
     + '<div>'
@@ -495,7 +495,7 @@ function renderKledningTool() {
     + '</div>'
 
     + '<div id="kledningInfoModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;overflow:auto" onclick="if(event.target.id===\'kledningInfoModal\')closeKledningInfoModal()">'
-    + '<div style="background:#fff;border-radius:16px;margin:40px auto;padding:24px;max-width:500px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2)">'
+    + '<div style="background:var(--card);border-radius:16px;margin:40px auto;padding:24px;max-width:500px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2)">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
     + '<h2 style="font-size:18px;font-weight:800;margin:0">Forklaring av mål og begreper</h2>'
     + '<button onclick="closeKledningInfoModal()" style="background:none;border:none;font-size:24px;color:#999;cursor:pointer;padding:0">✕</button>'
@@ -503,15 +503,15 @@ function renderKledningTool() {
     + '<p style="color:#666;font-size:14px;line-height:1.6;margin-bottom:20px">Her er en visuell forklaring av de viktigste målene og begrepene brukt i tømmermannskledning.</p>'
     + '<div style="display:grid;gap:16px">'
     + '<div style="text-align:center">'
-    + '<img src="img/kledning-info-1.jpg" style="width:100%;border-radius:8px;background:#f5f5f5" alt="Mål og oppbygging" />'
+    + '<img src="img/kledning-info-1.jpg" style="width:100%;border-radius:8px;background:var(--bg-warm)" alt="Mål og oppbygging" />'
     + '<p style="font-size:12px;color:#999;margin-top:8px;margin-bottom:0">Mål og oppbygging</p>'
     + '</div>'
     + '<div style="text-align:center">'
-    + '<img src="img/kledning-info-2.jpg" style="width:100%;border-radius:8px;background:#f5f5f5" alt="Begreper og plassering" />'
+    + '<img src="img/kledning-info-2.jpg" style="width:100%;border-radius:8px;background:var(--bg-warm)" alt="Begreper og plassering" />'
     + '<p style="font-size:12px;color:#999;margin-top:8px;margin-bottom:0">Begreper og plassering</p>'
     + '</div>'
     + '</div>'
-    + '<button onclick="closeKledningInfoModal()" style="width:100%;padding:12px;margin-top:20px;background:#f0f4ff;border:1.5px solid #d0deff;border-radius:10px;font-weight:700;color:#4a5fc1;cursor:pointer;font-size:14px;transition:all 0.2s">Lukk</button>'
+    + '<button onclick="closeKledningInfoModal()" style="width:100%;padding:12px;margin-top:20px;background:var(--accent-soft);border:1.5px solid var(--line);border-radius:10px;font-weight:700;color:var(--accent);cursor:pointer;font-size:14px;transition:all 0.2s">Lukk</button>'
     + '</div>'
     + '</div>'
 
@@ -533,7 +533,7 @@ function renderKledningTool() {
     // ── Kledning Resultat UI ──────────────────────────────────────────────
     function renderKledningResultatUI(res) {
       if (res.feil) {
-        return '<div style="background:#fef0f0;border:1.5px solid #e07b7b;border-radius:12px;padding:16px;color:#c33;font-weight:700;font-size:14px">'
+        return '<div style="background:var(--red-soft);border:1.5px solid rgba(196,91,91,.25);border-radius:12px;padding:16px;color:var(--red);font-weight:700;font-size:14px">'
           + res.feiltekst
           + '</div>';
       }
@@ -576,9 +576,9 @@ function renderKledningTool() {
 
       // Alternativ card (secondary)
       if (alt) {
-        h += '<div style="background:#fff;border:1.5px solid #e0e8f5;border-radius:14px;padding:16px;margin-bottom:16px">'
+        h += '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px">'
           + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
-          + '<span style="font-size:14px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:0.3px">Alternativ løsning</span>'
+          + '<span style="font-size:14px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px">Alternativ løsning</span>'
           + '</div>'
           + '<div style="display:grid;gap:10px">'
           + '<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -608,16 +608,16 @@ function renderKledningTool() {
       }
 
       // Utdelingsmål section
-      h += '<div style="background:#fff;border:1.5px solid #e0e8f5;border-radius:14px;padding:16px">'
+      h += '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:16px">'
         + '<div style="font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.3px">Utdelingsmål</div>';
 
       if (a.oppmerkingsliste && a.oppmerkingsliste.length > 0) {
         h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">';
         for (var i = 0; i < a.oppmerkingsliste.length; i++) {
           var m = a.oppmerkingsliste[i];
-          h += '<div style="background:#f9fafe;border:1px solid #e8eef7;border-radius:8px;padding:10px;text-align:center">'
+          h += '<div style="background:var(--bg-warm);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center">'
             + '<div style="font-weight:800;color:#4a5fc1;font-size:14px">U' + m.nr + '</div>'
-            + '<div style="font-size:12px;color:#888;margin-top:4px">' + (m.posisjonMm / 10).toFixed(1) + ' cm</div>'
+            + '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + (m.posisjonMm / 10).toFixed(1) + ' cm</div>'
             + '</div>';
         }
         h += '</div>';
@@ -655,22 +655,269 @@ function renderKledningTool() {
 };
 
 
+    // ── INNDELINGSKALKULATOR ────────────────────────────────────────────────
+
+    var _inndelingModus = 'lik'; // 'lik' | 'begge' | 'en'
+    var _inndelingAntallJustering = 0; // +/- justering fra beregnet antall
+
+    // Beregningslogikk for tre moduser
+    function beregnInndeling(totalLengde, materialBredde, mellomrom, modus, antallJustering) {
+      if (!totalLengde || totalLengde <= 0 || !materialBredde || materialBredde <= 0 || !mellomrom || mellomrom <= 0) {
+        return null;
+      }
+
+      if (modus === 'lik') {
+        // Materialbredde er fast, kun mellomrom justeres
+        // Mønster: [M][G][M][G]...[M]
+        // totalLengde = n * materialBredde + (n-1) * gap
+        var nBeregnet = Math.round((totalLengde + mellomrom) / (materialBredde + mellomrom));
+        nBeregnet += antallJustering;
+        if (nBeregnet < 1) nBeregnet = 1;
+
+        var antall = nBeregnet;
+        var faktiskMellomrom = 0;
+        if (antall > 1) {
+          faktiskMellomrom = (totalLengde - antall * materialBredde) / (antall - 1);
+        }
+
+        return {
+          modus: 'lik',
+          antall: antall,
+          faktiskBredde: materialBredde,
+          faktiskMellomrom: faktiskMellomrom
+        };
+      }
+
+      if (modus === 'begge') {
+        // Full bredde i midten, start og slutt kappes likt
+        // Mønster: [E][G][M][G][M]...[M][G][E]
+        // Finn antall hele materialer i midten
+        // totalLengde = 2*e + 2*g + (n-1)*(materialBredde + mellomrom) + materialBredde  (for n>=1 midtstykker)
+        // Enklere: legg ut fulle bord + mellomrom, se hva som er til overs for endene
+        var plassPerBord = materialBredde + mellomrom;
+        // Minimum: 2 endestykker + 1 mellomrom på hver side
+        // totalLengde = 2*endeBredde + antallMidt*materialBredde + (antallMidt+1)*mellomrom
+        // Start med å finne antall midtstykker
+        var tilgjengeligForMidt = totalLengde - 2 * mellomrom; // trekk fra mellomrom ved endene
+        var antallMidt = Math.floor(tilgjengeligForMidt / plassPerBord);
+        if (antallMidt < 0) antallMidt = 0;
+
+        var bruktAvMidt = antallMidt * materialBredde + (antallMidt > 0 ? (antallMidt - 1) : 0) * mellomrom;
+        var restTilEnder = totalLengde - bruktAvMidt - (antallMidt > 0 ? 2 : 0) * mellomrom;
+        if (antallMidt === 0) restTilEnder = totalLengde;
+        var endeBredde = restTilEnder / 2;
+
+        // Hvis endeBredde er negativ eller for smal, juster
+        if (endeBredde <= 0) {
+          antallMidt = Math.max(0, antallMidt - 1);
+          bruktAvMidt = antallMidt * materialBredde + (antallMidt > 0 ? (antallMidt - 1) : 0) * mellomrom;
+          restTilEnder = totalLengde - bruktAvMidt - (antallMidt > 0 ? 2 : 0) * mellomrom;
+          if (antallMidt === 0) restTilEnder = totalLengde;
+          endeBredde = restTilEnder / 2;
+        }
+
+        return {
+          modus: 'begge',
+          antallMidt: antallMidt,
+          antallTotalt: antallMidt + 2,
+          endeBredde: endeBredde,
+          materialBredde: materialBredde,
+          mellomrom: mellomrom
+        };
+      }
+
+      if (modus === 'en') {
+        // Full bredde + fullt mellomrom fra start, rest på slutten
+        var plassPerEnhet = materialBredde + mellomrom;
+        var antallHele = Math.floor(totalLengde / plassPerEnhet);
+        if (antallHele < 1) antallHele = 1;
+        var brukt = antallHele * materialBredde + (antallHele - 1) * mellomrom;
+        var restBredde = totalLengde - brukt - mellomrom; // siste mellomrom før rest-stykket
+
+        // Hvis rest-stykket er negativt betyr det at siste mellomrom + rest ikke får plass
+        if (restBredde <= 0) {
+          antallHele = Math.max(1, antallHele - 1);
+          brukt = antallHele * materialBredde + (antallHele - 1) * mellomrom;
+          restBredde = totalLengde - brukt - mellomrom;
+        }
+
+        return {
+          modus: 'en',
+          antallHele: antallHele,
+          antallTotalt: antallHele + 1,
+          restBredde: restBredde,
+          materialBredde: materialBredde,
+          mellomrom: mellomrom
+        };
+      }
+
+      return null;
+    }
+
+    function renderInndelingTool() {
+      var inp = 'width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:var(--card)';
+      var lbl = 'display:block;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px';
+
+      var moduser = [
+        { id: 'lik',   name: 'Lik fordeling',  desc: 'Alt likt — material og mellomrom samme mål', img: 'img/inndeling/lik.png' },
+        { id: 'begge', name: 'Begge ender',     desc: 'Endestykker kappes likt, resten full bredde', img: 'img/inndeling/begge.png' },
+        { id: 'en',    name: 'En ende',          desc: 'Full bredde fra start, viser rest på slutten', img: 'img/inndeling/en.png' }
+      ];
+
+      var h = '<div style="width:100%;max-width:540px;margin:0 auto;padding:20px 16px">'
+
+        // Header
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">'
+        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center">←</button>'
+        + '<h1 style="font-size:20px;font-weight:800;margin:0">📏 Inndeling</h1>'
+        + '</div>'
+
+        // Modus-velger
+        + '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">';
+
+      moduser.forEach(function(m) {
+        var aktiv = _inndelingModus === m.id;
+        h += '<button onclick="velgInndelingModus(\'' + m.id + '\')" style="'
+          + 'display:flex;align-items:center;gap:14px;'
+          + 'background:' + (aktiv ? 'var(--accent-soft)' : 'var(--card)') + ';'
+          + 'border:1.5px solid ' + (aktiv ? 'var(--accent)' : 'var(--line)') + ';'
+          + 'border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;'
+          + 'transition:all 0.15s">'
+          + '<div style="width:100px;height:68px;border-radius:8px;flex-shrink:0;padding:10px;box-sizing:border-box;'
+          + 'background:' + (aktiv ? 'var(--accent-soft)' : 'var(--bg)') + ';'
+          + 'border:1px solid ' + (aktiv ? 'var(--accent)' : 'var(--line)') + ';display:flex;align-items:center;justify-content:center">'
+          + '<img src="' + m.img + '" alt="' + m.name + '" style="width:100%;height:100%;object-fit:contain" />'
+          + '</div>'
+          + '<div>'
+          + '<div style="font-size:15px;font-weight:700;color:' + (aktiv ? 'var(--accent)' : 'var(--text)') + '">' + m.name + '</div>'
+          + '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + m.desc + '</div>'
+          + '</div>'
+          + '</button>';
+      });
+
+      h += '</div>'
+
+        // Input-felt
+        + '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px">'
+        + '<div style="display:grid;gap:16px">'
+
+        + '<div>'
+        + '<label style="' + lbl + '">Total lengde (mm)</label>'
+        + '<input id="innTotalLengde" type="number" inputmode="numeric" value="3000" oninput="calcInndeling()" style="' + inp + '" placeholder="3000" />'
+        + '</div>'
+
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+        + '<div>'
+        + '<label style="' + lbl + '">Materialbredde (mm)</label>'
+        + '<input id="innMaterialBredde" type="number" inputmode="numeric" value="23" oninput="calcInndeling()" style="' + inp + '" placeholder="23" />'
+        + '</div>'
+        + '<div>'
+        + '<label style="' + lbl + '">Mellomrom (mm)</label>'
+        + '<input id="innMellomrom" type="number" inputmode="numeric" value="5" oninput="calcInndeling()" style="' + inp + '" placeholder="5" />'
+        + '</div>'
+        + '</div>'
+
+        + '</div>'
+        + '</div>';
+
+      // +/- knapper for lik fordeling
+      if (_inndelingModus === 'lik') {
+        h += '<div id="innPlusMinus" style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px">'
+          + '<button onclick="justerInndelingAntall(-1)" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);font-size:22px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">−</button>'
+          + '<span id="innAntallVis" style="font-size:20px;font-weight:800;min-width:60px;text-align:center;color:var(--text)">–</span>'
+          + '<button onclick="justerInndelingAntall(1)" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);font-size:22px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">+</button>'
+          + '</div>';
+      }
+
+      // Resultat
+      h += '<div id="innResultat" style="min-height:60px"></div>'
+        + '</div>';
+
+      return h;
+    }
+
+    function calcInndeling() {
+      var totalEl = document.getElementById('innTotalLengde');
+      if (!totalEl) return;
+
+      var totalLengde = Number(totalEl.value);
+      var materialBredde = Number(document.getElementById('innMaterialBredde').value);
+      var mellomrom = Number(document.getElementById('innMellomrom').value);
+
+      var res = beregnInndeling(totalLengde, materialBredde, mellomrom, _inndelingModus, _inndelingAntallJustering);
+
+      var el = document.getElementById('innResultat');
+      if (!el) return;
+
+      if (!res) {
+        el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:20px">Fyll inn verdier for å beregne...</div>';
+        return;
+      }
+
+      var h = '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px">';
+
+      function rad(label, verdi, ekstra) {
+        return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)">'
+          + '<span style="font-size:14px;color:var(--muted)">' + label + '</span>'
+          + '<div style="text-align:right">'
+          + '<span style="font-size:18px;font-weight:800;color:var(--text)">' + verdi + '</span>'
+          + (ekstra ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + ekstra + '</div>' : '')
+          + '</div></div>';
+      }
+
+      if (res.modus === 'lik') {
+        var antallVis = document.getElementById('innAntallVis');
+        if (antallVis) antallVis.textContent = res.antall + ' stk';
+
+        h += rad('Antall', res.antall + ' stk', null);
+        h += rad('Materialbredde', res.faktiskBredde.toFixed(1) + ' mm',
+          res.faktiskBredde !== materialBredde ? 'Justert fra ' + materialBredde + ' mm' : null);
+        h += rad('Mellomrom', res.faktiskMellomrom.toFixed(1) + ' mm',
+          res.faktiskMellomrom !== mellomrom ? 'Justert fra ' + mellomrom + ' mm' : null);
+      }
+
+      if (res.modus === 'begge') {
+        h += rad('Antall totalt', res.antallTotalt + ' stk', res.antallMidt + ' hele + 2 endestykker');
+        h += rad('Endestykker', res.endeBredde.toFixed(1) + ' mm', 'Kappes likt i hver ende');
+        h += rad('Materialbredde', res.materialBredde + ' mm', 'Full bredde i midten');
+        h += rad('Mellomrom', res.mellomrom + ' mm', null);
+      }
+
+      if (res.modus === 'en') {
+        h += rad('Antall totalt', res.antallTotalt + ' stk', res.antallHele + ' hele + 1 reststykke');
+        h += rad('Reststykke', res.restBredde.toFixed(1) + ' mm', 'Bredde på siste stykke');
+        h += rad('Materialbredde', res.materialBredde + ' mm', 'Full bredde');
+        h += rad('Mellomrom', res.mellomrom + ' mm', null);
+      }
+
+      h += '</div>';
+      el.innerHTML = h;
+    }
+
+    window.velgInndelingModus = function(modus) {
+      _inndelingModus = modus;
+      _inndelingAntallJustering = 0;
+      renderMakkerView();
+    };
+
+    window.justerInndelingAntall = function(delta) {
+      _inndelingAntallJustering += delta;
+      calcInndeling();
+    };
+
     // ── MAKKER ───────────────────────────────────────────────────────────────
 
     var _makkerTool = null; // null = viser hjem-skjerm
-    var _trappeType = null; // null = viser typevelger
-    var _vangeMode = null;  // null = viser modus-velger for vange
-    var valgtTrappetype = null; // 'vange-mellom' | 'vange-ned' | 'vange-gulv'
-    var _vangeTrinn      = 5;     // antall trinn, justeres manuelt
-    var _visVangeInfo    = false; // viser/skjuler info-panel i vange-kalkulator
-    var _visAvansertVange       = false; // enkel/avansert-visning i vange-kalkulator
-    var _visVangeArbeidsvisning = false; // viser/skjuler arbeidsvisning
+    var _trappType = null;  // 'gulv' | 'forlengelse' | 'ned'
+    var _trappModus = null; // 'fri' | 'fast'
+    var _trappTrinn = 0;    // antall trinn, justeres med +/-
+    var _trappTrinnJustering = 0; // +/- fra beregnet antall
 
     var _makkerTools = [
-      { id: 'trapp',    icon: '🪜', name: 'Trappekalkulator',   desc: 'Beregn stigning, inntrinn og antall trinn' },
-      { id: 'spile',    icon: '📏', name: 'Spilekalkulator',    desc: 'Beregn spileavstand og antall spiler' },
-      { id: 'vinkel',   icon: '📐', name: 'Vinkelkalkulator',   desc: 'Beregn vinkler og lengder' },
-      { id: 'kledning', icon: '🪵', name: 'Tømmermannskledning',desc: 'Beregn tømmermannskledning' },
+      { id: 'trapp',     icon: '🪜', name: 'Trappekalkulator',    desc: 'Beregn stigning, inntrinn og antall trinn' },
+      { id: 'inndeling', icon: '📏', name: 'Inndelingskalkulator', desc: 'Fordel materialer jevnt over en lengde' },
+      { id: 'vinkel',    icon: '📐', name: 'Vinkelkalkulator',     desc: 'Beregn vinkler og lengder' },
+      { id: 'kledning',  icon: '🪵', name: 'Tømmermannskledning', desc: 'Beregn tømmermannskledning' },
     ];
 
     function renderMakkerView(){
@@ -682,22 +929,28 @@ function renderKledningTool() {
   if (_makkerTool === 'kledning' && typeof window.calcKledning === 'function') {
     window.calcKledning();
   }
+  if (_makkerTool === 'inndeling') {
+    calcInndeling();
+  }
+  if (_makkerTool === 'trapp' && _trappType && _trappModus) {
+    calcTrapp();
+  }
 }
 
     function renderMakkerHome(){
       return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
         + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">'
-        + '<button onclick="goToHome()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
+        + '<button onclick="goToHome()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px">←</button>'
         + '<div><div style="font-size:22px;font-weight:800">Makker</div>'
-        + '<div style="font-size:13px;color:#888">Verktøy for håndverkeren</div></div>'
+        + '<div style="font-size:13px;color:var(--muted)">Verktøy for håndverkeren</div></div>'
         + '</div>'
         + '<div style="display:flex;flex-direction:column;gap:10px">'
         + _makkerTools.map(function(t){
             return '<button onclick="openMakkerTool(\'' + t.id + '\')"'
-              + ' style="background:#fff;border:1.5px solid #dce8ff;border-radius:16px;padding:18px 20px;text-align:left;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06)">'
+              + ' style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;text-align:left;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06)">'
               + '<div style="font-size:20px;margin-bottom:4px">' + t.icon + '</div>'
               + '<div style="font-size:16px;font-weight:800">' + t.name + '</div>'
-              + '<div style="font-size:12px;color:#888;margin-top:2px">' + t.desc + '</div>'
+              + '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + t.desc + '</div>'
               + '</button>';
           }).join('')
         + '</div>'
@@ -707,14 +960,15 @@ function renderKledningTool() {
     function renderMakkerTool(id){
       if(id==='trapp') return renderTrappModul();
       if(id==='kledning') return renderKledningTool();
+      if(id==='inndeling') return renderInndelingTool();
       var t = _makkerTools.find(function(x){ return x.id===id; });
       if(!t) return renderMakkerHome();
       return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
         + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">'
-        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
+        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px">←</button>'
         + '<div><div style="font-size:22px;font-weight:800">' + t.icon + ' ' + t.name + '</div></div>'
         + '</div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:24px;text-align:center;color:#aaa">'
+        + '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:24px;text-align:center;color:var(--muted)">'
         + '<div style="font-size:32px;margin-bottom:10px">' + t.icon + '</div>'
         + '<div style="font-size:15px;font-weight:600">Kommer snart</div>'
         + '<div style="font-size:13px;margin-top:4px">' + t.desc + '</div>'
@@ -722,962 +976,309 @@ function renderKledningTool() {
         + '</div>';
     }
 
-    // ── TRAPP-MODUL — NY STRUKTUR ─────────────────────────────────────────────
+    // ── TRAPPEKALKULATOR — NY ──────────────────────────────────────────────
 
-    var _trappeKatalog = [
-      { id: 'vange',   name: 'Vangetrapp',  img: 'img/trapp/vange.png'   },
-      { id: 'tett',    name: 'Tett trapp',  img: 'img/trapp/kasse.png'   },
-      { id: 'loft',    name: 'Loftstrapp',  img: 'img/trapp/utvendig.png'},
+    var _trappTyper = [
+      { id: 'gulv',        name: 'Gulv til gulv',   desc: 'Vange fra gulv til gulv, trinn mellom vangene', img: 'img/trapp/GULV TIL GULV.png' },
+      { id: 'forlengelse', name: 'Gulvforlengelse',  desc: 'Øverste trinn i flukt med toppgulvet',         img: 'img/trapp/GULVFORLENGELSE.png' },
+      { id: 'ned',         name: 'Ett trinn ned',    desc: 'Øverste trinn ett hakk under toppgulv',        img: 'img/trapp/ETT TRINN NED.JPG' },
     ];
 
-    // Hovedrender — viser kalkulator direkte
     function renderTrappModul() {
-      if (!_trappeType) _trappeType = 'vange';
-      if (!valgtTrappetype) valgtTrappetype = 'vange-gulv';
-      return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">'
-        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-        + '<div style="font-size:22px;font-weight:800">🪜 Trapp</div>'
-        + '</div>'
-        + renderTrappTypeVelger()
-        + '<div id="trappKalkulator" style="margin-top:20px">'
-        + renderValgtTrappetype()
-        + '</div>'
-        + '</div>';
+      if (!_trappType) return renderTrappTypeVelger();
+      if (!_trappModus) return renderTrappModusVelger();
+      return renderTrappKalkulator();
     }
 
-    // Rad med klikkbare typekort
     function renderTrappTypeVelger() {
-      return '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">'
-        + _trappeKatalog.map(function(t) {
-            var aktiv = _trappeType === t.id;
-            var ramme = aktiv ? 'border:2px solid #3b82f6' : 'border:1.5px solid #dce8ff';
-            var tekst = aktiv ? 'color:#1d4ed8;font-weight:800' : 'color:#555;font-weight:600';
-            return '<button onclick="velgTrappetype(\'' + t.id + '\')"'
-              + ' style="flex:0 0 auto;width:110px;padding:10px 8px;border-radius:14px;background:#fff;' + ramme + ';cursor:pointer;text-align:center">'
-              + '<img src="' + t.img + '" alt="' + t.name + '" style="width:100%;height:64px;object-fit:cover;border-radius:8px;display:block;margin-bottom:8px" />'
-              + '<div style="font-size:12px;' + tekst + '">' + t.name + '</div>'
-              + '</button>';
-          }).join('')
-        + '</div>';
-    }
+      var h = '<div style="width:100%;max-width:540px;margin:0 auto;padding:20px 16px">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">'
+        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center">←</button>'
+        + '<h1 style="font-size:20px;font-weight:800;margin:0">🪜 Trappekalkulator</h1>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:10px">';
 
-    // Router til riktig kalkulator basert på valgt type
-    function renderValgtTrappetype() {
-      if (_trappeType === 'vange') return renderVangeTrapp();
-      return '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:24px;text-align:center;color:#aaa">'
-        + '<div style="font-size:13px;font-weight:600">Kommer senere</div>'
-        + '</div>';
-    }
-
-    // Arbeidsvisning — ryddig oppsummering av alle viktige mål
-    function renderVangeArbeidsvisning(d) {
-      function fmt(v, des, enhet) {
-        if (v === null || v === undefined || !isFinite(v)) return '—';
-        return v.toFixed(des) + (enhet || '');
-      }
-      function rad(label, verdi) {
-        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f2f4f8">'
-          + '<span style="font-size:13px;color:#555">' + label + '</span>'
-          + '<span style="font-size:14px;font-weight:700;color:#1a1a1a">' + verdi + '</span>'
-          + '</div>';
-      }
-      function seksjon(tittel, innhold) {
-        return '<div style="margin-bottom:20px">'
-          + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:2px">' + tittel + '</div>'
-          + innhold
-          + '</div>';
-      }
-      if (!d) {
-        return '<div style="font-size:13px;color:#aaa">Legg inn målene for å se arbeidsvisning.</div>';
-      }
-      var grunnmal = seksjon('GRUNNMÅL',
-        rad('Høyde gulv til gulv', fmt(d.totalHoydeMm, 0, ' mm'))
-        + rad('Antall trinn',      d.antallOpptrinn !== null ? d.antallOpptrinn : '—')
-        + rad('Høyde per trinn',   fmt(d.faktisk,    1, ' mm'))
-        + rad('Dybde på trinn',    fmt(d.inntrinnMm, 0, ' mm'))
-        + rad('Lengde',            fmt(d.innlop,     0, ' mm'))
-        + rad('Vangelengde',       fmt(d.vangeLengde,0, ' mm'))
-        + rad('Vinkel',            fmt(d.vinkel,     1, '°'))
-      );
-      var kapping = seksjon('KAPPING',
-        rad('Vinkel oppe', fmt(d.vinkelOppe, 1, '°'))
-        + rad('Vinkel nede', fmt(d.vinkelNede, 1, '°'))
-      );
-      var trinn = seksjon('TRINN',
-        rad('Antall trinnplater', d.antallTrinnplater !== null ? String(d.antallTrinnplater) : '—')
-        + rad('Bredde',   fmt(d.trinnplateBredde,   0, ' mm'))
-        + rad('Dybde',    fmt(d.trinnplateDybde,    0, ' mm'))
-        + rad('Tykkelse', fmt(d.trinnplateTykkelse, 0, ' mm'))
-      );
-      var oppmTekst;
-      if (d.faktisk && d.inntrinnMm && d.antallInn) {
-        oppmTekst = '<div style="font-size:13px;color:#333;line-height:1.8">'
-          + '1. Start nederst p\u00e5 vangen.<br>'
-          + '2. M\u00e5l ' + d.inntrinnMm.toFixed(0) + '\u00a0mm bort og ' + d.faktisk.toFixed(1) + '\u00a0mm opp.<br>'
-          + '3. Gjenta for alle ' + d.antallInn + ' trinn.'
-          + '</div>';
-      } else {
-        oppmTekst = '<div style="font-size:13px;color:#aaa">Mangler m\u00e5l.</div>';
-      }
-      return '<div style="font-size:16px;font-weight:800;margin-bottom:20px">Arbeidsvisning</div>'
-        + grunnmal + kapping + trinn + seksjon('OPPMERKING', oppmTekst);
-    }
-
-    // ── LAGRING — localStorage-helpers ───────────────────────────────────────
-
-    var LAGRE_NOKKEL = 'makker_trapper';
-
-    function hentLagredeTrapper() {
-      try {
-        return JSON.parse(localStorage.getItem(LAGRE_NOKKEL) || '[]');
-      } catch(e) { return []; }
-    }
-
-    function lagreTrapp(trappObj) {
-      var liste = hentLagredeTrapper();
-      liste.unshift(trappObj); // nyeste først
-      try { localStorage.setItem(LAGRE_NOKKEL, JSON.stringify(liste)); } catch(e) {}
-    }
-
-    function slettLagretTrapp(id) {
-      var liste = hentLagredeTrapper().filter(function(t) { return t.id !== id; });
-      try { localStorage.setItem(LAGRE_NOKKEL, JSON.stringify(liste)); } catch(e) {}
-    }
-
-    function hentLagretTrapp(id) {
-      return hentLagredeTrapper().find(function(t) { return t.id === id; }) || null;
-    }
-
-    function formaterDato(isoStr) {
-      try {
-        var d = new Date(isoStr);
-        var dd = String(d.getDate()).padStart(2,'0');
-        var mm = String(d.getMonth()+1).padStart(2,'0');
-        var yy = d.getFullYear();
-        return dd + '.' + mm + '.' + yy;
-      } catch(e) { return isoStr; }
-    }
-
-    // Liste over lagrede trapper
-    function renderLagredeTrapper() {
-      var liste = hentLagredeTrapper();
-      if (liste.length === 0) {
-        return '<div style="font-size:13px;color:#aaa;padding:4px 0">Ingen lagrede trapper.</div>';
-      }
-      return liste.map(function(t) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f2f4f8;gap:8px">'
-          + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:14px;font-weight:700;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (t.navn || 'Uten navn') + '</div>'
-          + '<div style="font-size:12px;color:#aaa;margin-top:2px">' + formaterDato(t.opprettetDato) + '</div>'
-          + '</div>'
-          + '<div style="display:flex;gap:6px;flex-shrink:0">'
-          + '<button onclick="apneVangeTrapp(\'' + t.id + '\')" style="padding:6px 12px;border-radius:8px;border:1.5px solid #3b82f6;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer">Åpne</button>'
-          + '<button onclick="slettVangeTrapp(\'' + t.id + '\')" style="padding:6px 10px;border-radius:8px;border:1.5px solid #fee2e2;background:#fff5f5;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">Slett</button>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-    }
-
-    // Lagre gjeldende vange-trapp
-    window.lagreVangeTrapp = function() {
-      var navnEl = document.getElementById('vt_lagreNavn');
-      var navn   = (navnEl && navnEl.value.trim()) ? navnEl.value.trim() : 'Trapp uten navn';
-      var v      = getVangeInputVerdier();
-      lagreTrapp({
-        id:            String(Date.now()),
-        navn:          navn,
-        trappetype:    'vange',
-        opprettetDato: new Date().toISOString(),
-        data: {
-          totalHoydeMm:    v.totalHoydeMm,
-          inntrinnMm:      v.inntrinnMm,
-          trappebreddeMm:  v.trappebreddeMm,
-          trinnTykkelseMm: v.trinnTykkelseMm,
-          antallOpptrinn:  v.antallOpptrinn,
-        },
+      _trappTyper.forEach(function(t) {
+        h += '<button onclick="velgTrappType(\'' + t.id + '\')" style="'
+          + 'display:flex;align-items:center;gap:14px;'
+          + 'background:var(--card);border:1.5px solid var(--line);border-radius:12px;'
+          + 'padding:14px 16px;text-align:left;cursor:pointer;transition:all 0.15s">'
+          + '<img src="' + t.img + '" alt="' + t.name + '" style="width:80px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--line)" />'
+          + '<div>'
+          + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + t.name + '</div>'
+          + '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + t.desc + '</div>'
+          + '</div></button>';
       });
-      if (navnEl) navnEl.value = '';
-      var el = document.getElementById('vtr_lagredeContainer');
-      if (el) el.innerHTML = renderLagredeTrapper();
-    };
 
-    // Åpne lagret trapp — fyll inn verdier og kjør beregning
-    window.apneVangeTrapp = function(id) {
-      var t = hentLagretTrapp(id);
-      if (!t || !t.data) return;
-      var d = t.data;
-      function fyll(elId, verdi) {
-        var el = document.getElementById(elId);
-        if (el && verdi !== null && verdi !== undefined) el.value = verdi;
-      }
-      fyll('vt_totalHoyde', d.totalHoydeMm);
-      fyll('vt_inntrinn',   d.inntrinnMm);
-      fyll('vt_bredde',     d.trappebreddeMm);
-      fyll('vt_trinnTypp',  d.trinnTykkelseMm);
-      if (d.antallOpptrinn && d.antallOpptrinn >= 1) {
-        _vangeTrinn = d.antallOpptrinn;
-        var trinnEl = document.getElementById('vt_antallTrinn');
-        if (trinnEl) trinnEl.textContent = _vangeTrinn;
-      }
-      oppdaterVangeGrunnberegning();
-      // Scroll inputfelter i sikte
-      var inp = document.getElementById('vt_totalHoyde');
-      if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    };
-
-    // Slett lagret trapp og oppdater listen
-    window.slettVangeTrapp = function(id) {
-      slettLagretTrapp(id);
-      var el = document.getElementById('vtr_lagredeContainer');
-      if (el) el.innerHTML = renderLagredeTrapper();
-    };
-
-    // Toggle arbeidsvisning uten å re-rendre inputfelter
-    window.toggleVangeArbeidsvisning = function() {
-      _visVangeArbeidsvisning = !_visVangeArbeidsvisning;
-      var el  = document.getElementById('vtr_arbeidsvisningContainer');
-      var btn = document.getElementById('vangeArbeidBtn');
-      if (el)  el.style.display = _visVangeArbeidsvisning ? '' : 'none';
-      if (btn) {
-        btn.textContent   = _visVangeArbeidsvisning ? 'Skjul' : 'Arbeidsvisning';
-        btn.style.background = _visVangeArbeidsvisning ? '#1d4ed8' : '#3b82f6';
-      }
-      if (_visVangeArbeidsvisning) oppdaterVangeGrunnberegning();
-    };
-
-    // Vange-kalkulator — samlet struktur
-    function renderVangeTrapp() {
-      var btnTekst = _visVangeInfo ? 'Lukk' : 'ℹ Info';
-      var tBase = 'padding:6px 18px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid ';
-      var tPa  = tBase + '#3b82f6;background:#eff6ff;color:#1d4ed8';
-      var tAv  = tBase + '#dce8ff;background:#fff;color:#888';
-      var enkStil = !_visAvansertVange ? tPa : tAv;
-      var avStil  =  _visAvansertVange ? tPa : tAv;
-      var arbBtnTekst = _visVangeArbeidsvisning ? 'Skjul' : 'Arbeidsvisning';
-      var arbBtnStil  = 'background:' + (_visVangeArbeidsvisning ? '#1d4ed8' : '#3b82f6') + ';color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%';
-      var arbContDisplay = _visVangeArbeidsvisning ? '' : 'display:none;';
-      var sCard = 'background:#fff;border:1.5px solid #dce8ff;border-radius:12px;padding:12px;text-align:center;cursor:pointer;flex:1';
-      var sCardActive = 'background:#fff;border:2px solid #3b82f6;border-radius:12px;padding:12px;text-align:center;cursor:pointer;flex:1;background:#eff6ff';
-      return '<div style="display:flex;flex-direction:column;gap:16px">'
-        + '<div style="display:flex;gap:8px;margin-bottom:4px">'
-        + '<button onclick="velgVangeVariant(\'vange-mellom\')" style="' + (valgtTrappetype === 'vange-mellom' ? sCardActive : sCard) + '"><div style="font-size:24px;margin-bottom:4px">📐</div><div style="font-size:11px;font-weight:700">Åpen</div></button>'
-        + '<button onclick="velgVangeVariant(\'vange-ned\')" style="' + (valgtTrappetype === 'vange-ned' ? sCardActive : sCard) + '"><div style="font-size:24px;margin-bottom:4px">⬇️</div><div style="font-size:11px;font-weight:700">Ned</div></button>'
-        + '<button onclick="velgVangeVariant(\'vange-gulv\')" style="' + (valgtTrappetype === 'vange-gulv' ? sCardActive : sCard) + '"><div style="font-size:24px;margin-bottom:4px">⬆️</div><div style="font-size:11px;font-weight:700">Gulv</div></button>'
-        + '</div>'
-        + '<div style="display:flex;justify-content:space-between;align-items:center">'
-        + '<div style="font-size:18px;font-weight:800">Vange trapp</div>'
-        + '<button id="vangeInfoBtn" onclick="toggleVangeInfo()" style="background:none;border:1.5px solid #dce8ff;border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer;color:#555">' + btnTekst + '</button>'
-        + '</div>'
-        + '<div style="display:flex;gap:8px">'
-        + '<button id="vange_enkelBtn" onclick="toggleVangeAvansert(false)" style="' + enkStil + '">Enkel</button>'
-        + '<button id="vange_avansertBtn" onclick="toggleVangeAvansert(true)" style="' + avStil + '">Avansert</button>'
-        + '</div>'
-        + '<div id="vangeInfoPanel">' + (_visVangeInfo ? renderVangeInfoPanel() : '') + '</div>'
-        + renderVangeInputseksjon()
-        + renderVangeResultatseksjon()
-        + '<button id="vangeArbeidBtn" onclick="toggleVangeArbeidsvisning()" style="' + arbBtnStil + '">' + arbBtnTekst + '</button>'
-        + '<div id="vtr_arbeidsvisningContainer" style="' + arbContDisplay + 'background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px">'
-        + renderVangeArbeidsvisning(null)
-        + '</div>'
-        // LAGRE-seksjon
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:12px">LAGRE TRAPP</div>'
-        + '<div style="display:flex;gap:8px">'
-        + '<input id="vt_lagreNavn" type="text" placeholder="Navn på trapp" style="flex:1;padding:10px 14px;border:1.5px solid #dce8ff;border-radius:12px;font-size:14px;box-sizing:border-box" />'
-        + '<button onclick="lagreVangeTrapp()" style="padding:10px 16px;border-radius:12px;border:none;background:#22c55e;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Lagre</button>'
-        + '</div>'
-        + '</div>'
-        // LAGREDE TRAPPER
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:4px">LAGREDE TRAPPER</div>'
-        + '<div id="vtr_lagredeContainer">' + renderLagredeTrapper() + '</div>'
-        + '</div>'
-        + '</div>';
+      h += '</div></div>';
+      return h;
     }
 
-    // Info-panel med målebilde og forklaringsliste
-    function renderVangeInfoPanel() {
-      return '<div style="background:#f0f7ff;border:1.5px solid #dce8ff;border-radius:14px;padding:16px">'
-        + '<img src="img/trapp/vange-mal.png" alt="Vange trapp mål" style="width:100%;border-radius:10px;display:block;margin-bottom:14px" />'
-        + '<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">'
-        + '<li style="font-size:13px;color:#444">Total høyde: fra ferdig gulv nede til ferdig gulv oppe</li>'
-        + '<li style="font-size:13px;color:#444">Opptrinn: loddrett høyde per trinn</li>'
-        + '<li style="font-size:13px;color:#444">Inntrinn: horisontal dybde nese til nese</li>'
-        + '<li style="font-size:13px;color:#444">Alle mål legges inn i mm</li>'
-        + '</ul>'
-        + '</div>';
-    }
-
-    // Inputseksjon — grunnmål og antall trinn
-    function renderVangeInputseksjon() {
-      var inp = 'width:100%;padding:10px 14px;border:1.5px solid #dce8ff;border-radius:12px;font-size:16px;box-sizing:border-box';
-      var lbl = 'display:block;font-size:13px;font-weight:700;margin-bottom:6px';
-      var btn = 'width:34px;height:34px;border-radius:8px;border:1.5px solid #dce8ff;background:#fff;font-size:20px;cursor:pointer';
-      return '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:14px">GRUNNMÅL</div>'
-        + '<div style="display:flex;flex-direction:column;gap:12px">'
-        + '<div><label style="' + lbl + '">Total høyde (mm)</label>'
-        + '<input id="vt_totalHoyde" type="number" inputmode="decimal" placeholder="f.eks. 2800" oninput="oppdaterVangeGrunnberegning()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Inntrinn (mm)</label>'
-        + '<input id="vt_inntrinn" type="number" inputmode="decimal" placeholder="f.eks. 250" oninput="oppdaterVangeGrunnberegning()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Trappebredde (mm)</label>'
-        + '<input id="vt_bredde" type="number" inputmode="decimal" placeholder="f.eks. 900" oninput="oppdaterVangeGrunnberegning()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Trinntykkelse (mm)</label>'
-        + '<input id="vt_trinnTypp" type="number" inputmode="decimal" placeholder="f.eks. 36" oninput="oppdaterVangeGrunnberegning()" style="' + inp + '" /></div>'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px">'
-        + '<span style="' + lbl + ';margin-bottom:0">Antall trinn</span>'
-        + '<div style="display:flex;align-items:center;gap:12px">'
-        + '<button onclick="vangeTrinnJuster(-1)" style="' + btn + '">−</button>'
-        + '<span id="vt_antallTrinn" style="font-size:20px;font-weight:800;min-width:28px;text-align:center">' + _vangeTrinn + '</span>'
-        + '<button onclick="vangeTrinnJuster(1)" style="' + btn + '">+</button>'
-        + '</div></div>'
+    function renderTrappModusVelger() {
+      var type = _trappTyper.find(function(t) { return t.id === _trappType; });
+      var h = '<div style="width:100%;max-width:540px;margin:0 auto;padding:20px 16px">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">'
+        + '<button onclick="velgTrappType(null)" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center">←</button>'
+        + '<div><h1 style="font-size:20px;font-weight:800;margin:0">🪜 ' + (type ? type.name : 'Trapp') + '</h1>'
+        + '<div style="font-size:13px;color:var(--muted)">Velg beregningsmodus</div></div>'
         + '</div>'
-        + '</div>';
+        + '<div style="display:flex;flex-direction:column;gap:10px">'
+
+        + '<button onclick="velgTrappModus(\'fri\')" style="'
+        + 'background:var(--card);border:1.5px solid var(--line);border-radius:12px;'
+        + 'padding:18px 20px;text-align:left;cursor:pointer">'
+        + '<div style="font-size:15px;font-weight:700;color:var(--text)">Uten faste mål</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:4px">Du kjenner lengde og høyde — juster antall trinn med +/−</div>'
+        + '</button>'
+
+        + '<button onclick="velgTrappModus(\'fast\')" style="'
+        + 'background:var(--card);border:1.5px solid var(--line);border-radius:12px;'
+        + 'padding:18px 20px;text-align:left;cursor:pointer">'
+        + '<div style="font-size:15px;font-weight:700;color:var(--text)">Med faste mål</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:4px">Du kjenner høyde per trinn, dybde per trinn og totalhøyde</div>'
+        + '</button>'
+
+        + '</div></div>';
+      return h;
     }
 
-    // Resultatseksjon — kontroll alltid synlig, avansert seksjoner bak toggle
-    function renderVangeResultatseksjon() {
-      function rad(label, id) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f2f4f8">'
-          + '<span style="font-size:13px;color:#555">' + label + '</span>'
-          + '<span id="' + id + '" style="font-size:14px;font-weight:700;color:#ccc">—</span>'
+    function renderTrappKalkulator() {
+      var type = _trappTyper.find(function(t) { return t.id === _trappType; });
+      var inp = 'width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;background:var(--card)';
+      var lbl = 'display:block;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px';
+
+      var h = '<div style="width:100%;max-width:540px;margin:0 auto;padding:20px 16px">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">'
+        + '<button onclick="velgTrappModus(null)" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center">←</button>'
+        + '<div><h1 style="font-size:20px;font-weight:800;margin:0">🪜 ' + (type ? type.name : 'Trapp') + '</h1>'
+        + '<div style="font-size:13px;color:var(--muted)">' + (_trappModus === 'fast' ? 'Med faste mål' : 'Uten faste mål') + '</div></div>'
+        + '</div>';
+
+      // Input-felt
+      h += '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px">'
+        + '<div style="display:grid;gap:16px">';
+
+      if (_trappModus === 'fri') {
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+          + '<div>'
+          + '<label style="' + lbl + '">Total lengde (mm)</label>'
+          + '<input id="trappLengde" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="3750" />'
+          + '</div>'
+          + '<div>'
+          + '<label style="' + lbl + '">Total høyde (mm)</label>'
+          + '<input id="trappHoyde" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="2800" />'
+          + '</div></div>';
+        if (_trappType === 'gulv') {
+          h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+            + '<div>'
+            + '<label style="' + lbl + '">Topptrinn (mm)</label>'
+            + '<input id="trappTopptrinn" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="28" />'
+            + '</div>'
+            + '<div>'
+            + '<label style="' + lbl + '">Vange (mm)</label>'
+            + '<input id="trappVange" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="198" />'
+            + '</div></div>';
+        }
+      } else {
+        h += '<div>'
+          + '<label style="' + lbl + '">Høyde per trinn (mm)</label>'
+          + '<input id="trappOpptrinn" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="175" />'
+          + '</div>'
+          + '<div>'
+          + '<label style="' + lbl + '">Dybde per trinn (mm)</label>'
+          + '<input id="trappInntrinn" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="250" />'
+          + '</div>'
+          + '<div>'
+          + '<label style="' + lbl + '">Total høyde (mm)</label>'
+          + '<input id="trappHoyde" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="2800" />'
           + '</div>';
-      }
-      var avHide  = _visAvansertVange ? '' : 'display:none;';
-      var avBlock = _visAvansertVange ? 'display:flex;flex-direction:column;gap:12px' : 'display:none';
-      return '<div style="display:flex;flex-direction:column;gap:12px">'
-        // KONTROLL — alltid synlig
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">KONTROLL</div>'
-        + rad('Høyde per trinn',       'vtr_faktiskOpptrinn')
-        + rad('Trappeformel (2×O+I)',  'vtr_trappeformel')
-        + rad('Vinkel',                'vtr_trappevinkel')
-        + rad('Opptrinn status',       'vtr_opptrinnsStatus')
-        + rad('Inntrinn status',       'vtr_inntrinnStatus')
-        + '<div id="vange_radAntallInntrinn" style="' + avHide + '">'
-        + rad('Antall inntrinn',       'vtr_antallInntrinn')
-        + '</div>'
-        + '</div>'
-        // MÅL — alltid synlig
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">MÅL</div>'
-        + rad('Lengde',      'vtr_totalInnlop')
-        + rad('Vangelengde', 'vtr_vangelengde')
-        + '</div>'
-        // MERKEGUIDE — bare synlig i enkel modus
-        + '<div id="vtr_merkeguideContainer" style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px' + (_visAvansertVange ? ';display:none' : '') + '">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">SLIK MERKER DU OPP</div>'
-        + renderVangeMerkeguide(null, null, null, null)
-        + '</div>'
-        // AVANSERT — skjult i enkel-modus
-        + '<div id="vange_avansertSeksjoner" style="' + avBlock + '">'
-        // VANGE — kappvinklar og mål
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">VANGE</div>'
-        + rad('Vinkel oppe',   'vtr_vinkelOppe')
-        + rad('Vinkel nede',   'vtr_vinkelNede')
-        + '<div id="vtr_kappeContainer"></div>'
-        + '</div>'
-        // TRINN — produksjonsmål
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">TRINN</div>'
-        + rad('Antall',   'vtr_antallTrinnplater')
-        + rad('Dybde',    'vtr_trinnplateDybde')
-        + rad('Bredde',   'vtr_trinnplateBredde')
-        + rad('Tykkelse', 'vtr_trinnplateTykkelse')
-        + '</div>'
-        // OPPMERKING — hakk-liste
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:10px">OPPMERKING</div>'
-        + '<div id="vtr_hakkContainer"><div style="font-size:13px;color:#aaa">Ingen data</div></div>'
-        + '</div>'
-        + '</div>'
-        + '</div>';
-    }
-
-    // Enkel oppmerking steg-for-steg — bare synlig i enkel modus
-    function renderVangeMerkeguide(faktisk, inntrinnMm, vinkel, antallInn) {
-      if (!faktisk || !inntrinnMm || !vinkel || !antallInn || antallInn < 1) {
-        return '<div style="font-size:13px;color:#aaa">Legg inn målene for å få oppmerkingstips.</div>';
-      }
-      var kappvinkel = (90 - vinkel).toFixed(1);
-      var steg = [
-        { tekst: 'Start nederst på vangen.' },
-        { tekst: 'Mål ' + inntrinnMm.toFixed(0) + '\u00a0mm bort og ' + faktisk.toFixed(1) + '\u00a0mm opp — marker hakket.' },
-        { tekst: 'Gjenta for alle ' + antallInn + ' trinn.' },
-        { tekst: 'Kapp begge ender i ' + kappvinkel + '°.' },
-      ];
-      var stegHtml = steg.map(function(s, i) {
-        return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f2f4f8;align-items:flex-start">'
-          + '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#3b82f6;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px">' + (i + 1) + '</span>'
-          + '<span style="font-size:13px;color:#333;line-height:1.4">' + s.tekst + '</span>'
-          + '</div>';
-      }).join('');
-      return stegHtml;
-    }
-
-    // Hakk-liste — Punkt / Bort / Opp / Langs vange
-    function renderVangeHakkListe(hakkListe) {
-      if (!hakkListe || hakkListe.length === 0) {
-        return '<div style="font-size:13px;color:#aaa;padding:4px 0">Ingen data</div>';
-      }
-      var th  = 'style="padding:4px 8px;font-size:12px;font-weight:700;color:#aaa;text-align:right"';
-      var thL = 'style="padding:4px 8px;font-size:12px;font-weight:700;color:#aaa;text-align:left"';
-      var siste = hakkListe[hakkListe.length - 1];
-      return '<table style="width:100%;border-collapse:collapse">'
-        + '<thead><tr>'
-        + '<th ' + thL + '>Trinn</th>'
-        + '<th ' + th + '>Bort (mm)</th>'
-        + '<th ' + th + '>Opp (mm)</th>'
-        + '<th ' + th + '>Langs vange</th>'
-        + '</tr></thead>'
-        + '<tbody>'
-        + '<tr style="background:#f8fff8">'
-        + '<td style="padding:7px 8px;font-size:13px;font-weight:700;color:#167a42;border-top:1px solid #f2f4f8">Start</td>'
-        + '<td style="padding:7px 8px;font-size:13px;text-align:right;border-top:1px solid #f2f4f8">0</td>'
-        + '<td style="padding:7px 8px;font-size:13px;text-align:right;border-top:1px solid #f2f4f8">0</td>'
-        + '<td style="padding:7px 8px;font-size:13px;text-align:right;border-top:1px solid #f2f4f8">0</td>'
-        + '</tr>'
-        + hakkListe.map(function(h) {
-            var erTopp = h === siste;
-            var bg  = erTopp ? 'background:#f0f7ff;' : '';
-            var td  = 'style="' + bg + 'padding:7px 8px;font-size:13px;text-align:right;border-top:1px solid #f2f4f8"';
-            var tdL = 'style="' + bg + 'padding:7px 8px;font-size:13px;font-weight:700;border-top:1px solid #f2f4f8;color:' + (erTopp ? '#1d4ed8' : '#1a1a1a') + '"';
-            return '<tr>'
-              + '<td ' + tdL + '>' + (erTopp ? 'Topp' : h.nr) + '</td>'
-              + '<td ' + td + '>' + h.xMm.toFixed(0) + '</td>'
-              + '<td ' + td + '>' + h.yMm.toFixed(0) + '</td>'
-              + '<td ' + td + '>' + h.avstandLangsVangeMm.toFixed(1) + '</td>'
-              + '</tr>';
-          }).join('')
-        + '</tbody></table>';
-    }
-
-    // Kappemål til VANGE-seksjonen i avansert modus
-    function renderVangeKappeseksjon(hakkListe, vangeLengdeMm) {
-      if (!hakkListe || hakkListe.length === 0 || !vangeLengdeMm) return '';
-      var siste = hakkListe[hakkListe.length - 1];
-      function rad(label, verdi) {
-        return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f2f4f8;font-size:13px">'
-          + '<span style="color:#555">' + label + '</span>'
-          + '<span style="font-weight:700">' + verdi + '</span>'
-          + '</div>';
-      }
-      return rad('Kapp ved', siste.avstandLangsVangeMm.toFixed(1) + ' mm')
-           + rad('Total lengde', vangeLengdeMm.toFixed(0) + ' mm');
-    }
-
-    // Binder oninput og kjører første beregning etter render
-    function bindVangeTrappEvents() {
-      oppdaterVangeGrunnberegning();
-    }
-
-    // Toggle info-panel uten å re-rendre inputfelter
-    window.toggleVangeInfo = function() {
-      _visVangeInfo = !_visVangeInfo;
-      var panel = document.getElementById('vangeInfoPanel');
-      if (panel) panel.innerHTML = _visVangeInfo ? renderVangeInfoPanel() : '';
-      var btn = document.getElementById('vangeInfoBtn');
-      if (btn) btn.textContent = _visVangeInfo ? 'Lukk' : 'ℹ Info';
-    };
-
-    // Bytter mellom enkel og avansert visning uten å re-rendre inputfelter
-    window.toggleVangeAvansert = function(avansert) {
-      _visAvansertVange = !!avansert;
-      var tBase = 'padding:6px 18px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid ';
-      var tPa   = tBase + '#3b82f6;background:#eff6ff;color:#1d4ed8';
-      var tAv   = tBase + '#dce8ff;background:#fff;color:#888';
-      var enkBtn = document.getElementById('vange_enkelBtn');
-      var avBtn  = document.getElementById('vange_avansertBtn');
-      if (enkBtn) enkBtn.style.cssText = !_visAvansertVange ? tPa : tAv;
-      if (avBtn)  avBtn.style.cssText  =  _visAvansertVange ? tPa : tAv;
-      var avSek = document.getElementById('vange_avansertSeksjoner');
-      if (avSek) avSek.style.display = _visAvansertVange ? 'flex' : 'none';
-      if (avSek && _visAvansertVange) avSek.style.flexDirection = 'column';
-      if (avSek && _visAvansertVange) avSek.style.gap = '12px';
-      var radAnt = document.getElementById('vange_radAntallInntrinn');
-      if (radAnt) radAnt.style.display = _visAvansertVange ? '' : 'none';
-      var merkEl = document.getElementById('vtr_merkeguideContainer');
-      if (merkEl) merkEl.style.display = _visAvansertVange ? 'none' : '';
-    };
-
-    // +/- for antall trinn — oppdaterer display og kjører beregning
-    window.vangeTrinnJuster = function(delta) {
-      _vangeTrinn = Math.max(1, _vangeTrinn + delta);
-      var el = document.getElementById('vt_antallTrinn');
-      if (el) el.textContent = _vangeTrinn;
-      oppdaterVangeGrunnberegning();
-    };
-
-    // Leser inputverdier trygt fra DOM
-    function getVangeInputVerdier() {
-      function les(id) {
-        var el = document.getElementById(id);
-        var v = el ? Number(el.value) : 0;
-        return (isFinite(v) && v > 0) ? v : null;
-      }
-      return {
-        totalHoydeMm:    les('vt_totalHoyde'),
-        inntrinnMm:      les('vt_inntrinn'),
-        trappebreddeMm:  les('vt_bredde'),
-        trinnTykkelseMm: les('vt_trinnTypp'),
-        antallOpptrinn:  (_vangeTrinn >= 1) ? _vangeTrinn : null,
-      };
-    }
-
-    // Beregner og oppdaterer de tre første resultatfeltene
-    window.oppdaterVangeGrunnberegning = function() {
-      var v = getVangeInputVerdier();
-
-      var faktisk   = beregnFaktiskOpptrinn(v.totalHoydeMm, v.antallOpptrinn);
-      var antallInn = beregnAntallInntrinn(v.antallOpptrinn);
-      var innlop    = beregnTotalInnlop(v.inntrinnMm, antallInn);
-
-      function sett(id, verdi, desimaler, enhet) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        if (verdi === null || !isFinite(verdi)) {
-          el.textContent = '—';
-          el.style.color = '#ccc';
-        } else {
-          el.textContent = verdi.toFixed(desimaler) + (enhet || '');
-          el.style.color = '#1a1a1a';
+        if (_trappType === 'gulv') {
+          h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+            + '<div>'
+            + '<label style="' + lbl + '">Topptrinn (mm)</label>'
+            + '<input id="trappTopptrinn" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="28" />'
+            + '</div>'
+            + '<div>'
+            + '<label style="' + lbl + '">Vange (mm)</label>'
+            + '<input id="trappVange" type="number" inputmode="numeric" oninput="calcTrapp()" style="' + inp + '" placeholder="198" />'
+            + '</div></div>';
         }
       }
 
-      sett('vtr_faktiskOpptrinn', faktisk,   1, ' mm');
-      sett('vtr_antallInntrinn',  antallInn, 0, '');
-      sett('vtr_totalInnlop',     innlop,    0, ' mm');
+      h += '</div></div>';
 
-      // Trappeformel og statuser — class-basert fargekode
-      var formel      = beregnTrappeformel(faktisk, v.inntrinnMm);
-      var formelOk    = erTrappeformelInnenfor(formel);
-      var opptrinnsOk = erOpptrinnInnenfor(faktisk);
-      var inntrinnOk  = erInntrinnInnenfor(v.inntrinnMm);
-
-      function settStatus(id, tekst, ok) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = tekst !== null ? tekst : '—';
-        el.className   = ok === true ? 'status-ok' : ok === false ? 'status-feil' : '';
-      }
-
-      settStatus('vtr_trappeformel',
-        formel !== null ? formel.toFixed(0) + ' mm' : null,
-        formelOk);
-      settStatus('vtr_opptrinnsStatus',
-        opptrinnsOk === null ? null : (opptrinnsOk ? 'Innenfor' : 'Utenfor'),
-        opptrinnsOk);
-      settStatus('vtr_inntrinnStatus',
-        inntrinnOk === null ? null : (inntrinnOk ? 'Innenfor' : 'For lite'),
-        inntrinnOk);
-
-      // Trappevinkel og teoretisk vangelengde
-      var vinkel      = beregnTrappeVinkelGrader(v.totalHoydeMm, innlop);
-      var vangeLengde = beregnVangeLengde(v.totalHoydeMm, innlop);
-      sett('vtr_trappevinkel', vinkel,      1, '°');
-      sett('vtr_vangelengde',  vangeLengde, 0, ' mm');
-
-      // Kappvinkler — bruker allerede beregnet trappevinkel
-      sett('vtr_vinkelOppe', beregnToppVinkelGrader(vinkel), 1, '°');
-      sett('vtr_vinkelNede', beregnBunnVinkelGrader(vinkel), 1, '°');
-
-      // Trinnplater
-      sett('vtr_antallTrinnplater',  beregnAntallTrinnplater(antallInn),        0, '');
-      sett('vtr_trinnplateDybde',    beregnTrinnplateDybde(v.inntrinnMm),       0, ' mm');
-      sett('vtr_trinnplateBredde',   beregnTrinnplateBredde(v.trappebreddeMm),  0, ' mm');
-      sett('vtr_trinnplateTykkelse', beregnTrinnplateTykkelse(v.trinnTykkelseMm), 0, ' mm');
-
-      // Hakk-liste for vange
-      var hakk   = beregnVangeHakk(antallInn, faktisk, v.inntrinnMm);
-      var hakkEl = document.getElementById('vtr_hakkContainer');
-      if (hakkEl) hakkEl.innerHTML = renderVangeHakkListe(hakk);
-      var kappeEl = document.getElementById('vtr_kappeContainer');
-      if (kappeEl) kappeEl.innerHTML = renderVangeKappeseksjon(hakk, vangeLengde);
-
-      // Arbeidsvisning — oppdater hvis synlig
-      if (_visVangeArbeidsvisning) {
-        var arbEl = document.getElementById('vtr_arbeidsvisningContainer');
-        if (arbEl) arbEl.innerHTML = renderVangeArbeidsvisning({
-          totalHoydeMm:      v.totalHoydeMm,
-          antallOpptrinn:    v.antallOpptrinn,
-          faktisk:           faktisk,
-          inntrinnMm:        v.inntrinnMm,
-          innlop:            innlop,
-          vangeLengde:       vangeLengde,
-          vinkel:            vinkel,
-          vinkelOppe:        beregnToppVinkelGrader(vinkel),
-          vinkelNede:        beregnBunnVinkelGrader(vinkel),
-          antallTrinnplater: beregnAntallTrinnplater(antallInn),
-          trinnplateDybde:   beregnTrinnplateDybde(v.inntrinnMm),
-          trinnplateBredde:  beregnTrinnplateBredde(v.trappebreddeMm),
-          trinnplateTykkelse:beregnTrinnplateTykkelse(v.trinnTykkelseMm),
-          antallInn:         antallInn,
-        });
-      }
-
-      // Merkeguide — oppdater med beregnede verdier
-      var merkEl = document.getElementById('vtr_merkeguideContainer');
-      if (merkEl) {
-        var guideHtml = renderVangeMerkeguide(faktisk, v.inntrinnMm, vinkel, antallInn);
-        merkEl.innerHTML = '<div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.06em;margin-bottom:8px">SLIK MERKER DU OPP</div>' + guideHtml;
-      }
-    };
-
-    // Setter valgt type og re-rendrer hele trapp-modulen
-    window.velgTrappetype = function(id) {
-      _trappeType = id;
-      renderMakkerView();
-    };
-
-    // Velg vange-variant og oppdater beregning
-    window.velgVangeVariant = function(id) {
-      valgtTrappetype = id;
-      calcVange();
-    };
-
-    // ─────────────────────────────────────────────────────────────────────────
-
-    var _trappeTyper = [
-      { id: 'vange',    name: 'Vangetrapp',    desc: 'Trinn festet mellom to vanger', img: 'img/trapp/vange.png' },
-      { id: 'kasse',    name: 'Kassetrapp',    desc: 'Lukket trapp med sideplater',   img: 'img/trapp/kasse.png' },
-      { id: 'utvendig', name: 'Utvendig trapp',desc: 'Trapp til terrasse eller inngang', img: 'img/trapp/utvendig.png' },
-    ];
-
-    function renderTrappeTypeSelect(){
-      return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">'
-        + '<button onclick="openMakkerTool(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-        + '<div><div style="font-size:22px;font-weight:800">🪜 Trappekalkulator</div>'
-        + '<div style="font-size:13px;color:#888">Velg trappetype</div></div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;gap:12px">'
-        + _trappeTyper.map(function(t){
-            return '<button onclick="selectTrappeType(\'' + t.id + '\')"'
-              + ' style="background:#fff;border:1.5px solid #dce8ff;border-radius:16px;overflow:hidden;text-align:left;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:center;gap:0;padding:0">'
-              + '<img src="' + t.img + '" alt="' + t.name + '"'
-              + ' style="width:100px;height:80px;object-fit:cover;flex-shrink:0;border-radius:14px 0 0 14px" />'
-              + '<div style="padding:14px 16px">'
-              + '<div style="font-size:16px;font-weight:800">' + t.name + '</div>'
-              + '<div style="font-size:12px;color:#888;margin-top:3px">' + t.desc + '</div>'
-              + '</div>'
-              + '</button>';
-          }).join('')
-        + '</div>'
-        + '</div>';
-    }
-
-    function renderTrappeTypePlaceholder(typeId){
-      var t = _trappeTyper.find(function(x){ return x.id===typeId; });
-      return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">'
-        + '<button onclick="selectTrappeType(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-        + '<div><div style="font-size:22px;font-weight:800">🪜 ' + (t?t.name:'Trappekalkulator') + '</div></div>'
-        + '</div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:24px;text-align:center;color:#aaa">'
-        + '<div style="font-size:32px;margin-bottom:10px">🪜</div>'
-        + '<div style="font-size:15px;font-weight:600">Kommer snart</div>'
-        + '<div style="font-size:13px;margin-top:4px">' + (t?t.desc:'') + '</div>'
-        + '</div>'
-        + '</div>';
-    }
-
-    function renderVangeModeSelect(){
-      return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">'
-        + '<button onclick="selectTrappeType(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-        + '<div><div style="font-size:22px;font-weight:800">🪜 Vangetrapp</div>'
-        + '<div style="font-size:13px;color:#888">Velg modus</div></div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;gap:12px">'
-        + '<button onclick="selectVangeMode(\'fast\')"'
-        + ' style="background:#fff;border:1.5px solid #dce8ff;border-radius:16px;overflow:hidden;text-align:left;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:0;width:100%">'
-        + '<img src="img/trapp-fast.png" alt="Med faste mål" style="width:100%;height:120px;object-fit:cover;display:block" />'
-        + '<div style="padding:14px 18px">'
-        + '<div style="font-size:16px;font-weight:800">📐 Med faste mål</div>'
-        + '<div style="font-size:12px;color:#888;margin-top:4px">Du vet opptrinn og inntrinn fra før</div>'
-        + '</div>'
-        + '</button>'
-        + '<button onclick="selectVangeMode(\'fri\')"'
-        + ' style="background:#fff;border:1.5px solid #dce8ff;border-radius:16px;overflow:hidden;text-align:left;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:0;width:100%">'
-        + '<img src="img/trapp-auto.png" alt="Uten faste mål" style="width:100%;height:120px;object-fit:cover;display:block" />'
-        + '<div style="padding:14px 18px">'
-        + '<div style="font-size:16px;font-weight:800">🔧 Uten faste mål</div>'
-        + '<div style="font-size:12px;color:#888;margin-top:4px">Du vet kun høyde – appen beregner resten</div>'
-        + '</div>'
-        + '</button>'
-        + '</div>'
-        + '</div>';
-    }
-
-    function renderVangeAuto(){
-  return ''
-    + '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-    + '  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-    + '    <button onclick="selectVangeMode(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-    + '    <div>'
-    + '      <div style="font-size:22px;font-weight:800">🪜 Vange trapp</div>'
-    + '      <div style="font-size:13px;color:#888">Uten faste mål</div>'
-    + '    </div>'
-    + '  </div>'
-
-    + '  <div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px">'
-    + '    <img src="img/trapp/vange-mal.png" alt="Vange trapp mål" style="width:100%;border-radius:12px" />'
-    + '  </div>'
-
-    + '  <div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-    + '    <div style="display:grid;gap:12px">'
-    + '      <div>'
-    + '        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Høyde trinn (cm)</label>'
-    + '        <input id="vangeAutoRise" type="number" inputmode="decimal" placeholder="F.eks. 18" style="width:100%" />'
-    + '      </div>'
-    + '      <div>'
-    + '        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Dybde trinn (cm)</label>'
-    + '        <input id="vangeAutoRun" type="number" inputmode="decimal" placeholder="F.eks. 25" style="width:100%" />'
-    + '      </div>'
-    + '      <div>'
-    + '        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Total høyde (cm)</label>'
-    + '        <input id="vangeAutoTotalHeight" type="number" inputmode="decimal" placeholder="F.eks. 120" style="width:100%" />'
-    + '      </div>'
-    + '      <div>'
-    + '        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Topptrinn (mm)</label>'
-    + '        <input id="vangeAutoTopStep" type="number" inputmode="decimal" placeholder="F.eks. 36" style="width:100%" />'
-    + '      </div>'
-    + '      <div>'
-    + '        <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Vange (mm)</label>'
-    + '        <input id="vangeAutoStringer" type="number" inputmode="decimal" placeholder="F.eks. 48" style="width:100%" />'
-    + '      </div>'
-    + '    </div>'
-    + '  </div>'
-    + '</div>';
-}   
-    function renderVangeView(){
-      var inp = 'width:100%;padding:10px 14px;border:1.5px solid #dce8ff;border-radius:12px;font-size:16px;box-sizing:border-box';
-      var lbl = 'display:block;font-size:13px;font-weight:700;margin-bottom:6px';
-      var fastActive = _vangeMode === 'fast';
-      var tabBase = 'flex:1;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;';
-      var tabOn  = tabBase + 'border:1.5px solid #3b82f6;background:#eff6ff;font-weight:800;color:#1d4ed8';
-      var tabOff = tabBase + 'border:1.5px solid #dce8ff;background:#fff;font-weight:600;color:#888';
-
-      var fastInputs = '<div style="display:flex;flex-direction:column;gap:14px">'
-        + '<div><label style="' + lbl + '">Total høyde (mm)</label>'
-        + '<input id="trappeHoyde" type="number" placeholder="f.eks. 2800" oninput="calcVange();oppdaterFaktiskOpptrinn()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Ønsket opptrinn (mm)</label>'
-        + '<input id="trappeOpptrinn" type="number" placeholder="f.eks. 175" oninput="calcVange()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Inntrinn (mm)</label>'
-        + '<input id="trappeInntrinn" type="number" placeholder="f.eks. 250" oninput="calcVange()" style="' + inp + '" /></div>'
-        + '</div>';
-
-      var friInputs = '<div style="display:flex;flex-direction:column;gap:14px">'
-        + '<div><label style="' + lbl + '">Høyde trinn (cm)</label>'
-        + '<input id="vangeAutoRise" type="number" inputmode="decimal" placeholder="F.eks. 18" oninput="calcVange()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Dybde trinn (cm)</label>'
-        + '<input id="vangeAutoRun" type="number" inputmode="decimal" placeholder="F.eks. 25" oninput="calcVange()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Total høyde (mm)</label>'
-        + '<input id="vangeAutoTotalHeight" type="number" inputmode="decimal" placeholder="F.eks. 2800" oninput="calcVange();oppdaterFaktiskOpptrinn()" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Topptrinn (mm)</label>'
-        + '<input id="vangeAutoTopStep" type="number" inputmode="decimal" placeholder="F.eks. 36" style="' + inp + '" /></div>'
-        + '<div><label style="' + lbl + '">Vange (mm)</label>'
-        + '<input id="vangeAutoStringer" type="number" inputmode="decimal" placeholder="F.eks. 48" style="' + inp + '" /></div>'
-        + '</div>';
-
-      return '<div style="width:100%;max-width:480px;margin:0 auto;padding:24px">'
-        + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-        + '<button onclick="selectTrappeType(null)" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px">←</button>'
-        + '<div><div style="font-size:22px;font-weight:800">🪜 Vangetrapp</div></div>'
-        + '</div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px">'
-        + '<img src="img/trapp/vange-mal.png" alt="Vange trapp mål" style="width:100%;border-radius:12px" />'
-        + '</div>'
-        + '<div style="display:flex;gap:8px;margin-bottom:16px">'
-        + '<button onclick="selectVangeMode(\'fast\')" style="' + (fastActive ? tabOn : tabOff) + '">📐 Med faste mål</button>'
-        + '<button onclick="selectVangeMode(\'fri\')" style="' + (!fastActive ? tabOn : tabOff) + '">🔧 Uten faste mål</button>'
-        + '</div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:13px;font-weight:700">Antall trinn</span>'
-        + '<div style="display:flex;align-items:center;gap:12px">'
-        + '<button onclick="vangeJusterTrinn(-1)" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #dce8ff;background:#fff;font-size:20px;cursor:pointer">−</button>'
-        + '<span id="vangeTrinnVisning" style="font-size:22px;font-weight:800;min-width:28px;text-align:center">' + _vangeTrinn + '</span>'
-        + '<button onclick="vangeJusterTrinn(1)" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #dce8ff;background:#fff;font-size:20px;cursor:pointer">+</button>'
-        + '</div></div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:13px;font-weight:700;color:#888">Faktisk opptrinn</span>'
-        + '<span id="vangeFaktiskOpptrinn" style="font-size:18px;font-weight:800">—</span>'
-        + '</div>'
-        + '<div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-        + (fastActive ? fastInputs : friInputs)
-        + '</div>'
-        + '<div id="vangeResultat"></div>'
-        + '</div>';
-    }
-
-    function renderTrappeTool(){
-      if(!_trappeType) return renderTrappeTypeSelect();
-      if(_trappeType !== 'vange') return renderTrappeTypePlaceholder(_trappeType);
-      if(!_vangeMode) _vangeMode = 'fri';
-      return renderVangeView();
-    }
-
-    window.calcTrappe = function(){
-      var hoyde = Number(document.getElementById('trappeHoyde').value);
-      var onsket = Number(document.getElementById('trappeOpptrinn').value);
-      var inntrinn = Number(document.getElementById('trappeInntrinn').value);
-      var el = document.getElementById('trappeResultat');
-      if(!hoyde || !onsket || hoyde<=0 || onsket<=0){ el.innerHTML=''; return; }
-      var antall = Math.round(hoyde / onsket);
-      if(antall < 1){ el.innerHTML=''; return; }
-      var faktisk = hoyde / antall;
-      var vurdering, farge;
-      if(faktisk < 160){       vurdering='Lavt opptrinn';   farge='#f0a202'; }
-      else if(faktisk <= 190){ vurdering='Normalt opptrinn'; farge='#167a42'; }
-      else {                   vurdering='Høyt opptrinn';    farge='#c0392b'; }
-      var resultat = '<div style="background:#f5f8ff;border:1.5px solid #dce8ff;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:13px;font-weight:700;color:#888">Antall opptrinn</span>'
-        + '<span style="font-size:22px;font-weight:800">' + antall + '</span>'
-        + '</div>'
-        + '<div style="display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:13px;font-weight:700;color:#888">Faktisk opptrinn</span>'
-        + '<span style="font-size:22px;font-weight:800">' + faktisk.toFixed(1) + ' mm</span>'
-        + '</div>'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #dce8ff">'
-        + '<span style="font-size:13px;font-weight:700;color:#888">Vurdering opptrinn</span>'
-        + '<span style="font-size:14px;font-weight:800;color:' + farge + '">' + vurdering + '</span>'
-        + '</div>';
-      if(inntrinn > 0){
-        var formel = 2 * faktisk + inntrinn;
-        var fVurdering, fFarge;
-        if(formel < 600){       fVurdering='Bratt trapp'; fFarge='#c0392b'; }
-        else if(formel <= 640){ fVurdering='God trapp';   fFarge='#167a42'; }
-        else {                  fVurdering='Slak trapp';  fFarge='#f0a202'; }
-        resultat += '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #dce8ff">'
-          + '<span style="font-size:13px;font-weight:700;color:#888">Trappeformel (2×O+I)</span>'
-          + '<span style="font-size:22px;font-weight:800">' + formel.toFixed(1) + ' mm</span>'
-          + '</div>'
-          + '<div style="display:flex;justify-content:space-between;align-items:center">'
-          + '<span style="font-size:13px;font-weight:700;color:#888">Vurdering trapp</span>'
-          + '<span style="font-size:14px;font-weight:800;color:' + fFarge + '">' + fVurdering + '</span>'
+      // +/- for fri modus
+      if (_trappModus === 'fri') {
+        h += '<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px">'
+          + '<button onclick="justerTrappTrinn(-1)" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);font-size:22px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">−</button>'
+          + '<span id="trappAntallVis" style="font-size:20px;font-weight:800;min-width:80px;text-align:center;color:var(--text)">–</span>'
+          + '<button onclick="justerTrappTrinn(1)" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);font-size:22px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">+</button>'
           + '</div>';
       }
-      el.innerHTML = resultat + '</div>';
-    };
 
-    window.openMakkerTool = function(id){
-      _makkerTool = id;
-      if(id !== 'trapp') _trappeType = null;
-      renderMakkerView();
-    };
+      // Resultat
+      h += '<div id="trappResultat" style="min-height:60px"></div></div>';
+      return h;
+    }
 
-    window.selectTrappeType = function(id){
-      _trappeType = id;
-      _vangeMode = null;
-      renderMakkerView();
-    };
+    // Trapp beregning — felles for alle typer og moduser
+    function calcTrapp() {
+      var el = document.getElementById('trappResultat');
+      if (!el) return;
 
-    window.selectVangeMode = function(mode){
-      _vangeMode = mode;
-      _vangeTrinn = null;
-      renderMakkerView();
-    };
+      var hoyde, inntrinn, opptrinn, antall, innlop, vangeHoyde;
+      var topptrinnEl = document.getElementById('trappTopptrinn');
+      var vangeEl = document.getElementById('trappVange');
+      var topptrinn = topptrinnEl ? Number(topptrinnEl.value) || 0 : 0;
+      var vangeBredde = vangeEl ? Number(vangeEl.value) || 0 : 0;
 
-    window.calcVange = function(){
-      var mode = _vangeMode || 'fri';
-      var hoyde, inntrinn;
-      if(mode === 'fast'){
-        hoyde   = Number(document.getElementById('trappeHoyde').value);
-        var ons = Number(document.getElementById('trappeOpptrinn').value);
-        inntrinn = Number(document.getElementById('trappeInntrinn').value);
-        if(!hoyde || !ons){ document.getElementById('vangeResultat').innerHTML=''; _vangeTrinn=null; return; }
-        _vangeTrinn = Math.max(1, Math.round(hoyde / ons));
-        if (valgtTrappetype !== 'vange-gulv') _vangeTrinn = Math.max(1, _vangeTrinn - 1);
+      // Tommelregel: "ned" bruker antall-1 inntrinn, de andre bruker antall
+      var brukAntallMinusEn = (_trappType === 'ned');
+
+      if (_trappModus === 'fast') {
+        var opptrinnInput = Number(document.getElementById('trappOpptrinn').value);
+        inntrinn = Number(document.getElementById('trappInntrinn').value);
+        hoyde = Number(document.getElementById('trappHoyde').value);
+        if (!opptrinnInput || !inntrinn || !hoyde || opptrinnInput <= 0 || hoyde <= 0) {
+          el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:20px">Fyll inn verdier for å beregne...</div>';
+          return;
+        }
+        var effektivHoyde = hoyde + topptrinn;
+        antall = Math.round(effektivHoyde / opptrinnInput);
+        if (antall < 1) antall = 1;
+        opptrinn = opptrinnInput;
+
+        if (brukAntallMinusEn) {
+          innlop = (antall - 1) * inntrinn;
+        } else {
+          innlop = antall * inntrinn;
+        }
       } else {
-        var tot = Number(document.getElementById('vangeAutoTotalHeight').value);
-        var ris = Number(document.getElementById('vangeAutoRise').value);
-        inntrinn = Number(document.getElementById('vangeAutoRun').value) * 10;
-        if(!tot || !ris){ document.getElementById('vangeResultat').innerHTML=''; _vangeTrinn=null; return; }
-        hoyde = tot;
-        _vangeTrinn = Math.max(1, Math.round(hoyde / (ris * 10)));
-        if (valgtTrappetype !== 'vange-gulv') _vangeTrinn = Math.max(1, _vangeTrinn - 1);
-      }
-      vangeVisResultat(hoyde, inntrinn);
-    };
+        var lengde = Number(document.getElementById('trappLengde').value);
+        hoyde = Number(document.getElementById('trappHoyde').value);
+        if (!lengde || !hoyde || lengde <= 0 || hoyde <= 0) {
+          el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:20px">Fyll inn verdier for å beregne...</div>';
+          return;
+        }
+        var effektivHoyde = hoyde + topptrinn;
+        if (!_trappTrinn) {
+          _trappTrinn = Math.round(effektivHoyde / 180);
+          if (_trappTrinn < 2) _trappTrinn = 2;
+          _trappTrinnJustering = 0;
+        }
+        antall = Math.max(2, _trappTrinn + _trappTrinnJustering);
+        opptrinn = effektivHoyde / antall;
 
-    window.vangeJusterTrinn = function(delta){
-      _vangeTrinn = Math.max(1, _vangeTrinn + delta);
-      var vis = document.getElementById('vangeTrinnVisning');
-      if(vis) vis.textContent = _vangeTrinn;
-      oppdaterFaktiskOpptrinn();
-      var mode = _vangeMode || 'fri';
-      var hoyde, inntrinn;
-      if(mode === 'fast'){
-        hoyde    = Number(document.getElementById('trappeHoyde').value);
-        inntrinn = Number(document.getElementById('trappeInntrinn').value);
+        if (brukAntallMinusEn) {
+          inntrinn = lengde / (antall - 1);
+        } else {
+          inntrinn = lengde / antall;
+        }
+        innlop = lengde;
+      }
+
+      // Vangehøyde avhenger av type
+      if (_trappType === 'ned') {
+        vangeHoyde = (antall - 1) * opptrinn;
       } else {
-        hoyde    = Number(document.getElementById('vangeAutoTotalHeight').value) * 10;
-        inntrinn = Number(document.getElementById('vangeAutoRun').value) * 10;
+        vangeHoyde = hoyde + topptrinn;
       }
-      vangeVisResultat(hoyde, inntrinn);
-    };
 
-    window.oppdaterFaktiskOpptrinn = function(){
-      var el = document.getElementById('vangeFaktiskOpptrinn');
-      if(!el) return;
-      var mode = _vangeMode || 'fri';
-      var feltId = mode === 'fast' ? 'trappeHoyde' : 'vangeAutoTotalHeight';
-      var felt = document.getElementById(feltId);
-      var hoyde = felt ? Number(felt.value) : 0;
-      if(!hoyde || !_vangeTrinn || _vangeTrinn < 1) { el.textContent = '—'; return; }
-      el.textContent = (hoyde / _vangeTrinn).toFixed(1) + ' mm';
-    };
+      var formel = 2 * opptrinn + inntrinn;
+      var vangeLengde = Math.sqrt(vangeHoyde * vangeHoyde + innlop * innlop);
+      var vinkel = Math.atan2(opptrinn, inntrinn) * (180 / Math.PI);
+      var kappVinkelTopp = 90 - vinkel;
+      var kappVinkelBunn = vinkel;
 
-    function vangeVisResultat(hoyde, inntrinn){
-      var el = document.getElementById('vangeResultat');
-      if(!el || !_vangeTrinn || !hoyde) return;
+      // Oppdater +/- visning
+      var antallVis = document.getElementById('trappAntallVis');
+      if (antallVis) antallVis.textContent = antall + ' trinn';
 
-      var faktiskH = hoyde / _vangeTrinn;
-      var formel   = inntrinn ? 2 * faktiskH + inntrinn : null;
-      var step     = inntrinn ? Math.sqrt(faktiskH*faktiskH + inntrinn*inntrinn) : null;
-      var lengde   = step ? step * _vangeTrinn : null;
-      var vinkel   = inntrinn ? Math.atan2(faktiskH, inntrinn) * 180 / Math.PI : null;
+      // Fargekoder
+      var GRONN = 'var(--green, #167a42)';
+      var ROD = 'var(--red, #c0392b)';
+      var GUL = '#f0a202';
 
-      var fFarge = formel  ? (formel  >= 600 && formel  <= 640 ? '#167a42' : '#c0392b') : '#aaa';
-      var hFarge = (faktiskH >= 160 && faktiskH <= 190) ? '#167a42' : '#c0392b';
-      var dFarge = inntrinn ? ((inntrinn >= 220 && inntrinn <= 280) ? '#167a42' : '#c0392b') : '#aaa';
+      function farge(verdi, min, max) {
+        if (verdi >= min && verdi <= max) return GRONN;
+        return ROD;
+      }
 
-      var btn = 'width:34px;height:34px;border-radius:8px;border:1.5px solid #dce8ff;background:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
-      var sep = 'display:flex;justify-content:space-between;align-items:flex-start;padding-top:10px;border-top:1px solid #dce8ff';
-      function row(label, val, note, noteColor){
-        return '<div style="' + sep + '">'
-          + '<span style="font-size:13px;font-weight:700;color:#888;padding-top:2px">' + label + '</span>'
+      var opptrinnFarge = farge(opptrinn, 150, 220);
+      var inntrinnFarge = inntrinn ? farge(inntrinn, 220, 300) : 'var(--muted)';
+      var formelFarge = formel ? farge(formel, 600, 640) : 'var(--muted)';
+
+      function rad(label, verdi, note, noteFarge) {
+        return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)">'
+          + '<span style="font-size:14px;color:var(--muted)">' + label + '</span>'
           + '<div style="text-align:right">'
-          + '<div style="font-size:18px;font-weight:800">' + val + '</div>'
-          + (note ? '<div style="font-size:11px;color:' + (noteColor||'#aaa') + ';margin-top:1px">' + note + '</div>' : '')
+          + '<span style="font-size:18px;font-weight:800">' + verdi + '</span>'
+          + (note ? '<div style="font-size:11px;color:' + (noteFarge || 'var(--muted)') + ';margin-top:2px">' + note + '</div>' : '')
           + '</div></div>';
       }
 
-      var h = '<div style="background:#f5f8ff;border:1.5px solid #dce8ff;border-radius:14px;padding:16px;margin-top:14px">';
+      var h = '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px">';
 
-      h += '<div style="display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:13px;font-weight:700;color:#888">Antall trinn</span>'
-        + '<div style="display:flex;align-items:center;gap:10px">'
-        + '<button onclick="vangeJusterTrinn(-1)" style="' + btn + '">−</button>'
-        + '<span style="font-size:22px;font-weight:800;min-width:28px;text-align:center">' + _vangeTrinn + '</span>'
-        + '<button onclick="vangeJusterTrinn(1)" style="' + btn + '">+</button>'
-        + '</div></div>';
+      h += rad('Antall trinn', antall + ' stk', null);
+      h += rad('Opptrinn', '<span style="color:' + opptrinnFarge + '">' + opptrinn.toFixed(1) + ' mm</span>',
+        opptrinn >= 150 && opptrinn <= 220 ? '✓ Innenfor (150–220 mm)' : '✗ Utenfor (150–220 mm)', opptrinnFarge);
 
-      h += row('Høyde trinn',  faktiskH.toFixed(1) + ' mm', 'Anbefalt: 160–190 mm', hFarge);
-      if(inntrinn) h += row('Dybde trinn', inntrinn.toFixed(0) + ' mm', 'Anbefalt: 220–280 mm', dFarge);
-      if(formel)   h += row('Trappeformel (2×O+I)',
-                     '<span style="color:' + fFarge + '">' + formel.toFixed(0) + ' mm</span>',
-                     formel >= 600 && formel <= 640 ? '✓ Innenfor (600–640 mm)' : '✗ Utenfor (600–640 mm)', fFarge);
-      if(step)     h += row('Mellomrom langs vange', step.toFixed(0) + ' mm', null, null);
-      if(lengde)   h += row('Lengde vange', (lengde / 1000).toFixed(2) + ' m', null, null);
-      if(vinkel !== null) {
-        h += row('Grader nede', vinkel.toFixed(1) + '°', null, null);
-        h += row('Grader oppe', (90 - vinkel).toFixed(1) + '°', null, null);
+      if (inntrinn) {
+        h += rad('Inntrinn', '<span style="color:' + inntrinnFarge + '">' + inntrinn.toFixed(1) + ' mm</span>',
+          inntrinn >= 220 && inntrinn <= 300 ? '✓ Innenfor (220–300 mm)' : '✗ Utenfor (220–300 mm)', inntrinnFarge);
+      }
+
+      h += rad('Trappeformel', '<span style="color:' + formelFarge + '">' + formel.toFixed(0) + ' mm</span>',
+        formel >= 600 && formel <= 640 ? '✓ Innenfor (600–640 mm)' : '✗ Utenfor (600–640 mm)', formelFarge);
+
+      // Mellomrom trinn langs vange
+      var mellomromVange = Math.sqrt(opptrinn * opptrinn + inntrinn * inntrinn);
+
+      h += rad('Vinkel', vinkel.toFixed(1) + '°', null);
+      h += rad('Vangelengde', (vangeLengde / 1000).toFixed(2) + ' m', vangeLengde.toFixed(0) + ' mm');
+      h += rad('Total innløp', (innlop / 1000).toFixed(2) + ' m', innlop.toFixed(0) + ' mm');
+      h += rad('Mellomrom langs vange', mellomromVange.toFixed(1) + ' mm', null);
+      h += rad('Kappvinkel topp', kappVinkelTopp.toFixed(1) + '°', null);
+      h += rad('Kappvinkel bunn', kappVinkelBunn.toFixed(1) + '°', null);
+      if (vangeBredde > 0) {
+        h += rad('Vange bredde', vangeBredde + ' mm', null);
       }
 
       h += '</div>';
       el.innerHTML = h;
     }
+
+    // ── TRAPP EVENT HANDLERS ──────────────────────────────────────────────
+
+    window.velgTrappType = function(id) {
+      _trappType = id;
+      _trappModus = null;
+      _trappTrinn = 0;
+      _trappTrinnJustering = 0;
+      renderMakkerView();
+    };
+
+    window.velgTrappModus = function(modus) {
+      _trappModus = modus;
+      _trappTrinn = 0;
+      _trappTrinnJustering = 0;
+      renderMakkerView();
+    };
+
+    window.justerTrappTrinn = function(delta) {
+      _trappTrinnJustering += delta;
+      calcTrapp();
+    };
+
+    window.openMakkerTool = function(id) {
+      _makkerTool = id;
+      if (id !== 'trapp') {
+        _trappType = null;
+        _trappModus = null;
+        _trappTrinn = 0;
+        _trappTrinnJustering = 0;
+      }
+      renderMakkerView();
+    };
+
+    // (gammel trapp-kode fjernet)

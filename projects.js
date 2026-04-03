@@ -333,7 +333,7 @@
       }
       // Send to offer button
       html+='<div style="margin-top:8px;display:flex;gap:6px">'
-        +'<button class="btn small primary" style="flex:1;background:#0a84ff" onclick="sendOperationToOffer(\''+opId+'\')">📤 Send til tilbud</button>'
+        +'<button class="btn small primary" style="flex:1;background:var(--accent)" onclick="sendOperationToOffer(\''+opId+'\')">📤 Send til tilbud</button>'
         +'</div>';
       return html;
     }
@@ -1077,12 +1077,12 @@
         +'Basert på '+opCount+' operasjon'+(opCount>1?'er':'')+' som ikke er sendt til tilbud ennå.'
         +'</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-          +'<div style="padding:10px;background:#fff;border:1px solid #fde68a;border-radius:10px">'
+          +'<div style="padding:10px;background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:10px">'
             +'<div style="font-size:13px;font-weight:700;color:var(--muted)">Total foreslåtte materialer:</div>'
             +'<div style="font-size:18px;font-weight:800;margin-top:4px">'+currency(totalCost)+'</div>'
             +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+unsentMats.length+' linjer</div>'
           +'</div>'
-          +'<div style="padding:10px;background:#fff;border:1px solid #fde68a;border-radius:10px">'
+          +'<div style="padding:10px;background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:10px">'
             +'<div style="font-size:13px;font-weight:700;color:var(--muted)">Operasjoner med forslag:</div>'
             +'<div style="font-size:18px;font-weight:800;margin-top:4px">'+opCount+'</div>'
             +'<div style="font-size:11px;color:var(--muted);margin-top:2px">stk</div>'

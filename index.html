@@ -8,32 +8,34 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200;12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app">
     <div id="dashboardView">
-      <div class="topbar">
-        <div>
-          <div class="title">Oversikt</div>
-          <div class="subtitle">Kunder, prosjekter og tilbud samlet på ett sted. <span id="syncIndicator" style="font-size:11px;font-weight:600;margin-left:6px;color:var(--green)">☁️ Synkronisert</span></div>
-        </div>
-        <div class="actions">
-          <button class="btn soft" onclick="goToHome()">← Hovedmeny</button>
-          <button class="btn secondary" id="backupBtn">Eksporter data</button>
-          <button class="btn soft" id="importBtn">Importer data</button>
-          <button class="btn soft" onclick="openMatCalc()">Materialkalk</button>
-          <button class="btn soft" id="settingsBtn" style="font-size:16px;padding:8px 12px">⚙️</button>
-          <button class="btn primary" id="newCustomerBtn">+ Ny kunde</button>
-          <button class="btn primary" id="newProjectBtn">+ Nytt prosjekt</button>
-          <input type="file" id="importFile" class="hidden" accept="application/json" />
+      <div class="dash-header">
+        <div class="topbar">
+          <div>
+            <div class="title">Oversikt</div>
+            <div class="subtitle">Kunder, prosjekter og tilbud samlet på ett sted. <span id="syncIndicator" style="font-size:11px;font-weight:600;margin-left:6px">☁️ Synkronisert</span></div>
+          </div>
+          <div class="actions">
+            <button class="btn soft" onclick="goToHome()">← Hovedmeny</button>
+            <button class="btn secondary" id="backupBtn">Eksporter data</button>
+            <button class="btn soft" id="importBtn">Importer data</button>
+            <button class="btn soft" onclick="openMatCalc()">Materialkalk</button>
+            <button class="btn soft" id="settingsBtn" style="font-size:16px;padding:8px 12px">⚙️</button>
+            <button class="btn primary" id="newCustomerBtn">+ Ny kunde</button>
+            <button class="btn primary" id="newProjectBtn">+ Nytt prosjekt</button>
+            <input type="file" id="importFile" class="hidden" accept="application/json" />
+          </div>
         </div>
       </div>
       <div class="grid cols-4" style="margin-bottom:20px">
-        <div class="metric"><div class="label">Kunder</div><div class="value" id="metricCustomers">0</div><div class="sub">Lagrede kunder</div></div>
-        <div class="metric"><div class="label">Prosjekter</div><div class="value" id="metricProjects">0</div><div class="sub">Alle prosjekter</div></div>
-        <div class="metric"><div class="label">Tilbud sendt</div><div class="value" id="metricSent">0</div><div class="sub">Status = sendt</div></div>
-        <div class="metric"><div class="label">Vinnerate</div><div class="value" id="metricWinRate">0%</div><div class="sub">Vunnet av sendt</div></div>
+        <div class="metric metric--blue dash-animate"><div class="label">Kunder</div><div class="value" id="metricCustomers">0</div><div class="sub">Lagrede kunder</div></div>
+        <div class="metric metric--teal dash-animate"><div class="label">Prosjekter</div><div class="value" id="metricProjects">0</div><div class="sub">Alle prosjekter</div></div>
+        <div class="metric metric--amber dash-animate"><div class="label">Tilbud sendt</div><div class="value" id="metricSent">0</div><div class="sub">Status = sendt</div></div>
+        <div class="metric metric--green dash-animate"><div class="label">Vinnerate</div><div class="value" id="metricWinRate">0%</div><div class="sub">Vunnet av sendt</div></div>
       </div>
       <div class="grid cols-2">
         <div class="card">
@@ -83,24 +85,24 @@
     </div>
   </div>
 
-  <div id="loginView" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;align-items:center;justify-content:center">
-    <div style="background:var(--card);border-radius:20px;padding:40px;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(13,17,23,.05),0 16px 48px rgba(13,17,23,.1);border:1px solid var(--line)">
+  <div id="loginView" style="display:none;position:fixed;inset:0;background:var(--panel);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--card);border-radius:18px;padding:40px;width:100%;max-width:400px;box-shadow:0 1px 3px rgba(28,25,23,.06),0 8px 24px rgba(28,25,23,.06),0 20px 50px rgba(28,25,23,.04)">
       <div style="text-align:center;margin-bottom:32px">
-        <div style="font-size:36px;margin-bottom:10px">&#127959;</div>
-        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.03em">Byggeplassen Beta</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:6px">Logg inn for a fortsette</div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--accent);border-radius:14px;font-size:26px;box-shadow:0 6px 20px var(--accent-glow);margin-bottom:14px">🏗️</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text)">Byggeplassen</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">Logg inn for å fortsette</div>
       </div>
-      <div id="loginError" style="display:none;background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px"></div>
+      <div id="loginError" style="display:none;background:var(--red-soft);border:1px solid #e8c4c1;border-radius:var(--radius-xs);padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px"></div>
       <label style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">E-post</label>
-      <input id="loginEmail" type="email" placeholder="din@epost.no" style="width:100%;margin:6px 0 16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:14px" />
+      <input id="loginEmail" type="email" placeholder="din@epost.no" style="width:100%;margin:6px 0 16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;background:var(--bg)" />
       <label style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Passord</label>
-      <input id="loginPassword" type="password" placeholder="..." style="width:100%;margin:6px 0 24px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:14px" onkeydown="if(event.key==='Enter')doLogin()" />
-      <button onclick="doLogin()" id="loginBtn" style="width:100%;padding:14px;background:var(--text);color:#fff;border:none;border-radius:10px;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s">Logg inn</button>
+      <input id="loginPassword" type="password" placeholder="..." style="width:100%;margin:6px 0 24px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;background:var(--bg)" onkeydown="if(event.key==='Enter')doLogin()" />
+      <button onclick="doLogin()" id="loginBtn" style="width:100%;padding:14px;background:var(--accent);color:#162736;border:none;border-radius:var(--radius-xs);font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s,box-shadow .2s">Logg inn</button>
       <div style="text-align:center;margin-top:16px">
-        <button onclick="showSignup()" style="border:none;background:none;color:var(--blue);font-family:var(--font-display);font-size:13px;cursor:pointer;font-weight:600">Ny bruker? Opprett konto</button>
+        <button onclick="showSignup()" style="border:none;background:none;color:var(--accent);font-family:var(--font-display);font-size:13px;cursor:pointer;font-weight:600">Ny bruker? Opprett konto</button>
       </div>
       <div id="signupExtra" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
-        <button onclick="doSignup()" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">Opprett konto</button>
+        <button onclick="doSignup()" style="width:100%;padding:12px;background:var(--bg-warm);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-xs);font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">Opprett konto</button>
         <div style="text-align:center;margin-top:12px"><button onclick="showLogin()" style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer">Tilbake til innlogging</button></div>
       </div>
     </div>
@@ -108,33 +110,40 @@
   <div id="modalHost"></div>
 
   <!-- HOME VIEW -->
-  <div id="homeView" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:900;align-items:center;justify-content:center">
-    <div style="width:100%;max-width:480px;padding:24px">
-      <div style="text-align:center;margin-bottom:36px">
-        <div style="font-size:40px;margin-bottom:10px">&#127959;</div>
-        <div style="font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.03em">Byggeplassen Beta</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:6px">Velg modul</div>
+  <div id="homeView" class="home-screen" style="display:none">
+    <div class="home-inner">
+      <div class="home-brand">
+        <div class="home-logo">🏗️</div>
+        <div class="home-title">Byggeplassen</div>
+        <div class="home-subtitle">Velg modul for å komme i gang</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="goToKalkyle()" style="background:var(--card);border:1.5px solid #cfe0f8;border-radius:14px;padding:20px 24px;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s">
-          <div style="font-size:22px;margin-bottom:6px">📐</div>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800">Kalkyle / Tilbud</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px">Prosjekter, materialer og tilbud</div>
+      <div class="home-modules">
+        <button class="home-module home-module--kalkyle" onclick="goToKalkyle()">
+          <div class="home-module-icon">📐</div>
+          <div class="home-module-text">
+            <div class="home-module-name">Kalkyle / Tilbud</div>
+            <div class="home-module-desc">Prosjekter, materialer og tilbud</div>
+          </div>
+          <div class="home-module-arrow">→</div>
         </button>
-        <button onclick="goToMakker()" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px 24px;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);opacity:.6">
-          <div style="font-size:22px;margin-bottom:6px">🤝</div>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800">Makker</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px">Kommer</div>
+        <button class="home-module home-module--makker" onclick="goToMakker()">
+          <div class="home-module-icon">🤝</div>
+          <div class="home-module-text">
+            <div class="home-module-name">Makker</div>
+            <div class="home-module-desc">Verktøy for håndverkeren</div>
+          </div>
+          <div class="home-module-arrow">→</div>
         </button>
-        <button onclick="goToBefaring()" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:20px 24px;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);opacity:.6">
-          <div style="font-size:22px;margin-bottom:6px">🔍</div>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800">Befaring</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px">Kommer</div>
+        <button class="home-module home-module--befaring home-module--disabled" onclick="goToBefaring()">
+          <div class="home-module-icon">🔍</div>
+          <div class="home-module-text">
+            <div class="home-module-name">Befaring <span class="home-module-badge">Kommer</span></div>
+            <div class="home-module-desc">Dokumentasjon og sjekklister</div>
+          </div>
+          <div class="home-module-arrow">→</div>
         </button>
       </div>
-      <div style="text-align:center;margin-top:28px">
-        <button onclick="_sb.auth.signOut()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer">Logg ut</button>
-      </div>
+      <button class="home-logout" onclick="_sb.auth.signOut()">Logg ut</button>
     </div>
   </div>
 
