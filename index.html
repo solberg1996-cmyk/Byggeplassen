@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KalkyleApp</title>
+  <title>Byggeplassen Beta</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +22,7 @@
           <button class="btn soft" onclick="goToHome()">← Hovedmeny</button>
           <button class="btn secondary" id="backupBtn">Eksporter data</button>
           <button class="btn soft" id="importBtn">Importer data</button>
+          <button class="btn soft" onclick="openMatCalc()">Materialkalk</button>
           <button class="btn soft" id="settingsBtn" style="font-size:16px;padding:8px 12px">⚙️</button>
           <button class="btn primary" id="newCustomerBtn">+ Ny kunde</button>
           <button class="btn primary" id="newProjectBtn">+ Nytt prosjekt</button>
@@ -62,6 +63,7 @@
           <div class="subtitle" id="projectSubtitle"></div>
         </div>
         <div class="actions">
+          <button class="btn soft" onclick="openMatCalc()">Materialkalk</button>
           <button class="btn secondary" id="saveProjectBtn">Lagre prosjekt</button>
           <button class="btn danger" id="deleteProjectBtn">Slett prosjekt</button>
         </div>
@@ -85,7 +87,7 @@
     <div style="background:var(--card);border-radius:20px;padding:40px;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(13,17,23,.05),0 16px 48px rgba(13,17,23,.1);border:1px solid var(--line)">
       <div style="text-align:center;margin-bottom:32px">
         <div style="font-size:36px;margin-bottom:10px">&#127959;</div>
-        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.03em">KalkyleApp</div>
+        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.03em">Byggeplassen Beta</div>
         <div style="font-size:13px;color:var(--muted);margin-top:6px">Logg inn for a fortsette</div>
       </div>
       <div id="loginError" style="display:none;background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px"></div>
@@ -110,7 +112,7 @@
     <div style="width:100%;max-width:480px;padding:24px">
       <div style="text-align:center;margin-bottom:36px">
         <div style="font-size:40px;margin-bottom:10px">&#127959;</div>
-        <div style="font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.03em">KalkyleApp</div>
+        <div style="font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.03em">Byggeplassen Beta</div>
         <div style="font-size:13px;color:var(--muted);margin-top:6px">Velg modul</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -336,6 +338,24 @@
 <script src="calcEngine.js"></script>
 <script src="projects.js"></script>
 <script src="makker.js"></script>
+<script src="materialCalc.js"></script>
 <script src="app.js" defer></script>
+
+<!-- Materialkalkulator modal -->
+<div id="matCalcModal" class="hidden">
+  <div class="mc-backdrop" onclick="closeMatCalc()"></div>
+  <div class="mc-panel">
+    <div class="mc-header">
+      <div>
+        <div class="mc-title">Materialkalkulator</div>
+        <div class="mc-subtitle">Raskt hjelpeverktøy for materialberegninger</div>
+      </div>
+      <button class="mc-close" onclick="closeMatCalc()" aria-label="Lukk">&times;</button>
+    </div>
+    <div id="matCalcTabs" class="mc-tabs"></div>
+    <div id="matCalcBody" class="mc-body"></div>
+  </div>
+</div>
+
 </body>
 </html>

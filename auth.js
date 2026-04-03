@@ -72,7 +72,7 @@
           state.settings=Object.assign({},defaultSettings,p.settings||{});
           state.priceCatalog=p.priceCatalog||[]; state.priceFileName=p.priceFileName||'';
           state.favoriteCatalogIds=p.favoriteCatalogIds||[]; state.recentCatalogIds=p.recentCatalogIds||[];
-          state.userTemplates=p.userTemplates||[]; state.calcRates=p.calcRates||{};
+          state.userTemplates=p.userTemplates||[]; state.calcRates=p.calcRates||{}; state.calcRecipes=p.calcRecipes||{};
           state.company=Object.assign({},defaultCompany,p.company||{});
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }

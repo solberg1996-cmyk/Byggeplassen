@@ -1,6 +1,6 @@
-# KalkyleApp
+# Byggeplassen Beta
 
-KalkyleApp er et lettvekts, nettbasert kalkyle- og tilbudsverktøy utviklet for norske håndverksbedrifter.
+Byggeplassen Beta er et lettvekts, nettbasert kalkyle- og tilbudsverktøy utviklet for norske håndverksbedrifter.
 
 Applikasjonen lar brukere opprette kunder, beregne prosjektkostnader, strukturere tilbud og følge salgsprosessen fra utkast til ferdigstilt prosjekt — alt i én samlet løsning.
 
@@ -96,7 +96,7 @@ State håndteres globalt i frontend og persisteres via localStorage + Supabase.
 ## Foreslått mappestruktur
 
 ```
-kalkyleapp/
+byggeplassen/
 ├── index.html
 ├── README.md
 │

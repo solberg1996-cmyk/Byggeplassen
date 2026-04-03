@@ -278,14 +278,8 @@ function compute(project){
   });
   const lhh=Number(work.laborHireHours)||0, lhr=Number(extras.laborHire)||0;
   const laborHireTotal=lhh>0?(lhr*lhh):lhr;
-  const driftCost=hoursTotal*(Number(extras.driftRate)||0);
   const subTotal=((extras.subcontractors)||[]).reduce((s,x)=>s+(Number(x.amount)||0),0);
-  const extrasBase=(Number(extras.rental)||0)+(Number(extras.waste)||0)+subTotal+laborHireTotal+(Number(extras.misc)||0)+(Number(extras.scaffolding)||0)+(Number(extras.drawings)||0)+driftCost;
-  const rigEx=(laborSaleEx+matSaleEx)*((Number(extras.rigPercent)||0)/100);
-  const costPrice=laborCost+matCost+extrasBase+rigEx;
-  const saleEx=laborSaleEx+matSaleEx+extrasBase+rigEx;
-  const saleInc=saleEx*1.25, profit=saleEx-costPrice;
-  const margin=saleEx?(profit/saleEx*100):0;
+  const extrasFixed=(Number(extras.rental)||0)+(Number(extras.waste)||0)+subTotal+laborHireTotal+(Number(extras.misc)||0)+(Number(extras.scaffolding)||0)+(Number(extras.drawings)||0);
 
   let snapMatCost=0, snapMatSaleEx=0, snapHours=0, snapLaborSaleEx=0, snapLaborCost=0;
   offerPosts.forEach(post=>{
@@ -306,6 +300,17 @@ function compute(project){
   const totalHours=Number(work.hoursOverride)>0
     ? Number(work.hoursOverride)
     : computedTotal;
+
+  const driftRate=Number(extras.driftRate)||Number(extras.driveCost)||0;
+  const driftCost=totalHours*driftRate;
+  const extrasBase=extrasFixed+driftCost;
+
+  const rigEx=(laborSaleEx+matSaleEx)*((Number(extras.rigPercent)||0)/100);
+  const costPrice=laborCost+matCost+extrasBase+rigEx;
+  const saleEx=laborSaleEx+matSaleEx+extrasBase+rigEx;
+  const saleInc=saleEx*1.25, profit=saleEx-costPrice;
+  const margin=saleEx?(profit/saleEx*100):0;
+
   const ratePerHour=(Number(work.timeRate)||0);
   const costPerHour=(Number(work.internalCost)||0);
   const totalLaborSaleEx=hoursTotal*ratePerHour + snapLaborSaleEx;
@@ -457,13 +462,60 @@ function generateWarnings(project, computeResult) {
 
 // ── SAMLET OPERASJONSESTIMATE (timer + materialer) ─────────────
 
-/**
- * Beregn komplett estimate for en operasjon (timer + materialer + kostnad)
- * @param {Object} op - operasjon {type, mengde, level, tilkomst, hoyde, kompleksitet, materialValues, materialChoices}
- * @param {Object} priceCatalog - {materialName: {cost, unit}, ...} eller tom {}
- * @returns {Object} {direkteTimer, materialer: [{name, qty, unit, waste, cost, totalCost}, ...], totalMaterialCost, errors: []}
- */
-function buildOperationEstimate(op, priceCatalog) {
+// ── PRISOPPSLAG MED FALLBACK ─────────────────────────────────
+
+function findCatalogPrice(name, priceCatalog, manualPrices) {
+  var unit = 'stk';
+  // 1. Manuelle prisoverrides (prosjektnivå)
+  if (manualPrices) {
+    var normKey = normalizeMaterialName(name);
+    for (var mk in manualPrices) {
+      if (manualPrices.hasOwnProperty(mk) && normalizeMaterialName(mk) === normKey) {
+        return { cost: Number(manualPrices[mk]) || 0, unit: unit, source: 'manual' };
+      }
+    }
+  }
+  if (!priceCatalog || typeof priceCatalog !== 'object') return { cost: 0, unit: unit, source: 'none' };
+
+  // 2. Eksakt match
+  if (priceCatalog[name]) return { cost: priceCatalog[name].cost || 0, unit: priceCatalog[name].unit || unit, source: 'exact' };
+
+  // 3. Match uten parenteser og normalisert
+  var stripped = (name || '').replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  if (stripped !== name && priceCatalog[stripped]) return { cost: priceCatalog[stripped].cost || 0, unit: priceCatalog[stripped].unit || unit, source: 'normalized' };
+
+  // 4. Fuzzy: substring + token-matching (samme logikk som autoMatchPrice)
+  var q = (name || '').toLowerCase().replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  var keys = Object.keys(priceCatalog);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i].toLowerCase();
+    if (q.includes(k) && k.length > 3) return { cost: priceCatalog[keys[i]].cost || 0, unit: priceCatalog[keys[i]].unit || unit, source: 'fuzzy' };
+    if (k.includes(q) && q.length > 3) return { cost: priceCatalog[keys[i]].cost || 0, unit: priceCatalog[keys[i]].unit || unit, source: 'fuzzy' };
+  }
+
+  // 5. Token-based: match if ≥40% of tokens hit
+  var tokens = q.split(/[\s×x\/\-]+/).filter(function(t) { return t.length > 2; });
+  if (tokens.length > 0) {
+    var bestMatch = null, bestScore = 0;
+    for (var j = 0; j < keys.length; j++) {
+      var kk = keys[j].toLowerCase();
+      var score = 0;
+      for (var t = 0; t < tokens.length; t++) {
+        if (kk.includes(tokens[t])) score++;
+      }
+      if (score > bestScore && score >= Math.ceil(tokens.length * 0.4)) {
+        bestScore = score;
+        bestMatch = priceCatalog[keys[j]];
+      }
+    }
+    if (bestMatch) return { cost: bestMatch.cost || 0, unit: bestMatch.unit || unit, source: 'token' };
+  }
+
+  return { cost: 0, unit: unit, source: 'none' };
+}
+
+
+function buildOperationEstimate(op, priceCatalog, manualPrices) {
   if (!op) return { direkteTimer: 0, materialer: [], totalMaterialCost: 0, errors: [] };
 
   priceCatalog = priceCatalog || {};
@@ -496,7 +548,7 @@ function buildOperationEstimate(op, priceCatalog) {
 
       // Konverter til material-objekt med pris
       materialer = (calcResult.materialer || []).map(function(m) {
-        var catalogEntry = priceCatalog[m.name] || { cost: 0, unit: m.unit };
+        var catalogEntry = findCatalogPrice(m.name, priceCatalog, manualPrices);
         var qty = Number(m.qty) || 0;
         var cost = Number(catalogEntry.cost) || 0;
         var waste = Number(m.waste) || 0;
@@ -505,13 +557,16 @@ function buildOperationEstimate(op, priceCatalog) {
         var withWaste = qty * cost * (1 + waste / 100);
         totalMaterialCost += withWaste;
 
+        var qtyWithWaste = Math.ceil(qty * (1 + waste / 100) * 10) / 10;
         return {
           name: m.name,
           qty: qty,
+          qtyWithWaste: qtyWithWaste,
           unit: m.unit || catalogEntry.unit || 'stk',
           waste: waste,
           cost: cost,
-          totalCost: Math.round(withWaste)
+          totalCost: Math.round(withWaste),
+          priceSource: catalogEntry.source || 'none'
         };
       });
     } catch (e) {
@@ -539,6 +594,7 @@ function buildProjectEstimate(project, priceCatalog) {
   if (!project) return { direkteTimer: 0, indirektTimer: 0, totalTimer: 0, operations: [], totalMaterialCost: 0, errors: [] };
 
   priceCatalog = priceCatalog || {};
+  var manualPrices = (project && project.manualPrices) || {};
   var errors = [];
 
   // 1. BEREGN TIMER via calcProject()
@@ -551,7 +607,7 @@ function buildProjectEstimate(project, priceCatalog) {
 
   ops.forEach(function(op) {
     if (!op) return;
-    var opEst = buildOperationEstimate(op, priceCatalog);
+    var opEst = buildOperationEstimate(op, priceCatalog, manualPrices);
     totalMaterialCost += opEst.totalMaterialCost || 0;
 
     operationEstimates.push({
@@ -578,6 +634,36 @@ function buildProjectEstimate(project, priceCatalog) {
   var profit = totalSaleEx - totalCost;
   var margin = totalSaleEx > 0 ? Math.round(profit / totalSaleEx * 1000) / 10 : 0;
 
+  // 4. INKLUDER MATERIALER FRA TILBUDSPOSTER (snapshotMaterials)
+  var offerPostMats = [];
+  (project.offerPosts || []).forEach(function(post) {
+    if (!post || !post.snapshotMaterials || !post.snapshotMaterials.length) return;
+    var postMats = post.snapshotMaterials.map(function(m) {
+      var qty = Number(m.qty) || 0;
+      var waste = Number(m.waste) || 0;
+      var qtyWithWaste = Math.ceil(qty * (1 + waste / 100) * 10) / 10;
+      return {
+        name: m.name || '',
+        qty: qty,
+        qtyWithWaste: qtyWithWaste,
+        unit: m.unit || 'stk',
+        waste: waste,
+        cost: Number(m.cost) || 0,
+        totalCost: Number(m.totalCost) || 0
+      };
+    });
+    offerPostMats.push({
+      operationId: post.id,
+      navn: post.name || 'Tilbudspost',
+      type: 'offerPost',
+      estimate: { materialer: postMats }
+    });
+    totalMaterialCost += postMats.reduce(function(s, m) { return s + (m.totalCost || 0); }, 0);
+  });
+
+  var allEstimates = operationEstimates.concat(offerPostMats);
+  var materialer = aggregateMaterials(allEstimates);
+
   return {
     direkteTimer: timeCalc.direkteTimer,
     indirektTimer: timeCalc.indirektTimer,
@@ -587,6 +673,7 @@ function buildProjectEstimate(project, priceCatalog) {
     laborSaleEx: laborSaleEx,
 
     operations: operationEstimates,
+    materialer: materialer,
     totalMaterialCost: Math.round(totalMaterialCost),
     totalCost: Math.round(totalCost),
     totalSaleEx: totalSaleEx,
@@ -595,6 +682,283 @@ function buildProjectEstimate(project, priceCatalog) {
 
     errors: errors
   };
+}
+
+
+// ── MATERIALSAMMENSLÅING ──────────────────────────────────────
+
+// Dimension pattern: 48×198, 48x198, 48×98 etc.
+var DIMENSION_RE = /(\d{2,3})\s*[×x]\s*(\d{2,3})/;
+
+function extractDimension(name) {
+  var m = (name || '').match(DIMENSION_RE);
+  return m ? m[1] + 'x' + m[2] : null;
+}
+
+// Lumber prefixes that describe the same physical material when dimensions match
+var LUMBER_PREFIXES = ['virke','bjelke','bjelkelag','stender','svill','rem','sperrer','taksperrer','åser','drager'];
+
+function normalizeMaterialName(name) {
+  var s = (name || '').trim().toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/×/g, 'x')
+    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s*mm\b/g, 'mm')
+    .replace(/\s*c24\b/gi, ' c24')
+    .replace(/trykkimpregnert/g, 'impregnert')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .trim();
+
+  // For dimensional lumber, normalize to "virke <dim>" so identical dimensions merge
+  var dim = extractDimension(s);
+  if (dim) {
+    var firstWord = s.split(/\s/)[0].replace(/[^a-zæøå]/g, '');
+    if (LUMBER_PREFIXES.indexOf(firstWord) !== -1) {
+      var hasC24 = /c24/.test(s);
+      s = 'virke ' + dim + (hasC24 ? ' c24' : '');
+    }
+  }
+  return s;
+}
+
+function aggregateMaterials(operationEstimates) {
+  var map = {};
+  var order = [];
+
+  operationEstimates.forEach(function(opEst) {
+    var mats = (opEst.estimate && opEst.estimate.materialer) || [];
+    mats.forEach(function(m) {
+      var normName = normalizeMaterialName(m.name);
+      var key = normName + '|' + (m.unit || 'stk');
+      if (!map[key]) {
+        // Build display name: for merged lumber use "Virke <dim> [C24]"
+        var dim = extractDimension(m.name);
+        var displayName = m.name;
+        if (dim && normName.indexOf('virke') === 0) {
+          var hasC24 = /c24/i.test(m.name);
+          displayName = 'Virke ' + dim.replace('x', '×') + (hasC24 ? ' C24' : '');
+        }
+        map[key] = {
+          name: displayName,
+          qty: 0,
+          qtyWithWaste: 0,
+          unit: m.unit || 'stk',
+          waste: 0,
+          cost: m.cost || 0,
+          totalCost: 0,
+          priceSource: 'none',
+          sources: []
+        };
+        order.push(key);
+      }
+      var entry = map[key];
+      entry.qty += m.qty || 0;
+      entry.qtyWithWaste += m.qtyWithWaste || 0;
+      entry.totalCost += m.totalCost || 0;
+      entry.waste = Math.max(entry.waste, m.waste || 0);
+      if (m.cost > 0) { entry.cost = m.cost; entry.priceSource = m.priceSource || 'catalog'; }
+      entry.sources.push(opEst.navn || opEst.type || '');
+    });
+  });
+
+  return order.map(function(key) {
+    var e = map[key];
+    return {
+      name: e.name,
+      qty: Math.round(e.qty * 10) / 10,
+      qtyWithWaste: Math.round(e.qtyWithWaste * 10) / 10,
+      unit: e.unit,
+      waste: e.waste,
+      cost: e.cost,
+      totalCost: Math.round(e.totalCost),
+      priceSource: e.priceSource,
+      sources: e.sources
+    };
+  });
+}
+
+
+// ── MATERIALKATEGORISERING ────────────────────────────────────
+
+var MATERIAL_CATEGORIES = [
+  {id:'treverk',   label:'Treverk / konstruksjon', keywords:['virke','stender','svill','rem','bjelke','sperr','drager','lekt','sl\u00F8yf','str\u00F8','stolpe','\u00E5s','rim','list','panel','kledning','fals','villmark','bord','vannbord','belistning','vinduslist','overgangslist','hj\u00F8rne','foring','terskel','h\u00E5ndl','trinn','trinns','terrassebord','rekkverksbord','sprosseverk','spindl','balust','trespon']},
+  {id:'plater',    label:'Plater / undergulv',     keywords:['gips','osb','spon','kryssfin','undergulv','fiberplate','mdf','hunton','vindsperre']},
+  {id:'isolasjon', label:'Isolasjon / tetting',    keywords:['isolasjon','mineralull','steinull','isopor','trefiber','dampsperre','pe-folie','fuktsperre','tape','mansjett','membran','fugetape','tettestr','pakn','fugesk']},
+  {id:'betong',    label:'Betong / fundament',      keywords:['betong','armering','forskaling','fundament','mur','pukk','grus','drenering','radon','ringmur']},
+  {id:'tak',       label:'Tak / tekking',           keywords:['takstein','takpanne','shingel','st\u00E5ltak','polykarb','membran','takpapp','tekking','undertaks','m\u00F8ne','beslag takfot','renne','nedl\u00F8p']},
+  {id:'overflate', label:'Overflatebehandling',     keywords:['maling','grunning','beis','lakk','olje','sparkelmasse']},
+  {id:'fest',      label:'Festemateriell',          keywords:['spiker','skruer','bolt','beslag','vinkel','bjelkesko','stolpesko','festemateriell','stift','dykkert','karmskruer','klammer','nagle','ankerskrue','montasje']},
+  {id:'vvs',       label:'VVS / r\u00F8r',          keywords:['r\u00F8r','sluk','avl\u00F8p','membran v\u00E5t','flis','flislim','fugemasse']},
+  {id:'dorer',     label:'D\u00F8rer / vinduer',    keywords:['d\u00F8r','vindu','karm','glass','port','hengsle']},
+  {id:'annet',     label:'Annet',                    keywords:[]}
+];
+
+function categorizeMaterial(name) {
+  var lower = (name || '').toLowerCase();
+  for (var i = 0; i < MATERIAL_CATEGORIES.length - 1; i++) {
+    var cat = MATERIAL_CATEGORIES[i];
+    for (var j = 0; j < cat.keywords.length; j++) {
+      if (lower.indexOf(cat.keywords[j]) !== -1) return cat.id;
+    }
+  }
+  return 'annet';
+}
+
+function groupMaterialsByCategory(materials) {
+  var groups = {};
+  MATERIAL_CATEGORIES.forEach(function(cat) { groups[cat.id] = []; });
+  materials.forEach(function(m) {
+    var catId = categorizeMaterial(m.name);
+    groups[catId].push(m);
+  });
+  return MATERIAL_CATEGORIES.filter(function(cat) {
+    return groups[cat.id].length > 0;
+  }).map(function(cat) {
+    var items = groups[cat.id];
+    var catCost = items.reduce(function(s, m) { return s + (m.totalCost || 0); }, 0);
+    return { id: cat.id, label: cat.label, items: items, totalCost: catCost };
+  });
+}
+
+
+// ── RESEPTMENGDE-MOTOR ───────────────────────────────────────
+
+function evalRecipeExpr(expr, ctx) {
+  var result = String(expr);
+  var keys = Object.keys(ctx).sort(function(a,b){ return b.length - a.length; });
+  keys.forEach(function(k) {
+    result = result.replace(new RegExp('\\{' + k + '\\}', 'g'), '(' + (Number(ctx[k]) || 0) + ')');
+    result = result.replace(new RegExp('\\b' + k + '\\b', 'g'), '(' + (Number(ctx[k]) || 0) + ')');
+  });
+  result = result.replace(/ceil\(/g, 'Math.ceil(');
+  result = result.replace(/floor\(/g, 'Math.floor(');
+  result = result.replace(/round\(/g, 'Math.round(');
+  result = result.replace(/max\(/g, 'Math.max(');
+  result = result.replace(/min\(/g, 'Math.min(');
+  try { return new Function('return ' + result)(); }
+  catch(e) { return 0; }
+}
+
+function getRecipeRatio(type, materialId) {
+  var userOverride = ((state.calcRecipes || {})[type] || {})[materialId];
+  if (userOverride && userOverride.ratio != null) return userOverride.ratio;
+  return null;
+}
+
+function saveRecipeRatio(type, materialId, val) {
+  state.calcRecipes = state.calcRecipes || {};
+  state.calcRecipes[type] = state.calcRecipes[type] || {};
+  state.calcRecipes[type][materialId] = { ratio: parseFloat(val) };
+}
+
+function resetRecipeRatio(type, materialId) {
+  if (state.calcRecipes && state.calcRecipes[type]) {
+    delete state.calcRecipes[type][materialId];
+  }
+}
+
+function calcFromRecipe(type, inputs, materialChoices) {
+  var def = window.calcDefs && window.calcDefs[type];
+  if (!def || !def.recipe) return null;
+
+  var recipe = def.recipe;
+  var ctx = {};
+  var key;
+
+  // Copy inputs into context
+  for (key in inputs) {
+    ctx[key] = Number(inputs[key]) || 0;
+  }
+
+  // Parse special material choices into numeric context
+  if (materialChoices.cc) ctx.cc = parseInt(materialChoices.cc) / 1000 || 0.6;
+
+  // Evaluate computed intermediate values
+  var computed = {};
+  if (recipe.computed) {
+    for (key in recipe.computed) {
+      var comp = recipe.computed[key];
+      computed[key] = evalRecipeExpr(comp.expr, ctx);
+      ctx[key] = computed[key];
+    }
+  }
+
+  // Evaluate each material line
+  var materialer = [];
+  recipe.materialer.forEach(function(mat) {
+    // Check condition
+    if (mat.condition) {
+      var condResult = evalRecipeCondition(mat.condition, ctx, materialChoices);
+      if (!condResult) return;
+    }
+
+    // Resolve material choice references in name
+    var name = (mat.nameTemplate || mat.name || '').replace(/\{(\w+)\}/g, function(_, k) {
+      return materialChoices[k] || ctx[k] || k;
+    });
+
+    // Calculate quantity
+    var userRatio = getRecipeRatio(type, mat.id);
+    var baseVal = ctx[mat.baseRef] || 0;
+    var qty;
+
+    if (userRatio != null && mat.baseRef) {
+      qty = baseVal * userRatio;
+    } else if (mat.ratio != null && mat.baseRef) {
+      qty = baseVal * mat.ratio;
+    } else if (mat.ratioExpr) {
+      qty = evalRecipeExpr(mat.ratioExpr, ctx);
+    } else if (mat.fixedQty != null) {
+      qty = mat.fixedQty;
+    } else {
+      qty = 0;
+    }
+
+    if (mat.roundUp) qty = Math.ceil(qty);
+
+    materialer.push({
+      id: mat.id,
+      name: name,
+      qty: qty,
+      unit: mat.unit || 'stk',
+      waste: mat.waste || 0,
+      baseRef: mat.baseRef || null,
+      baseVal: baseVal,
+      defaultRatio: mat.ratio,
+      userRatio: userRatio
+    });
+  });
+
+  // Calculate timer
+  var timerBase = computed.areal || computed.veggAreal || computed.lopemeter || ctx.lopemeter || 1;
+  var timer = Math.round(timerBase * getCalcRate(type));
+
+  // Build areal/info strings
+  var arealStr = '';
+  if (computed.veggAreal) arealStr = computed.veggAreal.toFixed(1) + ' m\u00B2 vegg';
+  else if (computed.areal) arealStr = computed.areal.toFixed(1) + ' m\u00B2';
+  else if (computed.lopemeter) arealStr = computed.lopemeter.toFixed(1) + ' lm';
+
+  return {
+    areal: arealStr,
+    info: recipe.info || '',
+    materialer: materialer,
+    timer: timer,
+    _computed: computed,
+    _recipe: true
+  };
+}
+
+function evalRecipeCondition(condition, ctx, mats) {
+  if (condition.matNotEquals) {
+    var val = mats[condition.matNotEquals.field] || '';
+    return !val.includes(condition.matNotEquals.value);
+  }
+  if (condition.matEquals) {
+    var val2 = mats[condition.matEquals.field] || '';
+    return val2.includes(condition.matEquals.value);
+  }
+  return true;
 }
 
 
@@ -616,5 +980,16 @@ window.blankOperation = blankOperation;
 window.quickEstimate = quickEstimate;
 window.saveCalcRate = saveCalcRate;
 window.generateWarnings = generateWarnings;
+window.findCatalogPrice = findCatalogPrice;
 window.buildOperationEstimate = buildOperationEstimate;
 window.buildProjectEstimate = buildProjectEstimate;
+window.aggregateMaterials = aggregateMaterials;
+window.normalizeMaterialName = normalizeMaterialName;
+window.MATERIAL_CATEGORIES = MATERIAL_CATEGORIES;
+window.categorizeMaterial = categorizeMaterial;
+window.groupMaterialsByCategory = groupMaterialsByCategory;
+window.calcFromRecipe = calcFromRecipe;
+window.getRecipeRatio = getRecipeRatio;
+window.saveRecipeRatio = saveRecipeRatio;
+window.resetRecipeRatio = resetRecipeRatio;
+window.evalRecipeExpr = evalRecipeExpr;

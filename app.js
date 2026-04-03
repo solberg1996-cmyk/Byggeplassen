@@ -10,7 +10,7 @@
         {name:'Fundament / stolpesko', unit:'stk', waste:0}
       ]},
       { id:'tpl_lettvegg', name:'Lettvegg', builtIn:true, materials:[
-        {name:'Stender 48x98 C24', unit:'stk', waste:8},
+        {name:'Virke 48×98 C24 (stender+svill/rem)', unit:'lm', waste:5},
         {name:'Gips 13 mm std', unit:'pl', waste:10},
         {name:'Mineralull 100 mm', unit:'pk', waste:5},
         {name:'Gipsskruer båndet', unit:'pk', waste:0}
@@ -531,6 +531,7 @@
             ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u==='stk'?'selected':'')+'> '+u+'</option>').join('')}
           </select>
         </td>
+        <td style="text-align:center;padding:8px;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${newMat.matId}">1.0</td>
         <td style="text-align:right;padding:8px">
           <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="0.00" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
         </td>
@@ -609,6 +610,8 @@
         newMaterials.push({matId,name,qty,cost,waste,markup,unit,totalCost});
         const totalSpan=row.querySelector('.calcMatRowTotal');
         if(totalSpan) totalSpan.textContent=currency(totalCost);
+        const bruttoCell=row.querySelector('.calcMatBrutto');
+        if(bruttoCell) bruttoCell.textContent=(waste>0?Math.ceil(qty*(1+waste/100)*10)/10:qty).toFixed(1);
       });
       result.materialsWithPrices=newMaterials;
       result.totalMatCost=newMaterials.reduce((s,m)=>s+(m.totalCost||0),0);
@@ -1585,6 +1588,90 @@
       runCalcWidget();
     };
 
+    function buildRecipeView(type, result, def){
+      if(!result._computed || !def.recipe) return '';
+      const recipe = def.recipe;
+      const computed = result._computed;
+
+      // Computed values section
+      let computedHtml = '';
+      if(recipe.computed){
+        computedHtml = Object.entries(recipe.computed).map(([key,comp])=>{
+          const val = computed[key];
+          if(val==null) return '';
+          return `<span class="recipe-computed-tag">${comp.label}: <strong>${(Math.round(val*10)/10)}</strong> ${comp.unit}</span>`;
+        }).filter(Boolean).join('');
+      }
+
+      // Material ratios section
+      const matRows = (result.materialer||[]).filter(m=>m.id).map(m=>{
+        const recipeMat = recipe.materialer.find(rm=>rm.id===m.id);
+        if(!recipeMat) return '';
+        const hasRatio = recipeMat.ratio!=null && m.baseRef;
+        const userRatio = m.userRatio;
+        const defaultRatio = recipeMat.ratio;
+        const isOverridden = userRatio!=null;
+        if(!hasRatio && !recipeMat.ratioExpr) return '';
+
+        if(hasRatio){
+          return `<tr>
+            <td style="padding:5px 8px;font-size:12px">${escapeHtml(m.name)}</td>
+            <td style="padding:5px 8px;text-align:center;font-size:11px;color:var(--muted)">${(Math.round(m.baseVal*10)/10)} ${recipeMat.baseRef}</td>
+            <td style="padding:5px 8px;text-align:center;font-size:11px">\u00D7</td>
+            <td style="padding:5px 8px;text-align:center">
+              <input type="number" step="0.001" style="width:70px;padding:4px 6px;border:1px solid ${isOverridden?'var(--blue)':'#ddd'};border-radius:6px;font-size:12px;text-align:center;${isOverridden?'font-weight:700;color:var(--blue)':''}"
+                value="${isOverridden?userRatio:defaultRatio}" onchange="updateRecipeRatio('${type}','${m.id}',this.value)" />
+            </td>
+            <td style="padding:5px 8px;text-align:center;font-size:11px;color:var(--muted)">${recipeMat.unit}/${recipeMat.baseRef}</td>
+            <td style="padding:5px 8px;text-align:right;font-weight:600;font-size:12px">= ${(Math.round(m.qty*10)/10)} ${m.unit}</td>
+            <td style="padding:5px 4px;text-align:center">${isOverridden?`<button style="border:none;background:none;cursor:pointer;font-size:10px;color:var(--muted)" onclick="resetRecipeRatioUI('${type}','${m.id}')" title="Tilbakestill">\u21A9</button>`:''}</td>
+          </tr>`;
+        } else {
+          return `<tr>
+            <td style="padding:5px 8px;font-size:12px">${escapeHtml(m.name)}</td>
+            <td colspan="5" style="padding:5px 8px;font-size:11px;color:var(--muted);font-style:italic">${recipeMat.desc||'Beregnet fra formel'}</td>
+            <td></td>
+          </tr>`;
+        }
+      }).filter(Boolean).join('');
+
+      if(!matRows && !computedHtml) return '';
+
+      return `<div class="tab-section" style="margin-bottom:14px">
+        <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)" style="font-size:12px;padding:8px 12px">
+          Reseptmengder <span style="font-weight:400;color:var(--muted)">\u2014 juster forholdstall fra erfaring</span>
+        </div>
+        <div class="tab-section-body" style="padding:8px">
+          ${computedHtml?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${computedHtml}</div>`:''}
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:1px solid var(--line)">
+              <th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--muted);font-weight:600">Material</th>
+              <th style="text-align:center;padding:4px 8px;font-size:10px;color:var(--muted);font-weight:600">Grunnlag</th>
+              <th style="padding:4px"></th>
+              <th style="text-align:center;padding:4px 8px;font-size:10px;color:var(--muted);font-weight:600">Forholdstall</th>
+              <th style="text-align:center;padding:4px 8px;font-size:10px;color:var(--muted);font-weight:600">Enhet</th>
+              <th style="text-align:right;padding:4px 8px;font-size:10px;color:var(--muted);font-weight:600">Resultat</th>
+              <th style="padding:4px"></th>
+            </tr></thead>
+            <tbody>${matRows}</tbody>
+          </table>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;padding:4px 8px">Endre forholdstall for \u00E5 justere mengder basert p\u00E5 din erfaring. Endringer lagres og brukes p\u00E5 alle nye beregninger.</div>
+        </div>
+      </div>`;
+    }
+
+    window.updateRecipeRatio=function(type, matId, val){
+      window.saveRecipeRatio(type, matId, val);
+      saveState();
+      runCalcWidget();
+    };
+
+    window.resetRecipeRatioUI=function(type, matId){
+      window.resetRecipeRatio(type, matId);
+      saveState();
+      runCalcWidget();
+    };
+
     window.runCalcWidget=function(){
       const type=document.getElementById('calcJobType')?.value;
       const def=calcDefs[type];
@@ -1612,9 +1699,18 @@
       const occupied=document.getElementById('calcOccupied')?.checked||false;
       const occupiedFactor=occupied?1.25:1;
 
-      // Calculate base result
+      // Calculate base result — use recipe engine if available
       let result;
-      try{ result=def.calc(vals,mats); } catch(e){ console.error(e); return; }
+      let isRecipe = false;
+      try{
+        if(def.recipe && window.calcFromRecipe){
+          result=window.calcFromRecipe(type, vals, mats);
+          isRecipe = result && result._recipe;
+        }
+        if(!result){
+          result=def.calc(vals,mats);
+        }
+      } catch(e){ console.error(e); return; }
 
       // Calculate direct time with all factors
       const baseTimer=result.timer;
@@ -1660,7 +1756,7 @@
         directTimer, indirectTimer, totalTimer,
         materialsWithPrices, totalMatCost,
         laborSaleEx, totalSaleEx, profit, margin,
-        type, sentToOffer:false,
+        type, sentToOffer:false, isRecipe,
         factors:{difficulty,distance,occupied}
       };
 
@@ -1684,7 +1780,7 @@
           </div>
 
           <table class="calc-mat-table">
-            <thead><tr><th>Materiale</th><th>Antall</th><th>Enhet</th><th>Pris</th><th>Svinn%</th><th>Paslag%</th><th style="text-align:right">Total</th><th></th></tr></thead>
+            <thead><tr><th>Materiale</th><th>Netto</th><th>Enhet</th><th>Brutto</th><th>Pris</th><th>Svinn%</th><th>Paslag%</th><th style="text-align:right">Total</th><th></th></tr></thead>
             <tbody id="calcMaterialsTableBody">
               ${materialsWithPrices.map(m=>{
                 const p=getProject(currentProjectId);
@@ -1700,6 +1796,9 @@
                     <select class="calcMatUnit mat-unit-select" data-mat-id="${m.matId}" onchange="recalcCalcMaterials()">
                       ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===(m.unit||'stk')?'selected':'')+'> '+u+'</option>').join('')}
                     </select>
+                  </td>
+                  <td style="text-align:center;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${m.matId}">
+                    ${(m.waste>0?Math.ceil((m.qty||0)*(1+m.waste/100)*10)/10:(m.qty||0)).toFixed(1)}
                   </td>
                   <td style="text-align:right">
                     <input type="number" class="calcMatCost mat-num-input" data-mat-id="${m.matId}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
@@ -1727,6 +1826,8 @@
               <div id="favDropdownCalc" class="fav-dropdown hidden"></div>
             </div>
           </div>
+
+          ${isRecipe ? buildRecipeView(type, result, def) : ''}
 
           <div class="calc-price-grid">
             <div class="calc-price-item">
@@ -2471,7 +2572,7 @@
       const beb=$('#fBebodd'); if(beb) beb.addEventListener('change',()=>{ p.bebodd=beb.checked; persistAndUpdate(); });
       const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
       const sI=$('#sInternalCost'); if(sI) sI.addEventListener('input',()=>{ p.settings.internalCost=Number(sI.value)||0; p.work.internalCost=p.settings.internalCost; const l=$('#wInternalCost'); if(l&&document.activeElement!==l) l.value=p.work.internalCost; persistAndUpdate(); });
-      const sD=$('#sDriveCost'); if(sD) sD.addEventListener('input',()=>{ p.settings.driveCost=parseVatInput(p,sD.value); p.extras.driveCost=p.settings.driveCost; const l=$('#eDrive'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.extras.driveCost); persistAndUpdate(); });
+      const sD=$('#sDriveCost'); if(sD) sD.addEventListener('input',()=>{ p.settings.driveCost=parseVatInput(p,sD.value); p.extras.driveCost=p.settings.driveCost; p.extras.driftRate=p.settings.driveCost; const l=$('#eDrive'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.extras.driveCost); persistAndUpdate(); });
       bindNum('#wActualHours',v=>p.work.actualHours=v);
       bindNum('#wLaborHireHours',v=>p.work.laborHireHours=v); bindNumVat('#wLaborHireRate',v=>p.extras.laborHire=v);
       bindNumVat('#wTimeRate',v=>p.work.timeRate=v); bindNum('#wInternalCost',v=>p.work.internalCost=v);

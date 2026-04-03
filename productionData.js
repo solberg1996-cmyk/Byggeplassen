@@ -318,20 +318,35 @@ const calcDefs = {
       const ccStr=mats.cc||'600 mm';
       const ccM=parseInt(ccStr)/1000;
       const antStendere=Math.ceil(v.lengde/ccM)+1;
+      const stenderLm=Math.ceil(antStendere*v.hoyde*1.05);
       const svilLm=Math.ceil(v.lengde*2*1.1);
       const stDim=mats.stender||'48×148';
+      const totalVirke=stenderLm+svilLm;
       return {
         areal:areal.toFixed(1)+' m²',
         info:`${stDim} c/c ${ccStr}`,
         materialer:[
-          {name:`Stender ${stDim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill/rem ${stDim}`,qty:svilLm,unit:'lm',waste:10},
+          {name:`Virke ${stDim} C24 (stender+svill/rem)`,qty:totalVirke,unit:'lm',waste:5},
           {name:'Vindsperre 1,5×50m',qty:Math.ceil(areal/50),unit:'rull',waste:5},
-          {name:'Spiker blank 3,4×90',qty:Math.ceil(antStendere*0.3),unit:'pk',waste:0},
+          {name:'Spiker / skruer montasje',qty:Math.ceil(antStendere*0.3),unit:'pk',waste:0},
           {name:'Vinkelbeslag',qty:antStendere*2,unit:'stk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('reisverk')),
       };
+    },
+    recipe:{
+      computed:{
+        veggAreal:  {expr:'lengde * hoyde',            label:'Vegg-areal',    unit:'m\u00B2'},
+        antStendere:{expr:'ceil(lengde / cc) + 1',     label:'Ant. stendere', unit:'stk'},
+        stenderLm:  {expr:'ceil(antStendere * hoyde * 1.05)', label:'Stender lm', unit:'lm'},
+        svilLm:     {expr:'ceil(lengde * 2 * 1.1)',    label:'Svill/rem lm',  unit:'lm'},
+      },
+      materialer:[
+        {id:'virke',     nameTemplate:'Virke {stender} C24 (stender+svill/rem)', ratioExpr:'stenderLm + svilLm', unit:'lm', waste:5, desc:'Stendere + svill/rem samlet i lm'},
+        {id:'vindsperre',name:'Vindsperre 1,5\u00D750m', baseRef:'veggAreal', ratio:0.02, roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'spiker',    name:'Spiker / skruer montasje', baseRef:'antStendere', ratio:0.3, roundUp:true, unit:'pk', waste:0, desc:'0.3 pk per stender'},
+        {id:'beslag',    name:'Vinkelbeslag',             baseRef:'antStendere', ratio:2,   unit:'stk', waste:0, desc:'2 stk per stender'},
+      ]
     }
   },
 
@@ -351,14 +366,15 @@ const calcDefs = {
       const ccM=parseInt(ccStr)/1000;
       const antBjelker=Math.ceil(v.lengde/ccM)+1;
       const bjelkeDim=mats.bjelke||'48×198 C24';
+      const bjelkeLm=Math.ceil(antBjelker*v.bredde*1.05);
+      const rimLm=Math.ceil(v.lengde*2*1.1);
       return {
         areal:areal.toFixed(1)+' m²',
         info:`${bjelkeDim} c/c ${ccStr}`,
         materialer:[
-          {name:`Bjelke ${bjelkeDim}`,qty:antBjelker,unit:'stk',waste:5},
-          {name:'Rim/svill 48×198',qty:Math.ceil(v.lengde*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${bjelkeDim} (bjelke+rim)`,qty:bjelkeLm+rimLm,unit:'lm',waste:5},
           {name:'Bjelkesko / beslag',qty:antBjelker*2,unit:'stk',waste:0},
-          {name:'Spikerplater / skruer',qty:Math.ceil(antBjelker/5),unit:'pk',waste:0},
+          {name:'Spiker / skruer montasje',qty:Math.ceil(antBjelker/5),unit:'pk',waste:0},
           {name:'Undergulv 18mm OSB/spon',qty:Math.ceil(areal/2.97*1.08),unit:'pl',waste:8},
         ],
         timer:Math.round(areal*getCalcRate('bjelkelag')),
@@ -384,7 +400,7 @@ const calcDefs = {
         info:`${dragerType} ${dim}`,
         materialer:[
           {name:`${dragerType} ${dim}`,qty:v.antall,unit:'stk',waste:0},
-          {name:'Stolpesko / innfesting',qty:v.antall*2,unit:'stk',waste:0},
+          {name:'Stolpesko / fundament',qty:v.antall*2,unit:'stk',waste:0},
           {name:'Gjengestang M16 + mutter',qty:v.antall*2,unit:'stk',waste:0},
           {name:'Bolter / skruer montasje',qty:v.antall,unit:'pk',waste:0},
         ],
@@ -425,6 +441,20 @@ const calcDefs = {
         ],
         timer:Math.round(netto*getCalcRate('kledning')),
       };
+    },
+    recipe:{
+      computed:{
+        brutto:    {expr:'bredde * hoyde',                          label:'Brutto areal', unit:'m\u00B2'},
+        netto:     {expr:'max(bredde * hoyde - vinduer * 1.8, 1)',  label:'Netto areal',  unit:'m\u00B2'},
+        lmPerM2:   {expr:'1000 / 148 * 1.12',                      label:'lm/m\u00B2',   unit:'lm'},
+      },
+      materialer:[
+        {id:'kledning',  nameTemplate:'{type}',                       baseRef:'netto', ratio:7.57, roundUp:true, unit:'lm', waste:12, desc:'lm kledning per m\u00B2 netto (148mm bredde)'},
+        {id:'sloeyfe',   name:'Sl\u00F8yfe 23\u00D736',              baseRef:'netto', ratio:1.83, roundUp:true, unit:'lm', waste:10, desc:'lm sl\u00F8yfe per m\u00B2 (c/c 600)'},
+        {id:'lekter',    name:'Lekter 23\u00D748',                   baseRef:'netto', ratio:1.83, roundUp:true, unit:'lm', waste:10, desc:'lm lekt per m\u00B2 (c/c 600)'},
+        {id:'vindsperre',name:'Vindsperre',                          baseRef:'netto', ratio:0.02, roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'spiker',    name:'Spiker ringspiker A2 50mm',           baseRef:'netto', ratio:0.1,  roundUp:true, unit:'pk', waste:0, desc:'1 pk per 10 m\u00B2'},
+      ]
     }
   },
 
@@ -450,6 +480,17 @@ const calcDefs = {
         ],
         timer:Math.round(v.areal*getCalcRate('etterisolering')),
       };
+    },
+    recipe:{
+      computed:{
+        areal:{expr:'areal', label:'Areal', unit:'m\u00B2'},
+      },
+      materialer:[
+        {id:'isolasjon',  nameTemplate:'{type} {tykkelse} mm', baseRef:'areal', ratio:0.174, roundUp:true, unit:'pk', waste:8, desc:'1 pk per 5.76 m\u00B2'},
+        {id:'lekt',       name:'Lekt 48\u00D748',             baseRef:'areal', ratio:1.83,  roundUp:true, unit:'lm', waste:10, desc:'lm lekt per m\u00B2 (c/c 600)'},
+        {id:'vindsperre', name:'Vindsperre',                   baseRef:'areal', ratio:0.02,  roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'tape',       name:'Tape / mansjetter',            fixedQty:1,                   unit:'pakke', waste:0, desc:'1 pakke per jobb'},
+      ]
     }
   },
 
@@ -469,11 +510,21 @@ const calcDefs = {
         info:listType,
         materialer:[
           {name:listType,qty:Math.ceil(v.lopemeter*1.12),unit:'lm',waste:12},
-          {name:'Spiker A2 / skruer utvendig',qty:Math.ceil(v.lopemeter/15),unit:'pk',waste:0},
+          {name:'Skruer A2 utvendig',qty:Math.ceil(v.lopemeter/15),unit:'pk',waste:0},
           {name:'Grunning / maling',qty:Math.ceil(v.lopemeter/20),unit:'l',waste:0},
         ],
         timer:Math.round(v.lopemeter*getCalcRate('utv_listing')),
       };
+    },
+    recipe:{
+      computed:{
+        lopemeter:{expr:'lopemeter', label:'L\u00F8pemeter', unit:'lm'},
+      },
+      materialer:[
+        {id:'list',   nameTemplate:'{type}',          baseRef:'lopemeter', ratio:1.12, roundUp:true, unit:'lm', waste:12, desc:'1.12 lm per lm (12% kapp)'},
+        {id:'skruer', name:'Skruer A2 utvendig',      baseRef:'lopemeter', ratio:0.067, roundUp:true, unit:'pk', waste:0, desc:'1 pk per 15 lm'},
+        {id:'maling', name:'Grunning / maling',       baseRef:'lopemeter', ratio:0.05,  roundUp:true, unit:'l', waste:0, desc:'1 l per 20 lm'},
+      ]
     }
   },
 
@@ -494,8 +545,8 @@ const calcDefs = {
         info:kasseType,
         materialer:[
           {name:`Hjørnekasse ${kasseType}`,qty:Math.ceil(lm*2*1.1),unit:'lm',waste:10},
-          {name:'Spiker A2 / skruer utvendig',qty:Math.ceil(v.antall*0.5),unit:'pk',waste:0},
-          {name:'Grunning/maling',qty:Math.ceil(lm/10),unit:'l',waste:0},
+          {name:'Skruer A2 utvendig',qty:Math.ceil(v.antall*0.5),unit:'pk',waste:0},
+          {name:'Grunning / maling',qty:Math.ceil(lm/10),unit:'l',waste:0},
         ],
         timer:Math.round(v.antall*getCalcRate('hjornekasser')),
       };
@@ -523,7 +574,7 @@ const calcDefs = {
         areal:v.antall+' vindu(er)',
         info:`${mats.type||'Standard 2-lags'} • ${foringType}`,
         materialer:[
-          {name:'Karmskruer 90 mm',qty:v.antall,unit:'pk',waste:0},
+          {name:'Karmskruer 90mm',qty:v.antall,unit:'pk',waste:0},
           {name:'Fugeskum proff',qty:v.antall*2,unit:'stk',waste:0},
           {name:'Beslag / tetting',qty:v.antall,unit:'pakke',waste:0},
           ...ekstraMat,
@@ -554,7 +605,7 @@ const calcDefs = {
         areal:v.antall+' dør(er)',
         info:`${mats.type||'Ytterdør enkel'} • ${arbeid}`,
         materialer:[
-          {name:'Karmskruer 120 mm',qty:v.antall,unit:'pk',waste:0},
+          {name:'Karmskruer 120mm',qty:v.antall,unit:'pk',waste:0},
           {name:'Fugeskum proff',qty:v.antall*2,unit:'stk',waste:0},
           {name:'Tettestripe / membranband',qty:v.antall*2,unit:'stk',waste:0},
           {name:'Terskel / beslag',qty:v.antall,unit:'stk',waste:0},
@@ -585,13 +636,13 @@ const calcDefs = {
         areal:areal.toFixed(1)+' m²',
         info:tekking,
         materialer:[
-          {name:`Taksperrer 48×198 C24`,qty:v.sperrer,unit:'stk',waste:0},
+          {name:`Taksperrer 48×198 C24`,qty:Math.ceil(v.sperrer*v.bredde*faktor*1.05),unit:'lm',waste:5},
           {name:mats.undertak||'Undertaksduk diffusjonsåpen',qty:Math.ceil(areal/50),unit:'rull',waste:5},
           {name:'Sløyfer 36×48 impr.',qty:Math.ceil(v.sperrer*v.bredde*faktor*1.1),unit:'lm',waste:8},
           {name:'Lekter 36×48',qty:Math.ceil(areal/0.35*1.1),unit:'lm',waste:8},
           {name:tekking,qty:Math.ceil(areal*1.1),unit:'m²',waste:10},
           {name:'Mønekam / mønebeslag',qty:Math.ceil(v.lengde*1.1),unit:'lm',waste:5},
-          {name:'Festemateriell (skruer/klammer)',qty:Math.ceil(areal/10),unit:'pk',waste:0},
+          {name:'Festemateriell / beslag',qty:Math.ceil(areal/10),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('takjobb')),
       };
@@ -742,7 +793,7 @@ const calcDefs = {
           ...(erGlass?[{name:'Glassrekkverk herdet',qty:Math.ceil(v.lopemeter/1.2),unit:'stk',waste:0}]:[]),
           ...(!erGlass&&!erStaal?[{name:'Sprosser 23×73',qty:Math.ceil(v.lopemeter/0.12),unit:'stk',waste:5}]:[]),
           {name:'Stolpebeslag / montasje',qty:antStolper,unit:'stk',waste:0},
-          {name:'Skruer A2 / bolter',qty:Math.ceil(v.lopemeter/5),unit:'pk',waste:0},
+          {name:'Skruer A2 utvendig',qty:Math.ceil(v.lopemeter/5),unit:'pk',waste:0},
         ],
         timer:Math.round(v.lopemeter*getCalcRate('rekkverk')),
       };
@@ -776,8 +827,8 @@ const calcDefs = {
             {name:kledType,qty:Math.ceil(areal*1000/148*1.12),unit:'lm',waste:12},
           ]),
           {name:'Rigler 48×98',qty:Math.ceil(v.lengde*3*1.1),unit:'lm',waste:10},
-          {name:'Stolpefeste betong/bakke',qty:antStolper,unit:'stk',waste:0},
-          {name:'Skruer A2',qty:Math.ceil(areal/8),unit:'pk',waste:0},
+          {name:'Stolpesko / fundament',qty:antStolper,unit:'stk',waste:0},
+          {name:'Skruer A2 utvendig',qty:Math.ceil(areal/8),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('levegg')),
       };
@@ -839,9 +890,9 @@ const calcDefs = {
         materialer:[
           {name:`Stolpe ${mats.stolpe||'98×98 trykkimpregnert'}`,qty:antStolper,unit:'stk',waste:0},
           {name:`Toppbjelke ${mats.bjelke||'48×198 C24'}`,qty:Math.ceil((v.lengde+v.bredde)*2*1.1),unit:'lm',waste:10},
-          {name:'Sperrer 48×148',qty:antSperrer,unit:'stk',waste:5},
+          {name:'Sperrer 48×148',qty:Math.ceil(antSperrer*v.bredde*1.05),unit:'lm',waste:5},
           ...(harTak?[{name:takType,qty:Math.ceil(areal*1.1),unit:'m²',waste:10}]:[]),
-          {name:'Stolpesko / fundamentbeslag',qty:antStolper,unit:'stk',waste:0},
+          {name:'Stolpesko / fundament',qty:antStolper,unit:'stk',waste:0},
           {name:'Bolter / beslag montasje',qty:Math.ceil(antStolper*1.5),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('pergola')),
@@ -870,15 +921,16 @@ const calcDefs = {
       const veggType=mats.vegg||'Bindingsverk 48×148';
       const dim=veggType.includes('98')?'48×98':'48×148';
       const antStendere=Math.ceil(omk/0.6);
+      const stenderLm=Math.ceil(antStendere*v.vegghoyde*1.05);
+      const svilLm=Math.ceil(omk*2*1.1);
       return {
         areal:gulvAreal.toFixed(0)+' m² grunnflate',
         info:`${veggType} • ${mats.tak||'Saltak takstein'}`,
         materialer:[
-          {name:`Stendere ${dim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill/rem ${dim}`,qty:Math.ceil(omk*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${dim} C24 (stender+svill/rem)`,qty:stenderLm+svilLm,unit:'lm',waste:5},
           {name:mats.kledning||'D-fals 19×148',qty:Math.ceil(veggAreal*1000/148*1.12),unit:'lm',waste:12},
           {name:'Vindsperre',qty:Math.ceil(veggAreal/50),unit:'rull',waste:5},
-          {name:'Taksperrer 48×198 C24',qty:Math.ceil(v.lengde/0.6)+1,unit:'stk',waste:5},
+          {name:'Taksperrer 48×198 C24',qty:Math.ceil((Math.ceil(v.lengde/0.6)+1)*v.bredde*1.05),unit:'lm',waste:5},
           {name:mats.tak||'Saltak takstein',qty:Math.ceil(takAreal*1.1),unit:'m²',waste:10},
           {name:'Undertaksplater / duk',qty:Math.ceil(takAreal/50),unit:'rull',waste:5},
           {name:mats.port||'Elektrisk seksjonalport',qty:1,unit:'stk',waste:0},
@@ -910,7 +962,7 @@ const calcDefs = {
         materialer:[
           {name:`Stolpe ${mats.stolpe||'98×98 trykkimpregnert'}`,qty:antStolper*2,unit:'stk',waste:0},
           {name:'Drager/bæring 73×198 C24',qty:Math.ceil(v.bredde*antStolper*1.1),unit:'lm',waste:10},
-          {name:'Åser/sperrer 48×198',qty:Math.ceil(v.lengde/0.9)+1,unit:'stk',waste:5},
+          {name:'Åser/sperrer 48×198',qty:Math.ceil((Math.ceil(v.lengde/0.9)+1)*v.bredde*1.05),unit:'lm',waste:5},
           {name:mats.tak||'Pulttak stålplater',qty:Math.ceil(areal*1.1),unit:'m²',waste:10},
           {name:'Stolpesko / fundament',qty:antStolper*2,unit:'stk',waste:0},
           {name:'Bolter / beslag',qty:Math.ceil(antStolper*2),unit:'pk',waste:0},
@@ -938,15 +990,16 @@ const calcDefs = {
       const veggAreal=omk*v.vegghoyde;
       const dim=mats.vegg&&mats.vegg.includes('98')?'48×98':'48×148';
       const antStendere=Math.ceil(omk/0.6);
+      const stenderLm=Math.ceil(antStendere*v.vegghoyde*1.05);
+      const svilLm=Math.ceil(omk*2*1.1);
       return {
         areal:gulvAreal.toFixed(0)+' m² grunnflate',
         info:`${dim} • ${mats.tak||'Pulttak shingel'}`,
         materialer:[
-          {name:`Stendere ${dim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill/rem ${dim}`,qty:Math.ceil(omk*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${dim} C24 (stender+svill/rem)`,qty:stenderLm+svilLm,unit:'lm',waste:5},
           {name:mats.kledning||'D-fals 19×148',qty:Math.ceil(veggAreal*1000/148*1.12),unit:'lm',waste:12},
           {name:'Gulv 22mm spon/OSB',qty:Math.ceil(gulvAreal/2.97*1.08),unit:'pl',waste:8},
-          {name:'Bjelkelag 48×148',qty:Math.ceil(v.lengde/0.6)+1,unit:'stk',waste:5},
+          {name:'Bjelkelag 48×148',qty:Math.ceil((Math.ceil(v.lengde/0.6)+1)*v.bredde*1.05),unit:'lm',waste:5},
           {name:'Taktekking',qty:Math.ceil(gulvAreal*1.15),unit:'m²',waste:10},
           {name:'Dør bod 90×200',qty:1,unit:'stk',waste:0},
           {name:'Festemateriell / beslag',qty:Math.ceil(gulvAreal/3),unit:'pk',waste:0},
@@ -977,7 +1030,7 @@ const calcDefs = {
         materialer:[
           {name:'Stolper 98×98 impregnert',qty:2,unit:'stk',waste:0},
           {name:'Bjelke/drager 48×198',qty:Math.ceil(v.bredde*1.1),unit:'lm',waste:10},
-          {name:'Sperrer 48×148',qty:Math.ceil(v.bredde/0.6)+1,unit:'stk',waste:5},
+          {name:'Sperrer 48×148',qty:Math.ceil((Math.ceil(v.bredde/0.6)+1)*v.dybde*1.05),unit:'lm',waste:5},
           {name:`Taktekking (${takType})`,qty:Math.ceil(takAreal*1.15),unit:'m²',waste:10},
           {name:gulvType,qty:v.antallTrinn,unit:'stk',waste:0},
           {name:'Beslag / montasjemateriell',qty:1,unit:'pk',waste:0},
@@ -1007,6 +1060,8 @@ const calcDefs = {
       const takAreal=gulvAreal*1.15;
       const dim=mats.vegg?mats.vegg.split(' ')[1]:'48×148';
       const antStendere=Math.ceil(omk/0.6);
+      const stenderLm=Math.ceil(antStendere*v.vegghoyde*1.05);
+      const svilLm=Math.ceil(omk*2*1.1);
       const isolStr=mats.isolasjon||'200 mm mineralull';
       const isolMm=parseInt(isolStr);
       return {
@@ -1015,14 +1070,12 @@ const calcDefs = {
         materialer:[
           {name:'Betong fundament',qty:Math.ceil(omk*0.4*0.8),unit:'m³',waste:5},
           {name:'Armering Ø12',qty:Math.ceil(omk*4),unit:'lm',waste:10},
-          {name:`Stendere ${dim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill/rem ${dim}`,qty:Math.ceil(omk*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${dim} C24 (stender+svill/rem)`,qty:stenderLm+svilLm,unit:'lm',waste:5},
           {name:`Isolasjon ${isolMm} mm`,qty:Math.ceil(veggAreal/5.76),unit:'pk',waste:8},
           {name:'Vindsperre',qty:Math.ceil(veggAreal/50),unit:'rull',waste:5},
           {name:mats.kledning||'D-fals 19×148',qty:Math.ceil(veggAreal*1000/148*1.12),unit:'lm',waste:12},
-          {name:'Bjelkelag 48×198 C24',qty:Math.ceil(v.lengde/0.6)+1,unit:'stk',waste:5},
+          {name:'Virke 48×198 C24 (bjelke+sperrer)',qty:Math.ceil((Math.ceil(v.lengde/0.6)+1)*v.bredde*1.05)*2,unit:'lm',waste:5},
           {name:'Undergulv 22mm spon',qty:Math.ceil(gulvAreal/2.97*1.08),unit:'pl',waste:8},
-          {name:'Taksperrer 48×198 C24',qty:Math.ceil(v.lengde/0.6)+1,unit:'stk',waste:5},
           {name:'Taktekking',qty:Math.ceil(takAreal*1.1),unit:'m²',waste:10},
           {name:'Vinduer (snitt)',qty:Math.ceil(gulvAreal/8),unit:'stk',waste:0},
           {name:'Festemateriell / beslag',qty:Math.ceil(gulvAreal/3),unit:'pk',waste:0},
@@ -1056,7 +1109,7 @@ const calcDefs = {
           {name:`Stolpe ${mats.stolpe||'73×73 trykkimpregnert'}`,qty:antStolper,unit:'stk',waste:0},
           {name:'Rigler 48×98 impregnert',qty:Math.ceil(v.lengde*antRigler*1.1),unit:'lm',waste:10},
           {name:`Bord/spiler gjerde ${gjerdeType}`,qty:bordLm,unit:erLukket?'lm':'stk',waste:10},
-          {name:'Stolpefeste / betong',qty:antStolper,unit:'stk',waste:0},
+          {name:'Stolpesko / fundament',qty:antStolper,unit:'stk',waste:0},
           {name:'Skruer A2 utvendig',qty:Math.ceil(v.lengde/5),unit:'pk',waste:0},
         ],
         timer:Math.round(v.lengde*getCalcRate('gjerde')),
@@ -1095,15 +1148,29 @@ const calcDefs = {
         areal:areal.toFixed(1)+' m²',
         info:`${stDim} c/c ${mats.cc||'600 mm'} • ${gipsType}`,
         materialer:[
-          {name:`Stender ${stDim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill/rem ${stDim}`,qty:Math.ceil(v.lengde*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${stDim} C24 (stender+svill/rem)`,qty:Math.ceil(antStendere*v.hoyde*1.05)+Math.ceil(v.lengde*2*1.1),unit:'lm',waste:5},
           ...(harGips?[{name:`Gips ${gipsType}`,qty:gipsPlater,unit:'pl',waste:10}]:[]),
           ...isolMat,
           ...(harGips?[{name:'Gipsskruer båndet',qty:Math.ceil(areal/20),unit:'pk',waste:0}]:[]),
-          {name:'Spiker/skruer stenderverk',qty:Math.ceil(antStendere/10),unit:'pk',waste:0},
+          {name:'Spiker / skruer montasje',qty:Math.ceil(antStendere/10),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('innevegger')),
       };
+    },
+    recipe:{
+      computed:{
+        veggAreal:   {expr:'lengde * hoyde',           label:'Vegg-areal',    unit:'m\u00B2'},
+        antStendere: {expr:'ceil(lengde / cc) + 2',    label:'Ant. stendere', unit:'stk'},
+        stenderLm:   {expr:'ceil(antStendere * hoyde * 1.05)', label:'Stender lm', unit:'lm'},
+        svilLm:      {expr:'ceil(lengde * 2 * 1.1)',   label:'Svill/rem lm',  unit:'lm'},
+      },
+      materialer:[
+        {id:'virke',      nameTemplate:'Virke {stender} C24 (stender+svill/rem)', ratioExpr:'stenderLm + svilLm', unit:'lm', waste:5, desc:'Stendere + svill/rem samlet'},
+        {id:'gips',       nameTemplate:'Gips {gips}',    baseRef:'veggAreal', ratio:0.764, roundUp:true, unit:'pl', waste:10, desc:'2 sider x 1 pl/2.88m\u00B2 x 1.1', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
+        {id:'isolasjon',  nameTemplate:'Mineralull {isolasjon}', baseRef:'veggAreal', ratio:0.174, roundUp:true, unit:'pk', waste:5, desc:'1 pk per 5.76 m\u00B2', condition:{matNotEquals:{field:'isolasjon',value:'Ingen'}}},
+        {id:'gipsskruer', name:'Gipsskruer b\u00E5ndet',baseRef:'veggAreal', ratio:0.05, roundUp:true, unit:'pk', waste:0, desc:'1 pk per 20 m\u00B2', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
+        {id:'spiker',     name:'Spiker / skruer montasje', baseRef:'antStendere', ratio:0.1, roundUp:true, unit:'pk', waste:0, desc:'1 pk per 10 stendere'},
+      ]
     }
   },
 
@@ -1127,11 +1194,9 @@ const calcDefs = {
         areal:areal.toFixed(1)+' m²',
         info:`${stDim} c/c ${mats.cc||'600 mm'}`,
         materialer:[
-          {name:`Stender ${stDim} C24`,qty:antStendere,unit:'stk',waste:5},
-          {name:`Svill ${stDim}`,qty:Math.ceil(v.lengde*1.1),unit:'lm',waste:10},
-          {name:`Rem ${stDim}`,qty:Math.ceil(v.lengde*1.1),unit:'lm',waste:10},
+          {name:`Virke ${stDim} C24 (stender+svill/rem)`,qty:Math.ceil(antStendere*v.hoyde*1.05)+Math.ceil(v.lengde*2*1.1),unit:'lm',waste:5},
           {name:'Vinkelbeslag',qty:antStendere*2,unit:'stk',waste:0},
-          {name:'Spiker 3,4×90 / skruer',qty:Math.ceil(antStendere/8),unit:'pk',waste:0},
+          {name:'Spiker / skruer montasje',qty:Math.ceil(antStendere/8),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('baerevegger')),
       };
@@ -1157,12 +1222,13 @@ const calcDefs = {
       const bjelkeDim=mats.bjelke||'48×198 C24';
       const ugType=mats.undergulv||'22 mm sponplate';
       const harUg=!ugType.includes('Ingen');
+      const bjelkeLm=Math.ceil(antBjelker*v.bredde*1.05);
+      const rimLm=Math.ceil(v.lengde*2*1.1);
       return {
         areal:areal.toFixed(1)+' m²',
         info:`${bjelkeDim} c/c ${mats.cc||'600 mm'}`,
         materialer:[
-          {name:`Bjelke ${bjelkeDim}`,qty:antBjelker,unit:'stk',waste:5},
-          {name:'Rim 48×198',qty:Math.ceil(v.lengde*2*1.1),unit:'lm',waste:10},
+          {name:`Virke ${bjelkeDim} (bjelke+rim)`,qty:bjelkeLm+rimLm,unit:'lm',waste:5},
           ...(harUg?[{name:`Undergulv ${ugType}`,qty:Math.ceil(areal/2.97*1.08),unit:'pl',waste:8}]:[]),
           {name:'Bjelkesko / beslag',qty:antBjelker*2,unit:'stk',waste:0},
           {name:'Skruer / spiker montasje',qty:Math.ceil(antBjelker/6),unit:'pk',waste:0},
@@ -1256,7 +1322,7 @@ const calcDefs = {
         info:`${lektDim} c/c ${mats.cc||'600 mm'}`,
         materialer:[
           {name:`Lekt ${lektDim}`,qty:lektLm,unit:'lm',waste:10},
-          {name:'Spiker/skruer montasje',qty:Math.ceil(lektLm/30),unit:'pk',waste:0},
+          {name:'Spiker / skruer montasje',qty:Math.ceil(lektLm/30),unit:'pk',waste:0},
           {name:'Kiler/justerbrikker',qty:Math.ceil(v.areal/5),unit:'stk',waste:0},
         ],
         timer:Math.round(v.areal*getCalcRate('utlekting_vegg')),
@@ -1316,8 +1382,8 @@ const calcDefs = {
         info:gipsType,
         materialer:[
           {name:`Gips ${gipsType}`,qty:plater,unit:'pl',waste:10},
-          {name:'Gipsskruer båndet 35mm',qty:Math.ceil(totAreal*lagFaktor/20),unit:'pk',waste:0},
-          {name:'Sparkelmasse (fuger)',qty:Math.ceil(totAreal*lagFaktor/30),unit:'spann',waste:5},
+          {name:'Gipsskruer båndet',qty:Math.ceil(totAreal*lagFaktor/20),unit:'pk',waste:0},
+          {name:'Sparkelmasse',qty:Math.ceil(totAreal*lagFaktor/30),unit:'spann',waste:5},
           {name:'Papirtape / fibertape',qty:Math.ceil(totAreal*lagFaktor/20),unit:'rull',waste:0},
         ],
         timer:Math.round(totAreal*getCalcRate('gips_vegg')),
@@ -1344,8 +1410,8 @@ const calcDefs = {
         info:gipsType,
         materialer:[
           {name:`Gips ${gipsType}`,qty:plater,unit:'pl',waste:10},
-          {name:'Gipsskruer båndet 41mm',qty:Math.ceil(v.areal*lagFaktor/18),unit:'pk',waste:0},
-          {name:'Sparkelmasse (fuger)',qty:Math.ceil(v.areal*lagFaktor/30),unit:'spann',waste:5},
+          {name:'Gipsskruer båndet',qty:Math.ceil(v.areal*lagFaktor/18),unit:'pk',waste:0},
+          {name:'Sparkelmasse',qty:Math.ceil(v.areal*lagFaktor/30),unit:'spann',waste:5},
           {name:'Papirtape / fibertape',qty:Math.ceil(v.areal*lagFaktor/20),unit:'rull',waste:0},
         ],
         timer:Math.round(v.areal*getCalcRate('gips_tak')),
@@ -1373,7 +1439,7 @@ const calcDefs = {
         materialer:[
           {name:panelType,qty:Math.ceil(v.areal*lmPerM2),unit:'lm',waste:10},
           {name:'Lekter 23×48',qty:Math.ceil(v.areal/0.6*1.1),unit:'lm',waste:8},
-          {name:'Dykkert 40mm / panelspiker',qty:Math.ceil(v.areal/12),unit:'pk',waste:0},
+          {name:'Dykkert 40mm',qty:Math.ceil(v.areal/12),unit:'pk',waste:0},
         ],
         timer:Math.round(v.areal*getCalcRate('panel_vegg')),
       };
@@ -1422,7 +1488,7 @@ const calcDefs = {
         areal:v.areal+' m²',info:himType,
         materialer:[
           {name:`Gips 13 mm`,qty:Math.ceil(v.areal/2.88*1.1),unit:'pl',waste:10},
-          {name:'Gipsskruer 41mm',qty:Math.ceil(v.areal/18),unit:'pk',waste:0},
+          {name:'Gipsskruer båndet',qty:Math.ceil(v.areal/18),unit:'pk',waste:0},
           {name:'Sparkelmasse',qty:Math.ceil(v.areal/30),unit:'spann',waste:5},
         ],
         timer:Math.round(v.areal*getCalcRate('himling')),
@@ -1504,8 +1570,8 @@ const calcDefs = {
         info:listType,
         materialer:[
           {name:listType,qty:totLm,unit:'lm',waste:12},
-          {name:'Dykkert 30mm / limstifte',qty:Math.ceil(v.antall/4),unit:'pk',waste:0},
-          {name:'Lim (fugemasse hvit)',qty:Math.ceil(v.antall/5)+1,unit:'tube',waste:0},
+          {name:'Dykkert 30mm',qty:Math.ceil(v.antall/4),unit:'pk',waste:0},
+          {name:'Fugemasse / lim',qty:Math.ceil(v.antall/5)+1,unit:'tube',waste:0},
         ],
         timer:Math.round(totLm*getCalcRate('vindulisting')),
       };
@@ -1556,7 +1622,7 @@ const calcDefs = {
         areal:v.antall+' dør(er)',
         info:`${mats.type||'Fyllingsdør hvitmalt'} • ${mats.karm||'Standard fôrkarm'}`,
         materialer:[
-          {name:'Karmskruer',qty:v.antall,unit:'pk',waste:0},
+          {name:'Karmskruer 90mm',qty:v.antall,unit:'pk',waste:0},
           {name:'Fugeskum proff',qty:v.antall,unit:'stk',waste:0},
           ...(harList?[{name:'Gerikter/listverk',qty:v.antall*5,unit:'lm',waste:10}]:[]),
           {name:'Hengsler (3 per dør)',qty:v.antall*3,unit:'stk',waste:0},
@@ -1831,7 +1897,7 @@ const calcDefs = {
         materialer:[
           {name:`Benkeplate ${plateType}`,qty:Math.ceil(v.lopemeter*1.05),unit:'lm',waste:5},
           {name:'Skjøtejern / -bolt',qty:Math.max(Math.ceil(v.lopemeter/2)-1,0),unit:'stk',waste:0},
-          {name:'Fugemasse fargematched',qty:v.utsparinger+1,unit:'tube',waste:0},
+          {name:'Fugemasse / lim',qty:v.utsparinger+1,unit:'tube',waste:0},
           {name:'Benkeplatelim / silikon',qty:Math.ceil(v.lopemeter/3)+1,unit:'tube',waste:0},
         ],
         timer:Math.round(v.lopemeter*getCalcRate('benkeplater')),
@@ -2055,8 +2121,8 @@ const calcDefs = {
         info:listType,
         materialer:[
           {name:listType,qty:Math.ceil(v.lopemeter*1.1),unit:'lm',waste:10},
-          {name:'Dykkert 30mm / stifter',qty:Math.ceil(v.lopemeter/25),unit:'pk',waste:0},
-          {name:'Fugemasse/lim hvit',qty:Math.ceil(v.lopemeter/20),unit:'tube',waste:0},
+          {name:'Dykkert 30mm',qty:Math.ceil(v.lopemeter/25),unit:'pk',waste:0},
+          {name:'Fugemasse / lim',qty:Math.ceil(v.lopemeter/20),unit:'tube',waste:0},
           {name:'Hjørneklosser/endestopp',qty:Math.ceil(v.lopemeter/3),unit:'stk',waste:5},
         ],
         timer:Math.round(v.lopemeter*getCalcRate('gulvlister')),
@@ -2080,8 +2146,8 @@ const calcDefs = {
         info:listType,
         materialer:[
           {name:listType,qty:Math.ceil(v.lopemeter*1.1),unit:'lm',waste:10},
-          {name:'Dykkert 40mm / stifter',qty:Math.ceil(v.lopemeter/25),unit:'pk',waste:0},
-          {name:'Fugemasse hvit',qty:Math.ceil(v.lopemeter/15),unit:'tube',waste:0},
+          {name:'Dykkert 40mm',qty:Math.ceil(v.lopemeter/25),unit:'pk',waste:0},
+          {name:'Fugemasse / lim',qty:Math.ceil(v.lopemeter/15),unit:'tube',waste:0},
         ],
         timer:Math.round(v.lopemeter*getCalcRate('taklister')),
       };
@@ -2108,8 +2174,8 @@ const calcDefs = {
         info:`${geriktType} • ${v.antallDorer}d + ${v.antallVinduer}v`,
         materialer:[
           {name:geriktType,qty:totLm,unit:'lm',waste:10},
-          {name:'Dykkert 30mm / stifter',qty:Math.ceil(totLm/30),unit:'pk',waste:0},
-          {name:'Lim / fugemasse hvit',qty:Math.ceil((v.antallDorer+v.antallVinduer)/4),unit:'tube',waste:0},
+          {name:'Dykkert 30mm',qty:Math.ceil(totLm/30),unit:'pk',waste:0},
+          {name:'Fugemasse / lim',qty:Math.ceil((v.antallDorer+v.antallVinduer)/4),unit:'tube',waste:0},
         ],
         timer:Math.round(totLm*getCalcRate('gerikter')),
       };

@@ -39,16 +39,14 @@
 
       const tabs=[
         {id:'info',      label:'📋 Info'},
-        {id:'work',      label:'🔨 Arbeid og kostnader'},
-        {id:'materials', label:'🪵 Utregning og materialer'},
+        {id:'materials', label:'🪵 Kalkyle'},
         {id:'offer',     label:'📄 Tilbud'},
         {id:'preview',   label:'📑 Tilbudsvisning'},
       ];
-      const tabBar=`<div class="tab-bar">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}</div>`;
+      const tabBar=`<div class="tab-bar">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}<button class="tab-btn" onclick="openHandleliste()" style="margin-left:auto;font-size:11px;opacity:0.8">Handleliste</button></div>`;
 
       let panel='';
       if(currentTab==='info')      panel=renderTabInfo(p);
-      if(currentTab==='work')      panel=renderTabWork(p);
       if(currentTab==='materials') panel=renderTabMaterials(p);
        if(currentTab==='offer')     panel=renderTabOffer(p);
       if(currentTab==='preview'){
@@ -70,7 +68,7 @@
           return;
         }
       }
-      currentTab=(id==='costs'?'work':id); renderProjectView();
+      currentTab=(id==='costs'||id==='work')?'info':id; renderProjectView();
     }
 
     function persistAndUpdate(){ const p=getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); updateSummary(); }
@@ -134,69 +132,29 @@
           <label>Beskrivelse</label><textarea id="fDescription">${escapeHtml(p.description)}</textarea>
           <label>Notat</label><textarea id="fNote">${escapeHtml(p.note||'')}</textarea>
         </div>
+        <div class="tab-section collapsed">
+          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Satser</div>
+          <div class="tab-section-body">
+            <div class="row">
+              <div><label>Timepris eks. mva</label><input id="wTimeRate" type="number" value="${displayVatValue(p,p.work.timeRate)}" /></div>
+              <div><label>Intern timekost</label><input id="wInternalCost" type="number" value="${p.work.internalCost}" /></div>
+            </div>
+            <div class="row-3" style="margin-top:12px">
+              <div><label>Kjøring / drift per time</label><input id="sDriveCost" type="number" value="${displayVatValue(p,p.settings.driveCost)}" /></div>
+              <div><label>Påslag materialer %</label><input id="wMatMarkup" type="number" value="${p.settings.materialMarkup}" /></div>
+              <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div><label>Gyldighet tilbud (dager)</label><input id="oValidity" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /></div>
+            </div>
+            <div class="footer-note" style="margin-top:8px">Timepris og satser brukes i alle kalkyler for dette prosjektet.</div>
+          </div>
+        </div>
         `;
     }
 
 
 
-        function renderTabWork(p){
-      const cv=window.compute(p);
-      return `
-        <div class="tab-section">
-          <div class="tab-section-heading">⚙️ Satser</div>
-          <div class="row">
-            <div><label>Timepris eks. mva</label><input id="wTimeRate" type="number" value="${displayVatValue(p,p.work.timeRate)}" /></div>
-            <div><label>Intern timekost</label><input id="wInternalCost" type="number" value="${p.work.internalCost}" /></div>
-          </div>
-          <div class="row-3" style="margin-top:12px">
-            <div><label>Kjøring / drift per time</label><input id="sDriveCost" type="number" value="${displayVatValue(p,p.settings.driveCost)}" /></div>
-            <div><label>Påslag materialer %</label><input id="wMatMarkup" type="number" value="${p.settings.materialMarkup}" /></div>
-            <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <div><label>Gyldighet tilbud (dager)</label><input id="oValidity" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /></div>
-          </div>
-        </div>
-
-        <div class="tab-section">
-          <div class="tab-section-heading">📋 Prosjektkostnader</div>
-          <div class="row-3">
-            <div><label>Leie av utstyr</label><input id="eRental" type="number" value="${displayVatValue(p,p.extras.rental)}" /></div>
-            <div><label>Avfall / deponi</label><input id="eWaste" type="number" value="${displayVatValue(p,p.extras.waste)}" /></div>
-            <div><label>🏗️ Stillas</label><input id="eScaffolding" type="number" value="${displayVatValue(p,p.extras.scaffolding||0)}" /></div>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <div><label>📐 Tegninger / byggesøknad</label><input id="eDrawings" type="number" value="${displayVatValue(p,p.extras.drawings||0)}" /></div>
-            <div><label>Diverse</label><input id="eMisc" type="number" value="${displayVatValue(p,p.extras.misc)}" /></div>
-          </div>
-        </div>
-
-        <div class="tab-section">
-          <div class="tab-section-heading">🔧 Underentreprenører</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-            ${(p.extras.subcontractors||[]).map(s=>`
-              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
-                <select onchange="updSubcontractor('${s.id}','trade',this.value)" style="padding:10px 12px">
-                  ${['Rørlegger','Elektriker','Maler','Snekker','Flislegger','Tømrer','Annet'].map(t=>`<option value="${t}" ${s.trade===t?'selected':''}>${t}</option>`).join('')}
-                </select>
-                <input type="number" placeholder="Beløp" value="${displayVatValue(p,s.amount||0)}" onchange="updSubcontractor('${s.id}','amount',this.value)" />
-                <button class="btn small danger" onclick="removeSubcontractor('${s.id}')">Slett</button>
-              </div>`).join('')}
-          </div>
-          <button class="btn small soft" onclick="addSubcontractor()">+ Legg til underentreprenør</button>
-          ${(p.extras.subcontractors||[]).length ? `<div class="footer-note" style="margin-top:8px">Total: <strong>${currency((p.extras.subcontractors||[]).reduce((s,x)=>s+(Number(x.amount)||0),0))}</strong></div>` : ''}
-        </div>
-
-        <div class="tab-section">
-          <div class="tab-section-heading">👷 Innleid håndverker</div>
-          <div class="row-3">
-            <div><label>Timepris innleid</label><input id="wLaborHireRate" type="number" value="${displayVatValue(p,p.extras.laborHire||0)}" /></div>
-            <div><label>Antall timer</label><input id="wLaborHireHours" type="number" value="${p.work.laborHireHours||0}" /></div>
-            <div><label>Faktiske timer brukt (logging)</label><input id="wActualHours" type="number" value="${p.work.actualHours||0}" /></div>
-          </div>
-        </div>
-        <div class="footer-note">Timepris og satser brukes i alle kalkyler for dette prosjektet.</div>`;
-    }
 
 
     // ── KALKYLEMOTOR UI ────────────────────────────────────────
@@ -324,7 +282,8 @@
 
     function renderOpMaterials(op, opId){
       var priceCatalogMap = buildPriceCatalogMap();
-      var est=window.buildOperationEstimate(op, priceCatalogMap);
+      var p = getProject(currentProjectId);
+      var est=window.buildOperationEstimate(op, priceCatalogMap, (p&&p.manualPrices)||{});
       if(!est || !est.materialer || est.materialer.length===0){
         return '<div style="font-size:12px;color:var(--muted);font-style:italic">Ingen materialforslag for denne jobbtypen.</div>';
       }
@@ -332,7 +291,8 @@
         +'<table style="width:100%;font-size:11px;border-collapse:collapse">'
         +'<thead><tr style="border-bottom:1px solid #dce8ff">'
         +'<th style="text-align:left;padding:4px;color:var(--muted)">Material</th>'
-        +'<th style="text-align:right;padding:4px;color:var(--muted)">Mengde</th>'
+        +'<th style="text-align:right;padding:4px;color:var(--muted)">Netto</th>'
+        +'<th style="text-align:right;padding:4px;color:var(--muted)">Brutto</th>'
         +'<th style="text-align:right;padding:4px;color:var(--muted)">Pris/enhet</th>'
         +'<th style="text-align:right;padding:4px;color:var(--muted)">Total</th>'
         +'</tr></thead><tbody>';
@@ -341,9 +301,12 @@
         var totalPrice = m.totalCost > 0 ? currency(m.totalCost) : '—';
         var priceNote = m.cost === 0 ? ' style="color:var(--muted)"' : '';
         var priceClass = m.cost === 0 ? ' title="Pris ikke funnet i katalog"' : '';
+        var qtyBrutto = m.qtyWithWaste || m.qty;
+        var hasWaste = m.waste > 0 && qtyBrutto !== m.qty;
         html+='<tr style="border-bottom:1px solid #eef2ff">'
-          +'<td style="padding:4px">'+escapeHtml(m.name)+' '+( m.waste>0?'<span style="color:var(--muted)">(+'+m.waste+'%)</span>':'')+' </td>'
-          +'<td style="text-align:right;padding:4px">'+m.qty.toFixed(1)+' '+escapeHtml(m.unit)+'</td>'
+          +'<td style="padding:4px">'+escapeHtml(m.name)+'</td>'
+          +'<td style="text-align:right;padding:4px;color:var(--muted)">'+m.qty.toFixed(1)+' '+escapeHtml(m.unit)+'</td>'
+          +'<td style="text-align:right;padding:4px;font-weight:600">'+(hasWaste?qtyBrutto.toFixed(1):m.qty.toFixed(1))+' '+escapeHtml(m.unit)+(hasWaste?' <span style="color:var(--muted);font-weight:400">(+'+m.waste+'%)</span>':'')+'</td>'
           +'<td style="text-align:right;padding:4px'+priceNote+priceClass+'">'+pricePerUnit+'</td>'
           +'<td style="text-align:right;padding:4px;font-weight:700'+priceNote+priceClass+'">'+totalPrice+'</td>'
           +'</tr>';
@@ -389,7 +352,8 @@
 
       // Get price catalog and estimate
       var priceCatalogMap=buildPriceCatalogMap();
-      var est=window.buildOperationEstimate(op, priceCatalogMap);
+      var proj = getProject(currentProjectId);
+      var est=window.buildOperationEstimate(op, priceCatalogMap, (proj&&proj.manualPrices)||{});
       if(!est || !est.materialer || est.materialer.length===0){
         alert('Ingen materialer å sende for denne operasjonen.');
         return;
@@ -612,6 +576,38 @@
       persistAndRenderProject();
     };
 
+    function buildRecipeSettingsHtml(){
+      var defs = window.calcDefs || {};
+      var rates = window.productionRates || {};
+      var html = '';
+      Object.keys(defs).forEach(function(type){
+        var def = defs[type];
+        if(!def.recipe || !def.recipe.materialer) return;
+        var label = (rates[type]||{}).label || def.label || type;
+        var matRows = def.recipe.materialer.filter(function(m){ return m.ratio!=null && m.baseRef; }).map(function(m){
+          var userOverride = ((state.calcRecipes||{})[type]||{})[m.id];
+          var currentVal = userOverride && userOverride.ratio!=null ? userOverride.ratio : m.ratio;
+          var isOverridden = userOverride && userOverride.ratio!=null;
+          return '<div style="display:grid;grid-template-columns:1fr 80px 60px;gap:6px;align-items:center">'
+            +'<label style="font-size:11px">'+(m.name||m.nameTemplate||m.id)+'</label>'
+            +'<input type="number" step="0.001" value="'+currentVal+'" style="'+(isOverridden?'border-color:var(--blue);font-weight:700;color:var(--blue)':'')+'" onchange="window.updateRecipeRatio(\''+type+'\',\''+m.id+'\',this.value)" />'
+            +'<span style="font-size:10px;color:var(--muted)">'+m.unit+'/'+m.baseRef+'</span>'
+            +'</div>';
+        }).join('');
+        if(!matRows) return;
+        html += '<div class="rate-section">'
+          +'<div class="rate-section-toggle" onclick="toggleRateSection(this)" aria-expanded="false" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleRateSection(this)}">'
+            +'<span>'+escapeHtml(label)+'</span>'
+            +'<span class="rate-toggle-icon">&#9654;</span>'
+          +'</div>'
+          +'<div class="rate-section-body">'
+            +'<div style="display:flex;flex-direction:column;gap:6px">'+matRows+'</div>'
+          +'</div>'
+        +'</div>';
+      });
+      return html || '<div style="font-size:11px;color:var(--muted);font-style:italic">Ingen jobbtyper med reseptmengder enda.</div>';
+    }
+
     function renderTabMaterials(p){
       const allTpls=getAllTemplates();
       const builtIn=allTpls.filter(t=>t.builtIn);
@@ -690,6 +686,9 @@
                   </div>
                 </div>`).join('')}
               <div class="footer-note" style="margin-top:8px">Endre verdiene over for a justere timesatser basert pa din erfaring</div>
+              <div class="rate-settings-header" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">Materialresepter (forholdstall)</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Juster mengdeforholdstall for materialer. P\u00E5virker beregning for jobbtyper med resept.</div>
+              ${buildRecipeSettingsHtml()}
             </div>
           </div>
         </div>
@@ -745,9 +744,290 @@
           </div>
           <div id="priceSearchResults" class="list" style="margin-top:12px"></div>
         </div>
+
+        <div class="tab-section collapsed">
+          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Prosjektkostnader</div>
+          <div class="tab-section-body">
+            <div class="row-3">
+              <div><label>Leie av utstyr</label><input id="eRental" type="number" value="${displayVatValue(p,p.extras.rental)}" /></div>
+              <div><label>Avfall / deponi</label><input id="eWaste" type="number" value="${displayVatValue(p,p.extras.waste)}" /></div>
+              <div><label>Stillas</label><input id="eScaffolding" type="number" value="${displayVatValue(p,p.extras.scaffolding||0)}" /></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div><label>Tegninger / byggesøknad</label><input id="eDrawings" type="number" value="${displayVatValue(p,p.extras.drawings||0)}" /></div>
+              <div><label>Diverse</label><input id="eMisc" type="number" value="${displayVatValue(p,p.extras.misc)}" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-section collapsed">
+          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Underentreprenører</div>
+          <div class="tab-section-body">
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+              ${(p.extras.subcontractors||[]).map(s=>`
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
+                  <select onchange="updSubcontractor('${s.id}','trade',this.value)" style="padding:10px 12px">
+                    ${['Rørlegger','Elektriker','Maler','Snekker','Flislegger','Tømrer','Annet'].map(t=>`<option value="${t}" ${s.trade===t?'selected':''}>${t}</option>`).join('')}
+                  </select>
+                  <input type="number" placeholder="Beløp" value="${displayVatValue(p,s.amount||0)}" onchange="updSubcontractor('${s.id}','amount',this.value)" />
+                  <button class="btn small danger" onclick="removeSubcontractor('${s.id}')">Slett</button>
+                </div>`).join('')}
+            </div>
+            <button class="btn small soft" onclick="addSubcontractor()">+ Legg til underentreprenør</button>
+            ${(p.extras.subcontractors||[]).length ? `<div class="footer-note" style="margin-top:8px">Total: <strong>${currency((p.extras.subcontractors||[]).reduce((s,x)=>s+(Number(x.amount)||0),0))}</strong></div>` : ''}
+          </div>
+        </div>
+
+        <div class="tab-section collapsed">
+          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Innleid håndverker</div>
+          <div class="tab-section-body">
+            <div class="row-3">
+              <div><label>Timepris innleid</label><input id="wLaborHireRate" type="number" value="${displayVatValue(p,p.extras.laborHire||0)}" /></div>
+              <div><label>Antall timer</label><input id="wLaborHireHours" type="number" value="${p.work.laborHireHours||0}" /></div>
+              <div><label>Faktiske timer brukt (logging)</label><input id="wActualHours" type="number" value="${p.work.actualHours||0}" /></div>
+            </div>
+          </div>
+        </div>
+
+        ${renderMaterialSummary(p)}
         `;
     }
 
+    var _matViewMode = 'detailed';
+
+    window.toggleMatViewMode = function(){
+      _matViewMode = _matViewMode === 'detailed' ? 'simple' : 'detailed';
+      var p = getProject(currentProjectId);
+      if(!p) return;
+      var el = document.getElementById('matSummaryContent');
+      if(el) el.innerHTML = renderMaterialSummaryContent(p);
+    };
+
+    function renderMaterialSummary(p){
+      var priceCatalogMap = buildPriceCatalogMap();
+      var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
+      if(!projectEst || !projectEst.materialer || projectEst.materialer.length===0) return '';
+
+      var mats = projectEst.materialer;
+      var totalCost = mats.reduce(function(s,m){ return s+(m.totalCost||0); },0);
+      var totalLines = mats.length;
+      var groups = window.groupMaterialsByCategory(mats);
+
+      return '<div class="tab-section">'
+        +'<div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Samlet materialoversikt <span style="font-weight:400;color:var(--muted);font-size:12px">('+totalLines+' linjer'+(totalCost>0?' \u2014 '+currency(totalCost):'')+')</span></div>'
+        +'<div class="tab-section-body">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+            +'<div style="font-size:12px;color:var(--muted)">Materialer aggregert fra alle operasjoner, gruppert etter kategori.</div>'
+            +'<div style="display:flex;gap:6px">'
+              +'<button class="btn small soft" onclick="toggleMatViewMode()" style="font-size:11px" id="matViewToggleBtn">'+(_matViewMode==='detailed'?'Enkel visning':'Detaljert visning')+'</button>'
+              +'<button class="btn small primary" onclick="openHandleliste()" style="font-size:11px">Handleliste</button>'
+            +'</div>'
+          +'</div>'
+          +'<div id="matSummaryContent">'+renderMaterialSummaryContent(p)+'</div>'
+        +'</div>'
+      +'</div>';
+    }
+
+    function renderMaterialSummaryContent(p){
+      var priceCatalogMap = buildPriceCatalogMap();
+      var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
+      if(!projectEst || !projectEst.materialer) return '';
+
+      var mats = projectEst.materialer;
+      var totalCost = mats.reduce(function(s,m){ return s+(m.totalCost||0); },0);
+      var groups = window.groupMaterialsByCategory(mats);
+
+      // Prisdekning-indikator
+      var withPrice = mats.filter(function(m){ return m.cost > 0; }).length;
+      var total = mats.length;
+      var pct = total > 0 ? Math.round(withPrice / total * 100) : 0;
+      var color = pct >= 90 ? '#16a34a' : pct >= 50 ? '#ca8a04' : '#dc2626';
+      var hasCatalog = state.priceCatalog && state.priceCatalog.length > 0;
+      var coverageHtml = '<div class="price-coverage">'
+        +'<span class="price-coverage-bar" style="--pct:'+pct+'%;--bar-color:'+color+'"></span>'
+        +'<span class="price-coverage-text" style="color:'+color+'">'+withPrice+' av '+total+' materialer har pris ('+pct+'%)</span>'
+        +(!hasCatalog ? ' <a href="#" onclick="document.getElementById(\'priceFileInput\').click();return false" style="font-size:11px;margin-left:6px">Last opp prisfil</a>' : '')
+        +'</div>';
+
+      // Update toggle button text
+      var btn = document.getElementById('matViewToggleBtn');
+      if(btn) btn.textContent = _matViewMode==='detailed' ? 'Enkel visning' : 'Detaljert visning';
+
+      if(_matViewMode === 'simple'){
+        return coverageHtml + renderSimpleView(groups, totalCost);
+      }
+      return coverageHtml + renderDetailedView(groups, totalCost);
+    }
+
+    function renderSimpleView(groups, totalCost){
+      var html = '<div class="mat-category-grid">';
+      groups.forEach(function(g){
+        html += '<div class="mat-category-card">'
+          +'<div class="mat-cat-label">'+escapeHtml(g.label)+'</div>'
+          +'<div class="mat-cat-count">'+g.items.length+' materialer</div>'
+          +(g.totalCost > 0 ? '<div class="mat-cat-cost">'+currency(g.totalCost)+'</div>' : '<div class="mat-cat-cost" style="color:var(--muted)">\u2014</div>')
+        +'</div>';
+      });
+      html += '</div>';
+      if(totalCost > 0){
+        html += '<div class="mat-summary-total">Totalt materialer: <strong>'+currency(totalCost)+'</strong></div>';
+      }
+      return html;
+    }
+
+    function renderDetailedView(groups, totalCost){
+      var html = '';
+      groups.forEach(function(g){
+        html += '<div class="mat-category-group">'
+          +'<div class="mat-category-header">'
+            +'<span>'+escapeHtml(g.label)+' <span style="color:var(--muted);font-weight:400;font-size:11px">('+g.items.length+')</span></span>'
+            +(g.totalCost > 0 ? '<span style="font-weight:700">'+currency(g.totalCost)+'</span>' : '')
+          +'</div>'
+          +'<table style="width:100%;font-size:12px;border-collapse:collapse">'
+            +'<thead><tr style="border-bottom:1px solid var(--line)">'
+              +'<th style="text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px">Material</th>'
+              +'<th style="text-align:right;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px">Netto</th>'
+              +'<th style="text-align:right;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px">Brutto</th>'
+              +'<th style="text-align:right;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px">Pris</th>'
+              +'<th style="text-align:right;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px">Total</th>'
+            +'</tr></thead><tbody>';
+        g.items.forEach(function(m){
+          var hasWaste = m.waste > 0 && m.qtyWithWaste > m.qty;
+          var nameKey = escapeAttr(m.name);
+          var isManual = m.priceSource === 'manual';
+          var priceStr;
+          if(m.cost > 0){
+            priceStr = '<span'+(isManual?' class="manual-price" title="Manuell pris"':'')+'>'+currency(m.cost)+'</span>';
+          } else {
+            priceStr = '<input type="number" class="inline-price-input" placeholder="Pris" data-mat="'+nameKey+'" data-unit="'+escapeAttr(m.unit)+'" onchange="setManualPrice(this)" />';
+          }
+          var totalStr = m.totalCost > 0 ? currency(m.totalCost) : '<span style="color:var(--muted)">\u2014</span>';
+          var sourceTip = m.sources && m.sources.length > 1 ? ' title="Fra: '+escapeHtml(m.sources.join(', '))+'"' : '';
+          html += '<tr style="border-bottom:1px solid var(--line)">'
+            +'<td style="padding:5px 8px"'+sourceTip+'>'+escapeHtml(m.name)
+              +(m.sources && m.sources.length > 1 ? ' <span style="color:var(--muted);font-size:10px">('+m.sources.length+')</span>' : '')
+            +'</td>'
+            +'<td style="text-align:right;padding:5px 8px;color:var(--muted)">'+m.qty.toFixed(1)+' '+escapeHtml(m.unit)+'</td>'
+            +'<td style="text-align:right;padding:5px 8px;font-weight:600">'+(hasWaste?m.qtyWithWaste.toFixed(1):m.qty.toFixed(1))+' '+escapeHtml(m.unit)
+              +(hasWaste?' <span style="color:var(--muted);font-weight:400;font-size:10px">(+'+m.waste+'%)</span>':'')
+            +'</td>'
+            +'<td style="text-align:right;padding:5px 8px">'+priceStr+'</td>'
+            +'<td style="text-align:right;padding:5px 8px;font-weight:700">'+totalStr+'</td>'
+          +'</tr>';
+        });
+        html += '</tbody></table></div>';
+      });
+      if(totalCost > 0){
+        html += '<div class="mat-summary-total">Totalt materialer: <strong>'+currency(totalCost)+'</strong></div>';
+      }
+      return html;
+    }
+
+
+    window.openHandleliste = function(){
+      var p = getProject(currentProjectId);
+      if(!p) return;
+      var priceCatalogMap = buildPriceCatalogMap();
+      var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
+      if(!projectEst || !projectEst.materialer || projectEst.materialer.length===0){
+        alert('Ingen materialer \u00E5 vise. Kj\u00F8r en kalkyle f\u00F8rst.');
+        return;
+      }
+      var mats = projectEst.materialer;
+      var groups = window.groupMaterialsByCategory(mats);
+      var totalCost = mats.reduce(function(s,m){ return s+(m.totalCost||0); },0);
+      var cust = getCustomer(p.customerId);
+
+      var html = '<div class="handleliste-overlay" onclick="if(event.target===this)closeHandleliste()">'
+        +'<div class="handleliste-modal">'
+          +'<div class="handleliste-header">'
+            +'<div>'
+              +'<div style="font-size:18px;font-weight:800">Handleliste</div>'
+              +'<div style="font-size:12px;color:var(--muted)">'+escapeHtml(p.name||'Prosjekt')+' \u2014 '+(cust?escapeHtml(cust.name):'Ingen kunde')+'</div>'
+            +'</div>'
+            +'<div style="display:flex;gap:6px">'
+              +'<button class="btn small soft" onclick="exportHandlelisteCsv()">Eksporter CSV</button>'
+              +'<button class="btn small soft" onclick="printHandleliste()">Skriv ut</button>'
+              +'<button class="btn small soft" onclick="closeHandleliste()">\u2715</button>'
+            +'</div>'
+          +'</div>';
+
+      groups.forEach(function(g){
+        html += '<div class="handleliste-cat">'
+          +'<div class="handleliste-cat-title">'+escapeHtml(g.label)
+            +(g.totalCost>0?' <span style="font-weight:400;color:var(--muted);font-size:12px">\u2014 '+currency(g.totalCost)+'</span>':'')
+          +'</div>';
+        g.items.forEach(function(m){
+          var qtyDisplay = m.qtyWithWaste > m.qty ? m.qtyWithWaste.toFixed(1) : m.qty.toFixed(1);
+          var priceStr = m.cost > 0 ? currency(m.cost)+'/'+escapeHtml(m.unit) : '';
+          var totalStr = m.totalCost > 0 ? currency(m.totalCost) : '';
+          html += '<div class="handleliste-item">'
+            +'<span>'+escapeHtml(m.name)+'</span>'
+            +'<span class="hl-prices">'
+              +'<span class="hl-qty">'+qtyDisplay+' '+escapeHtml(m.unit)+'</span>'
+              +(totalStr ? '<span class="hl-total">'+totalStr+'</span>' : '')
+            +'</span>'
+            +'<input type="checkbox" class="hl-check" />'
+          +'</div>';
+        });
+        html += '</div>';
+      });
+
+      if(totalCost > 0){
+        html += '<div style="text-align:right;padding:12px 0;border-top:2px solid var(--line);font-size:16px;font-weight:800">Totalsum: '+currency(totalCost)+'</div>';
+      }
+
+      html += '</div></div>';
+      document.getElementById('modalHost').innerHTML = html;
+    };
+
+    window.closeHandleliste = function(){
+      document.getElementById('modalHost').innerHTML = '';
+    };
+
+    window.printHandleliste = function(){
+      window.print();
+    };
+
+    window.exportHandlelisteCsv = function(){
+      var p = getProject(currentProjectId);
+      if(!p) return;
+      var priceCatalogMap = buildPriceCatalogMap();
+      var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
+      if(!projectEst || !projectEst.materialer || !projectEst.materialer.length) return;
+      var mats = projectEst.materialer;
+      var groups = window.groupMaterialsByCategory(mats);
+      var lines = ['Material;Mengde;Enhet;Pris/enhet;Total;Kategori'];
+      groups.forEach(function(g){
+        g.items.forEach(function(m){
+          var qty = m.qtyWithWaste > m.qty ? m.qtyWithWaste : m.qty;
+          lines.push('"'+m.name.replace(/"/g,'""')+'";'+qty.toFixed(1)+';'+m.unit+';'+(m.cost||0)+';'+(m.totalCost||0)+';"'+g.label.replace(/"/g,'""')+'"');
+        });
+      });
+      var csv = lines.join('\n');
+      var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (p.name||'handleliste').replace(/[^a-zæøåA-ZÆØÅ0-9]/g,'_')+'.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    window.setManualPrice = function(input){
+      var p = getProject(currentProjectId);
+      if(!p) return;
+      var matName = input.getAttribute('data-mat');
+      var price = parseFloat(input.value) || 0;
+      if(!p.manualPrices) p.manualPrices = {};
+      if(price > 0){
+        p.manualPrices[matName] = price;
+      } else {
+        delete p.manualPrices[matName];
+      }
+      saveState();
+      var el = document.getElementById('matSummaryContent');
+      if(el) el.innerHTML = renderMaterialSummaryContent(p);
+    };
 
     function renderWarnings(p, c){
       var warnings=window.generateWarnings(p, c);
@@ -771,30 +1051,36 @@
 
     function renderSuggestedMaterialsForOffer(p){
       var priceCatalogMap = buildPriceCatalogMap();
-      var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
+      var manualPrices = (p && p.manualPrices) || {};
 
-      if(!projectEst || !projectEst.materialer || projectEst.materialer.length===0){
+      // Only count operations NOT already sent to offer
+      var unsentOps = (p.operations||[]).filter(function(op){ return !op.sentToOffer; });
+      var opCount = 0;
+      var unsentMats = [];
+      unsentOps.forEach(function(op){
+        var opEst = window.buildOperationEstimate(op, priceCatalogMap, manualPrices);
+        if(opEst && opEst.materialer && opEst.materialer.length){
+          opCount++;
+          unsentMats = unsentMats.concat(opEst.materialer);
+        }
+      });
+
+      if(unsentMats.length === 0){
         return '';
       }
 
-      // Count how many operations have suggestions
-      var opCount=0;
-      (p.operations||[]).forEach(function(op){
-        var opEst=window.buildOperationEstimate(op, priceCatalogMap);
-        if(opEst && opEst.materialer && opEst.materialer.length) opCount++;
-      });
+      var totalCost = unsentMats.reduce(function(s,m){ return s + (m.totalCost||0); }, 0);
 
       return '<div class="card" style="margin-bottom:14px;background:#fffbf0;border:1px solid #fde68a;border-radius:16px">'
         +'<div class="section-head"><div class="section-title">💡 Foreslåtte materialer fra operasjoner</div></div>'
         +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">'
-        +'Basert på operasjoner og deres inndata. '
-        +'<strong>Disse er IKKE automatisk med i tilbudssummen ennå.</strong>'
+        +'Basert på '+opCount+' operasjon'+(opCount>1?'er':'')+' som ikke er sendt til tilbud ennå.'
         +'</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
           +'<div style="padding:10px;background:#fff;border:1px solid #fde68a;border-radius:10px">'
             +'<div style="font-size:13px;font-weight:700;color:var(--muted)">Total foreslåtte materialer:</div>'
-            +'<div style="font-size:18px;font-weight:800;margin-top:4px">'+currency(projectEst.totalMaterialCost||0)+'</div>'
-            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+projectEst.materialer.length+' linjer</div>'
+            +'<div style="font-size:18px;font-weight:800;margin-top:4px">'+currency(totalCost)+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+unsentMats.length+' linjer</div>'
           +'</div>'
           +'<div style="padding:10px;background:#fff;border:1px solid #fde68a;border-radius:10px">'
             +'<div style="font-size:13px;font-weight:700;color:var(--muted)">Operasjoner med forslag:</div>'
@@ -803,11 +1089,8 @@
           +'</div>'
         +'</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
-          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(true)" style="flex:1;background:#ff9500;border:none">📦 Legg alle '+projectEst.materialer.length+' linjer som én post</button>'
+          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(true)" style="flex:1;background:#ff9500;border:none">📦 Legg alle '+unsentMats.length+' linjer som én post</button>'
           +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(false)" style="flex:1;background:#a78bfa;border:none">📦 Legg som '+opCount+' poster</button>'
-        +'</div>'
-        +'<div style="font-size:11px;color:var(--muted);font-style:italic;padding:10px;background:#f9f7f0;border-radius:8px">'
-        +'💬 Etter at du legger til, kan du valgfritt slette de manuelle materialene fra «Utregning og materialer»-fanen.'
         +'</div>'
         +'</div>';
     }
