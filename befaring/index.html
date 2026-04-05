@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Byggeplassen — Befaring</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="befaring.css" />
+</head>
+<body>
+  <!-- Login -->
+  <div id="loginView" class="bef-login" style="display:none">
+    <div class="bef-login-card">
+      <div class="bef-login-logo">B</div>
+      <h1>Byggeplassen</h1>
+      <p>Logg inn for å starte befaring</p>
+      <input type="email" id="loginEmail" placeholder="E-post" autocomplete="email" />
+      <input type="password" id="loginPassword" placeholder="Passord" autocomplete="current-password" />
+      <button id="loginBtn" onclick="doLogin()">Logg inn</button>
+      <div id="loginError" class="bef-login-error" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="befApp" style="display:none">
+    <!-- Top bar -->
+    <header class="bef-topbar">
+      <button class="bef-topbar-back" id="topbarBack" onclick="goBack()" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="bef-topbar-title" id="topbarTitle">Befaringer</span>
+      <button class="bef-topbar-action" id="topbarLogout" onclick="doLogout()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </header>
+
+    <!-- Progress bar (hidden on list view) -->
+    <div class="bef-progress" id="befProgress" style="display:none">
+      <div class="bef-progress-bar">
+        <div class="bef-progress-fill" id="progressFill"></div>
+      </div>
+      <span class="bef-progress-label" id="progressLabel"></span>
+    </div>
+
+    <!-- Main content area -->
+    <main class="bef-main" id="befMain"></main>
+
+    <!-- Bottom nav (step navigation, hidden on list view) -->
+    <nav class="bef-bottomnav" id="befBottomNav" style="display:none">
+      <button class="bef-nav-btn" id="navPrev" onclick="prevStep()">Tilbake</button>
+      <button class="bef-nav-btn bef-nav-btn--primary" id="navNext" onclick="nextStep()">Neste</button>
+    </nav>
+  </div>
+
+  <script src="../utils.js"></script>
+  <script src="../auth.js"></script>
+  <script src="befaring.js"></script>
+</body>
+</html>

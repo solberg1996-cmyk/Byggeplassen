@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sperretegning — Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #F4F7F9;
+      color: #162736;
+      padding: 2rem;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+
+    /* ── Diagram-container ──────────────────────────────────── */
+    .rafter-diagram {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      max-width: 1000px;
+      line-height: 0;
+    }
+
+    .rafter-diagram__img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .rafter-diagram__svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* ── Input-panel ────────────────────────────────────────── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: end;
+    }
+
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .controls input {
+      width: 120px;
+      padding: 0.4rem 0.6rem;
+      border: 2px solid #DDE6EC;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .controls input:focus {
+      outline: none;
+      border-color: #66C4FF;
+      box-shadow: 0 0 0 3px rgba(102,196,255,0.25);
+    }
+
+    .controls button {
+      padding: 0.5rem 1.2rem;
+      background: #FFC067;
+      color: #162736;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .controls button:hover { background: #ffb347; }
+
+    .result-table {
+      margin-top: 1.5rem;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .result-table td {
+      padding: 0.3rem 1rem 0.3rem 0;
+    }
+
+    .result-table td:last-child {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sperretegning med dynamiske mål</h1>
+
+  <div class="controls">
+    <label>
+      Run (mm)
+      <input type="number" id="inp-run" value="3000">
+    </label>
+    <label>
+      Takvinkel (°)
+      <input type="number" id="inp-vinkel" value="22" step="0.5">
+    </label>
+    <label>
+      Utstikk (mm)
+      <input type="number" id="inp-utstikk" value="300">
+    </label>
+    <label>
+      Sperrehøyde (mm)
+      <input type="number" id="inp-hoyde" value="198">
+    </label>
+    <label>
+      Fuglehakk bredde (mm)
+      <input type="number" id="inp-fuglehakk" value="100">
+    </label>
+    <button id="btn-calc">Beregn</button>
+  </div>
+
+  <div id="rafter-container"></div>
+
+  <table class="result-table" id="result-table"></table>
+
+  <script src="rafterCalc.js"></script>
+  <script src="rafterDiagram.js"></script>
+  <script>
+    function oppdater() {
+      var input = {
+        run:            Number(document.getElementById('inp-run').value),
+        takvinkel:      Number(document.getElementById('inp-vinkel').value),
+        utstikk:        Number(document.getElementById('inp-utstikk').value),
+        sperrehoyde:    Number(document.getElementById('inp-hoyde').value),
+        fuglehakkBredde:Number(document.getElementById('inp-fuglehakk').value)
+      };
+
+      var res = beregnTaksperre(input);
+      renderRafterDiagram('rafter-container', res);
+      visResultat(res);
+    }
+
+    function visResultat(r) {
+      if (!r.gyldig) {
+        document.getElementById('result-table').innerHTML =
+          '<tr><td>Ugyldig input</td></tr>';
+        return;
+      }
+
+      var rader = [
+        ['Sperre total lengde', r.sperreTotalLengde + ' mm'],
+        ['Sperre topp lengde',  r.sperreTopLengde + ' mm'],
+        ['Total run',           r.totalRun + ' mm'],
+        ['Rise',                r.rise + ' mm'],
+        ['HAP',                 r.hap + ' mm'],
+        ['Fuglehakk',           r.fuglehakkBredde + ' × ' + r.fuglehakkDybde + ' mm'],
+        ['Loddskjær setback',   r.loddskjaerSetback + ' mm'],
+        ['Loddskjær vinkel',    r.loddskjaerVinkel + '°'],
+        ['Kuttlengde',          r.kuttlengde + ' mm'],
+        ['Utstikk fall',        r.utstikkFall + ' mm'],
+        ['Utstikk langs sperre',r.utstikkLangsSperre + ' mm']
+      ];
+
+      var html = rader.map(function(r) {
+        return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>';
+      }).join('');
+
+      if (r.advarsler.length) {
+        html += '<tr><td colspan="2" style="color:#dc2626;padding-top:0.5rem">'
+          + r.advarsler.join('<br>') + '</td></tr>';
+      }
+
+      document.getElementById('result-table').innerHTML = html;
+    }
+
+    document.getElementById('btn-calc').addEventListener('click', oppdater);
+
+    // Beregn ved lasting
+    oppdater();
+  </script>
+
+</body>
+</html>

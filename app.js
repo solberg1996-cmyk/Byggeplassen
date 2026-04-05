@@ -121,9 +121,10 @@
     window.copyArtikkelNummer=function(artnr,el){
       navigator.clipboard.writeText(artnr).then(()=>{
         if(el){
-          const original=el.textContent;
-          el.textContent='✓';
-          setTimeout(()=>{ el.textContent=original; },1000);
+          const original=el.innerHTML;
+          el.innerHTML=artnr+' <span class="copy-artnr-label">Kopiert</span>';
+          el.style.borderColor='var(--green)';
+          setTimeout(()=>{ el.innerHTML=original; el.style.borderColor=''; },1200);
         }
       }).catch(err=>console.error('Copy failed:',err));
     };
@@ -206,7 +207,7 @@
           <div style="font-size:11px;color:var(--muted);display:flex;gap:16px;align-items:center">
             <span>${escapeHtml(item.unit||'stk')}</span>
             <span style="color:var(--accent);font-weight:600">${currency(item.userPrice||0)}</span>
-            ${item.itemNo?'<span style="color:var(--muted);font-size:10px;display:flex;align-items:center;gap:6px">Art.nr: '+escapeHtml(item.itemNo)+'<button style="background:none;border:none;cursor:pointer;padding:0;font-size:12px" onclick="copyCalcItemNo(\''+escapeHtml(item.itemNo)+'\');event.stopPropagation()">📋</button></span>':''}
+            ${item.itemNo?'<button class="copy-artnr-btn" onclick="copyCalcItemNo(\''+escapeHtml(item.itemNo)+'\',this);event.stopPropagation()">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}
           </div>
         </div>
       `).join('');
@@ -300,9 +301,14 @@
       window._calcMatSearchActive=0;
     };
 
-    window.copyCalcItemNo=function(itemNo){
+    window.copyCalcItemNo=function(itemNo,el){
       navigator.clipboard.writeText(itemNo).then(()=>{
-        console.log('Artikkelnummer kopiert: '+itemNo);
+        if(el){
+          const original=el.innerHTML;
+          el.innerHTML=itemNo+' <span class="copy-artnr-label">Kopiert</span>';
+          el.style.borderColor='var(--green)';
+          setTimeout(()=>{ el.innerHTML=original; el.style.borderColor=''; },1200);
+        }
       }).catch(err=>console.error('Copy failed:',err));
     };
 
@@ -356,14 +362,14 @@
       const context=dropdownId.includes('Modal')?`'modal'`:dropdownId.includes('Calc')?'true':'false';
       if(!favs.length){
         dd.innerHTML=`<div class="fav-dropdown-header">Favorittmaterialer</div>
-          <div class="fav-dropdown-footer">Ingen favoritter enda.<br>Marker materialer som ⭐ i prissøk for å lagre dem her.</div>`;
+          <div class="fav-dropdown-footer">Ingen favoritter enda.<br>Marker materialer som ★ i prissøk for å lagre dem her.</div>`;
       } else {
         dd.innerHTML=`<div class="fav-dropdown-header">Favorittmaterialer</div>`
           +favs.map(f=>`<button class="fav-dropdown-item" onclick="addFavToProject(${context},'${escapeHtml(f.name)}','${f.unit||'stk'}',${f.cost||0});toggleFavDropdown('${dropdownId}')">
             <span class="fav-item-name">${escapeHtml(f.name)}</span>
             <span class="fav-item-meta">${f.unit||'stk'}${f.cost?' · kr '+f.cost:''}</span>
           </button>`).join('')
-          +`<div class="fav-dropdown-footer">Marker materialer som ⭐ i prissøk for å lagre dem her</div>`;
+          +`<div class="fav-dropdown-footer">Marker materialer som ★ i prissøk for å lagre dem her</div>`;
       }
       dd.classList.remove('hidden');
     };
@@ -385,7 +391,41 @@
         const calcMarkup=(p?.settings?.materialMarkup)||20;
         const newMat={matId:uid(),name,qty:1,cost,waste:0,markup:calcMarkup,unit,totalCost:cost};
         result.materialsWithPrices.push(newMat);
-        runCalcWidget();
+        const tbody=document.getElementById('calcMaterialsTableBody');
+        if(tbody){
+          const newRow=document.createElement('tr');
+          newRow.style.borderBottom='1px solid #eef2ff';
+          newRow.dataset.matId=newMat.matId;
+          newRow.innerHTML=`<td style="padding:8px;min-width:200px;position:relative">
+            <input type="text" class="calcMatName" data-mat-id="${newMat.matId}" value="${escapeAttr(name)}" placeholder="Søk materiale..." style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer" onclick="openPriceSearchForCalc('${newMat.matId}')" readonly />
+          </td>
+          <td style="text-align:center;padding:8px">
+            <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+          </td>
+          <td style="text-align:center;padding:8px">
+            <select class="calcMatUnit" data-mat-id="${newMat.matId}" class="calcMatUnit" onchange="recalcCalcMaterials()">
+              ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===unit?'selected':'')+'> '+u+'</option>').join('')}
+            </select>
+          </td>
+          <td style="text-align:center;padding:8px;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${newMat.matId}">1.0</td>
+          <td style="text-align:right;padding:8px">
+            <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="${cost.toFixed(2)}" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+          </td>
+          <td style="text-align:center;padding:8px">
+            <input type="number" class="calcMatWaste" data-mat-id="${newMat.matId}" value="0" step="1" min="0" max="100" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+          </td>
+          <td style="text-align:center;padding:8px">
+            <input type="number" class="calcMatMarkup" data-mat-id="${newMat.matId}" value="${calcMarkup}" step="1" min="0" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+          </td>
+          <td style="text-align:right;padding:8px;font-weight:700;min-width:75px">
+            <span class="calcMatRowTotal" data-mat-id="${newMat.matId}" style="color:#0a84ff">kr ${cost.toFixed(0)}</span>
+          </td>
+          <td style="text-align:center;padding:8px">
+            <button class="btn small" style="padding:4px 8px;font-size:10px;background:#ffebee;color:#c62828;border:1px solid #ef5350;border-radius:4px;cursor:pointer" onclick="deleteCalcMaterial('${newMat.matId}')">✕</button>
+          </td>`;
+          tbody.appendChild(newRow);
+          recalcCalcMaterials();
+        }
       } else {
         const p=getProject(currentProjectId);
         if(!p) return;
@@ -397,47 +437,24 @@
     window.showMatAutocomplete=function(matId,query){
       const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
       if(!dropdown) return;
-      const q=query?query.toLowerCase().trim():'';
-      const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
+      const q=(query||'').trim();
 
-      let matches=[];
+      let allItems=[];
       if(q.length>0){
-        matches=Object.entries(priceCatalogMap).filter(([name,item])=>{
-          const artnr=(item.itemNo||item.artnr||item.articleNumber||'').toLowerCase();
-          return name.toLowerCase().includes(q)||artnr.includes(q);
-        });
-
-        // Sort: name start > artnr match > contains
-        matches.sort((a,b)=>{
-          const aName=a[0].toLowerCase();
-          const bName=b[0].toLowerCase();
-          const aArtnr=(a[1].itemNo||a[1].artnr||a[1].articleNumber||'').toLowerCase();
-          const bArtnr=(b[1].itemNo||b[1].artnr||b[1].articleNumber||'').toLowerCase();
-          const isNumQuery=/^\d+$/.test(q);
-
-          const aNameStart=aName.startsWith(q);
-          const bNameStart=bName.startsWith(q);
-          if(aNameStart!==bNameStart) return bNameStart?1:-1;
-
-          const aArtnrMatch=aArtnr.includes(q);
-          const bArtnrMatch=bArtnr.includes(q);
-          if(isNumQuery&&aArtnrMatch!==bArtnrMatch) return bArtnrMatch?1:-1;
-
-          return aName.localeCompare(bName);
-        });
-
-        matches=matches.slice(0,8);
-      }
-
-      // Add favorites at top if no search
-      let allItems=matches;
-      if(!q){
+        // Use the same smart search as prisfil-søk
+        const results=searchPriceCatalog(q).slice(0,12);
+        allItems=results.map(item=>[(item.productName||item.name), {
+          cost:item.userPrice||0, unit:item.unit||'stk',
+          itemNo:item.itemNo||'', artnr:item.itemNo||''
+        }]);
+      } else {
+        // Show favorites when empty
+        const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
         const favs=getCalcFavorites();
-        const favMatches=favs.map(f=>{
+        allItems=favs.map(f=>{
           const cat=Object.entries(priceCatalogMap).find(([n])=>n===f.name);
           return cat?cat:[f.name,{unit:f.unit,cost:f.cost,itemNo:f.itemNo}];
-        });
-        allItems=[...favMatches,...matches].slice(0,8);
+        }).slice(0,8);
       }
 
       if(!allItems.length){
@@ -446,18 +463,19 @@
       }
       dropdown.style.minWidth='400px';
       dropdown.style.maxHeight='250px';
+      dropdown.style.overflowY='auto';
       dropdown.innerHTML=allItems.map(([name,item],idx)=>{
         const artnr=item.itemNo||item.artnr||item.articleNumber;
         const isFav=isCalcFavorite(name);
         return `<div class="matDropdownItem" data-idx="${idx}" data-name="${escapeHtml(name)}" style="padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:11px;transition:background 0.15s;background:${isFav?'var(--yellow-soft)':'var(--card)'}" onmouseover="setMatAutocompleteActive('${matId}',${idx})" onclick="selectMatByIndex('${matId}',${idx})">
           <div style="font-weight:700;color:var(--text);margin-bottom:4px;display:flex;gap:8px;align-items:center">
-            <span style="cursor:pointer;font-size:14px;user-select:none" onclick="event.stopPropagation(); toggleFavoriteMaterial('${matId}','${escapeHtml(name)}')" title="Favoritt">${isFav?'⭐':'☆'}</span>
+            <span style="cursor:pointer;font-size:14px;user-select:none" onclick="event.stopPropagation(); toggleFavoriteMaterial('${matId}','${escapeHtml(name)}')" title="Favoritt">${isFav?'★':'☆'}</span>
             ${escapeHtml(name)}
           </div>
           <div style="font-size:10px;color:var(--muted);display:flex;gap:12px;align-items:center">
             <span>${escapeHtml(item.unit||'stk')}</span>
             <span style="color:var(--accent);font-weight:600">${currency(item.cost||0)}</span>
-            ${artnr?'<span style="color:var(--muted);cursor:pointer;display:flex;gap:4px;align-items:center" onclick="event.stopPropagation(); copyArtikkelNummer(\''+escapeHtml(artnr)+'\', this)">Art.nr: '+escapeHtml(artnr)+' 📋</span>':''}
+            ${artnr?'<button class="copy-artnr-btn" onclick="event.stopPropagation(); copyArtikkelNummer(\''+escapeHtml(artnr)+'\', this)">'+escapeHtml(artnr)+' <span class="copy-artnr-label">Kopier</span></button>':''}
           </div>
         </div>`;
       }).join('');
@@ -527,7 +545,7 @@
           <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
         </td>
         <td style="text-align:center;padding:8px">
-          <select class="calcMatUnit" data-mat-id="${newMat.matId}" style="padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;width:60px" onchange="recalcCalcMaterials()">
+          <select class="calcMatUnit" data-mat-id="${newMat.matId}" class="calcMatUnit" onchange="recalcCalcMaterials()">
             ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u==='stk'?'selected':'')+'> '+u+'</option>').join('')}
           </select>
         </td>
@@ -625,9 +643,9 @@
       result.profit=profit; result.margin=margin; result.totalSaleEx=totalSaleEx; result.totalCost=totalCost;
       const matGridDiv=document.querySelector('div[style*="grid-template-columns:repeat(3"]');
       if(matGridDiv){
-        matGridDiv.innerHTML=`<div><div style="font-size:11px;color:var(--muted);font-weight:700">🔨 Arbeid (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#0a84ff;margin-top:2px">${currency(laborSaleEx)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700">🪵 Materialer</div><div style="font-size:16px;font-weight:800;color:#167a42;margin-top:2px">${currency(result.totalMatCost)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700">💰 Totalt (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#2e7d32;margin-top:2px">${currency(totalSaleEx)}</div></div>`;
+        matGridDiv.innerHTML=`<div><div style="font-size:11px;color:var(--muted);font-weight:700"> Arbeid (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#0a84ff;margin-top:2px">${currency(laborSaleEx)}</div></div>
+          <div><div style="font-size:11px;color:var(--muted);font-weight:700"> Materialer</div><div style="font-size:16px;font-weight:800;color:#167a42;margin-top:2px">${currency(result.totalMatCost)}</div></div>
+          <div><div style="font-size:11px;color:var(--muted);font-weight:700"> Totalt (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#2e7d32;margin-top:2px">${currency(totalSaleEx)}</div></div>`;
       }
       const marginDiv=document.querySelector('div[style*="background:#f0f7ff"][style*="margin"]');
       if(marginDiv){
@@ -739,7 +757,7 @@
             <h4>${escapeHtml(item.productName||item.name)}</h4>
             <p>${escapeHtml(item.description||'')}</p>
             <div class="pills" style="margin-top:8px">
-              <span class="pill">Varenr: ${escapeHtml(item.itemNo)}</span>
+              <button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer('${escapeHtml(item.itemNo)}',this)">${escapeHtml(item.itemNo)} <span class="copy-artnr-label">Kopier</span></button>
               <span class="pill">Enhet: ${escapeHtml(item.unit||'-')}</span>
               <span class="pill">Din pris: ${currency(item.userPrice)}</span>
               ${item.regularPrice?`<span class="pill">Ord. pris: ${currency(item.regularPrice)}</span>`:''}
@@ -889,7 +907,7 @@
           <div class="item" style="padding:10px">
             <div>
               <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
-              <div style="font-size:12px;color:var(--muted)">${escapeHtml(item.itemNo||'')} • ${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</div>
+              <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
             </div>
             <button class="btn small primary" onclick="tplAddFromCatalog('${escapeHtml(item.id)}')">+ Legg til</button>
           </div>`).join('');
@@ -904,7 +922,7 @@
         <input id="tplNameInput" value="${escapeAttr(tpl.name)}" placeholder="F.eks. Bad komplett" />
 
         <div style="margin-top:16px;padding:14px;background:#f0f7ff;border:1px solid #cde2ff;border-radius:14px">
-          <label style="margin:0 0 8px">🔍 Søk i prisfil og legg til materialer</label>
+          <label style="margin:0 0 8px"> Søk i prisfil og legg til materialer</label>
           <input id="tplSearchInput" placeholder="Søk varenummer eller navn..." />
           <div id="tplSearchResults" class="list" style="margin-top:10px;max-height:220px;overflow-y:auto"></div>
         </div>
@@ -992,15 +1010,15 @@
           <div>
             <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn..." style="font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;width:100%" onchange="window._cpm[${i}].name=this.value" />
             ${m.groupName?`<div style="font-size:10px;color:${m.groupColor||'var(--muted)'};margin-top:1px">${escapeHtml(m.groupName)}</div>`:''}
-            ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">🔖 ${escapeHtml(m.itemNo)}</div>`:''}
+            ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">${escapeHtml(m.itemNo)}</div>`:''}
           </div>
           <input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" />
           <input value="${escapeHtml(m.unit||'stk')}" title="Enhet" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].unit=this.value" />
           <input type="number" value="${m.cost||0}" title="Innpris" style="padding:6px;font-size:13px;text-align:right;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].cost=Number(this.value);rerenderCalcModal()" />
-          <select title="Svinn %" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].waste=Number(this.value);rerenderCalcModal()">
+          <select title="Svinn %" class="calc-modal-select" onchange="window._cpm[${i}].waste=Number(this.value);rerenderCalcModal()">
             ${pctOpts.map(v=>`<option value="${v}" ${(m.waste||0)==v?'selected':''}>${v}%</option>`).join('')}
           </select>
-          <select title="Påslag %" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
+          <select title="Påslag %" class="calc-modal-select" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
             ${pctOpts.map(v=>`<option value="${v}" ${(m.markup||20)==v?'selected':''}>${v}%</option>`).join('')}
           </select>
           <button style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
@@ -1015,7 +1033,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
               <div>
                 <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
-                <div style="font-size:11px;color:var(--muted)">${escapeHtml(item.itemNo||'')} • ${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</div>
+                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
               </div>
               <button class="btn small primary" onclick="addFromCatalogToCalcModal('${escapeHtml(item.id)}')">+ Legg til</button>
             </div>`).join('')
@@ -1030,7 +1048,7 @@
       const laborGroupsHtml=laborGrps?laborGrps.map((g,gi)=>`
         <div style="background:${g.groupColor+'18'};border:1px solid ${g.groupColor+'40'};border-left:3px solid ${g.groupColor};border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:16px">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px;color:${g.groupColor}">⏱️ Timer ${escapeHtml(g.groupName)}</div>
+            <div style="font-size:13px;font-weight:800;margin-bottom:2px;color:${g.groupColor}"> Timer ${escapeHtml(g.groupName)}</div>
             <div style="font-size:12px;color:var(--muted)">Beregnet: ${g.hours||0}t</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -1043,7 +1061,7 @@
 
       const html=`
         <div class="section-head">
-          <div class="section-title">✏️ Tilpass post</div>
+          <div class="section-title"> Tilpass post</div>
           <button class="btn small secondary" onclick="closeModal()">Lukk</button>
         </div>
         ${laborGrps?`
@@ -1056,7 +1074,7 @@
         `:(offerPost?`
         <div style="background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px">⏱️ Timer for denne posten</div>
+            <div style="font-size:13px;font-weight:800;margin-bottom:2px"> Timer for denne posten</div>
             <div style="font-size:12px;color:var(--muted)">${calcHours?'Kalkyle beregnet: '+calcHours+'t':''}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -1070,7 +1088,7 @@
 
 
         <div style="background:#f0f7ff;border:1px solid #cde2ff;border-radius:14px;padding:12px;margin-bottom:14px">
-          <label style="margin:0 0 6px">🔍 Søk i prisfil og legg til</label>
+          <label style="margin:0 0 6px"> Søk i prisfil og legg til</label>
           <input id="calcModalSearch" placeholder="Søk varenummer eller navn..." value="${escapeAttr(window._cpmSearch||'')}"
             oninput="window._cpmSearch=this.value;rerenderCalcModal()" style="margin:0" />
           <div style="margin-top:8px;max-height:180px;overflow-y:auto">${searchHtml}</div>
@@ -1081,7 +1099,7 @@
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="btn small soft" onclick="addBlankToCalcModal()">+ Tom rad</button>
           <div class="fav-dropdown-wrap" style="position:relative">
-            <button class="btn small soft" onclick="toggleFavDropdown('favDropdownModal')">⭐ Favoritter</button>
+            <button class="btn small soft" onclick="toggleFavDropdown('favDropdownModal')">★ Favoritter</button>
             <div id="favDropdownModal" class="fav-dropdown hidden"></div>
           </div>
         </div>
@@ -1091,7 +1109,7 @@
           <div style="font-size:22px;font-weight:800;color:var(--blue)">${currency(matTotal())}</div>
         </div>
         <div class="toolbar" style="margin-top:14px">
-          <button class="btn primary" onclick="saveCalcPostMaterials()">💾 Lagre og oppdater tilbud</button>
+          <button class="btn primary" onclick="saveCalcPostMaterials()">Lagre og oppdater tilbud</button>
           <button class="btn secondary" onclick="closeModal()">Avbryt</button>
         </div>`;
 
@@ -1269,7 +1287,7 @@
         +'body{padding:30px 40px}@media print{.no-print{display:none!important}}'
         +'</style></head><body>'
         +'<div style="text-align:center;margin-bottom:20px" class="no-print">'
-        +'<button onclick="window.print()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Skriv ut / Lagre som PDF</button>'
+        +'<button onclick="window.print()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer"> Skriv ut / Lagre som PDF</button>'
         +'</div>'
         +doc.innerHTML+'</body></html>';
       var blob=new Blob([html],{type:'text/html'});
@@ -1822,7 +1840,7 @@
           <div class="mat-add-row" style="margin-bottom:14px">
             <button class="calc-add-mat-btn" onclick="addCalcMaterial()" style="flex:1">+ Legg til materiale</button>
             <div class="fav-dropdown-wrap" style="flex:1;position:relative">
-              <button class="calc-add-mat-btn" onclick="toggleFavDropdown('favDropdownCalc')" style="width:100%">⭐ Favoritter</button>
+              <button class="calc-add-mat-btn" onclick="toggleFavDropdown('favDropdownCalc')" style="width:100%">★ Favoritter</button>
               <div id="favDropdownCalc" class="fav-dropdown hidden"></div>
             </div>
           </div>
@@ -1932,7 +1950,7 @@
 
       // Confirm to user and ask if they want to clear old materials
       const matCount=snapshotMats.length;
-      const msg='✅ Kalkyle sendt til tilbud!\n\n'+matCount+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
+      const msg=' Kalkyle sendt til tilbud!\n\n'+matCount+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
       const shouldClear=confirm(msg);
       if(shouldClear){
         p.materials=[];
@@ -1998,7 +2016,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
               <div>
                 <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
-                <div style="font-size:11px;color:var(--muted)">${escapeHtml(item.itemNo||'')} • ${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</div>
+                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
               </div>
               <button class="btn small primary" onclick="setPriceFromCatalog('${m.id}','${escapeHtml(item.id)}')">Velg</button>
             </div>`).join('');
@@ -2006,7 +2024,7 @@
 
         showModal(`
           <div class="section-head">
-            <div class="section-title">💰 Sett pris (${idx+1}/${missingMats.length})</div>
+            <div class="section-title"> Sett pris (${idx+1}/${missingMats.length})</div>
             <button class="btn small secondary" onclick="skipPriceLookup()">Hopp over alle</button>
           </div>
           <div style="padding:10px;background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;margin-bottom:12px">
@@ -2019,7 +2037,7 @@
             <button class="btn small soft" onclick="setManualPrice('${m.id}',document.getElementById('calcPriceManual').value)">OK</button>
           </div>
           <div style="background:#f0f7ff;border:1px solid #cde2ff;border-radius:12px;padding:12px">
-            <label style="margin:0 0 6px">🔍 Søk i prisfil</label>
+            <label style="margin:0 0 6px"> Søk i prisfil</label>
             <input id="calcPriceSearch" placeholder="Søk varenummer eller navn..."
               oninput="document.getElementById('calcPriceResults').innerHTML=window._calcSearchHtml(this.value)" />
             <div id="calcPriceResults" style="margin-top:8px;max-height:200px;overflow-y:auto"></div>
@@ -2178,7 +2196,7 @@
       const c=compute(p);
       showModal(`
         <div class="section-head">
-          <div class="section-title">✅ Fullfør prosjekt</div>
+          <div class="section-title"> Fullfør prosjekt</div>
           <button class="btn small secondary" onclick="closeModal()">Lukk</button>
         </div>
         <div style="background:#edfff4;border:1px solid #b7f0cf;border-radius:14px;padding:12px;margin-bottom:14px;font-size:13px;color:#167a42;font-weight:700">
@@ -2195,7 +2213,7 @@
         <label>Notater / læring fra dette prosjektet</label>
         <textarea id="fcNotes" placeholder="Hva gikk bra? Hva tok lengre tid enn estimert? Tips til neste gang...">${p.completionData?.notes||''}</textarea>
         <div style="margin-top:14px;padding:12px;background:#f5f8ff;border-radius:14px;border:1px solid #dce8ff">
-          <div style="font-size:13px;font-weight:800;margin-bottom:8px">📊 Avvik fra estimat</div>
+          <div style="font-size:13px;font-weight:800;margin-bottom:8px">Avvik fra estimat</div>
           <div class="row-3" style="font-size:13px">
             <div>Timer estimert: <strong>${c.totalHours||c.hoursTotal}</strong></div>
             <div>Materialer estimert: <strong>${currency(c.totalMatCost||c.matCost)}</strong></div>
@@ -2203,7 +2221,7 @@
           </div>
         </div>
         <div class="toolbar" style="margin-top:14px">
-          <button class="btn primary" onclick="saveProjectComplete('${p.id}')">✅ Merk som ferdig og lagre</button>
+          <button class="btn primary" onclick="saveProjectComplete('${p.id}')"> Merk som ferdig og lagre</button>
           <button class="btn secondary" onclick="closeModal()">Avbryt</button>
         </div>
       `);
@@ -2279,13 +2297,13 @@
         return '<label style="display:flex;align-items:center;gap:8px;margin-top:10px">'
           +'<input style="width:auto" type="checkbox" '+chk
           +' onchange="togglePost(\x27'+id+'\x27,this.checked)" /> Valgt opsjon</label>'
-          +'<div style="margin-top:8px"><button class="btn small secondary" style="font-size:12px" onclick="openPostMaterialEditor(\x27'+id+'\x27)">✏️ Tilpass</button></div>';
+          +'<div style="margin-top:8px"><button class="btn small secondary" style="font-size:12px" onclick="openPostMaterialEditor(\x27'+id+'\x27)"> Tilpass</button></div>';
       } else if(post.type==='calc'){
-        return '<div style="margin-top:6px;font-size:12px;color:var(--muted)">📦 Materialer + ⏱️ arbeid inkludert</div>'
-          +'<button class="btn small soft" style="font-size:12px;margin-top:6px" onclick="restoreCalcPost(\x27'+id+'\x27)">✏️ Tilpass</button>';
+        return '<div style="margin-top:6px;font-size:12px;color:var(--muted)"> Materialer +  arbeid inkludert</div>'
+          +'<button class="btn small soft" style="font-size:12px;margin-top:6px" onclick="restoreCalcPost(\x27'+id+'\x27)"> Tilpass</button>';
       } else {
         return '<div style="margin-top:8px">'
-          +'<button class="btn small secondary" style="font-size:12px" onclick="openPostMaterialEditor(\x27'+id+'\x27)">✏️ Tilpass</button>'
+          +'<button class="btn small secondary" style="font-size:12px" onclick="openPostMaterialEditor(\x27'+id+'\x27)"> Tilpass</button>'
           +'</div>';
       }
     }
@@ -2310,7 +2328,7 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-weight:800;font-size:14px">${escapeHtml(post.name||'Ny post')}</span>
               <span style="font-size:11px;color:var(--muted);background:var(--bg-warm);border-radius:4px;padding:1px 6px">${typeLabel}</span>
-              ${post.type==='option'&&post.enabled?'<span style="font-size:11px;background:var(--green-soft);color:var(--green);border-radius:4px;padding:1px 6px;font-weight:700">✅ Valgt</span>':''}
+              ${post.type==='option'&&post.enabled?'<span style="font-size:11px;background:var(--green-soft);color:var(--green);border-radius:4px;padding:1px 6px;font-weight:700"> Valgt</span>':''}
             </div>
             ${post.description&&!isOpen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(post.description)}</div>`:''}
           </div>
@@ -2331,7 +2349,7 @@
             </select></div>
             <div><label>Pris ${vatLbl}</label>
               ${post.type==='calc'
-                ? `<div style="padding:12px 14px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:14px;font-size:18px;font-weight:800">${currency(displayVatValue(p,post.price||0))} <span style="font-size:11px;color:var(--muted);font-weight:500">🔒</span></div>`
+                ? `<div style="padding:12px 14px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:14px;font-size:18px;font-weight:800">${currency(displayVatValue(p,post.price||0))} <span style="font-size:11px;color:var(--muted);font-weight:500"></span></div>`
                 : `<input type="number" value="${post.price||0}" onchange="updatePost('${post.id}','price',this.value)" />`
               }
             </div>
@@ -2634,7 +2652,7 @@
       if(t.id==='backToDashboard') openDashboard();
       if(t.id==='saveProjectBtn'){ persistAndRenderProject(); alert('Prosjekt lagret.'); }
       if(t.id==='deleteProjectBtn') deleteCurrentProject();
-      if(t.id==='settingsBtn') openSettings();
+      if(t.id==='settingsBtn'||t.closest('#settingsBtn')) openSettings();
       if(t.id==='saveSettingsBtn') saveSettings();
       if(t.id==='backToOverviewBtn'){ $('#settingsView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
       if(t.id==='backupBtn') exportData();
@@ -2645,7 +2663,9 @@
     $('#importFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) importData(f); e.target.value=''; });
     $('#customerSearch').addEventListener('input',renderDashboard);
     $('#projectSearch').addEventListener('input',renderDashboard);
+    $('#projectStatusFilter').addEventListener('change',renderDashboard);
 
+    window.deleteProjectFromDashboard=function(id){ if(!confirm('Slette dette prosjektet?')) return; state.projects=state.projects.filter(p=>p.id!==id); saveState(); renderDashboard(); };
     window.editCustomer=editCustomer; window.deleteCustomer=deleteCustomer; window.openProject=openProject;
     window.toggleStep=toggleStep; window.updMaterial=updMaterial; window.removeMaterial=removeMaterial;
     window.addMaterial=addMaterial; window.addPackage=addPackage; window.setAllMarkup=setAllMarkup;

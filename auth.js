@@ -9,36 +9,43 @@
       else { document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
       _sb.auth.onAuthStateChange(async function(event,session){
         if(event==='SIGNED_IN'&&session){ _sbUser=session.user; await loadFromCloud(); showApp(); }
-        else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
+        else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; }
       });
     }
 
     function showApp(){
       document.getElementById('loginView').style.display='none';
-      document.getElementById('homeView').style.display='flex';
+      document.getElementById('appSidebar').style.display='';
+      sidebarNav('kalkyle');
     }
 
-    window.goToKalkyle=function(){
-      document.getElementById('homeView').style.display='none';
-      document.querySelector('.app').style.display='';
-      renderDashboard();
-    };
-    window.goToMakker=function(){
-      document.getElementById('homeView').style.display='none';
-      document.getElementById('makkView').style.display='block';
-      _makkerTool=null;
-      renderMakkerView();
-    };
-    window.goToBefaring=function(){
-      document.getElementById('homeView').style.display='none';
-      document.getElementById('befaringView').style.display='flex';
-    };
-    window.goToHome=function(){
+    window.sidebarNav=function(view){
+      // Hide all views
+      document.querySelector('.app').style.display='none';
       document.getElementById('makkView').style.display='none';
       document.getElementById('befaringView').style.display='none';
-      document.querySelector('.app').style.display='none';
-      document.getElementById('homeView').style.display='flex';
+      // Update active state
+      document.querySelectorAll('.sidebar-item[data-view]').forEach(function(btn){
+        btn.classList.toggle('active',btn.dataset.view===view);
+      });
+      // Show selected view
+      if(view==='kalkyle'){
+        document.querySelector('.app').style.display='';
+        renderDashboard();
+      } else if(view==='makker'){
+        document.getElementById('makkView').style.display='block';
+        _makkerTool=null;
+        renderMakkerView();
+      } else if(view==='befaring'){
+        document.getElementById('befaringView').style.display='flex';
+      }
     };
+
+    // Keep old functions working for any remaining references
+    window.goToKalkyle=function(){ sidebarNav('kalkyle'); };
+    window.goToMakker=function(){ sidebarNav('makker'); };
+    window.goToBefaring=function(){ sidebarNav('befaring'); };
+    window.goToHome=function(){ sidebarNav('kalkyle'); };
 
     window.doLogin=async function(){
       const email=$('#loginEmail').value.trim(), pw=$('#loginPassword').value;
@@ -90,6 +97,6 @@
     function updateSyncIndicator(ok){
       const el=document.getElementById('syncIndicator');
       if(!el) return;
-      el.textContent=ok?'☁️ Synkronisert':'⚠️ Synkfeil';
+      el.textContent=ok?'Synkronisert':'Synkfeil';
       el.style.color=ok?'#34c759':'#ff3b30';
     }

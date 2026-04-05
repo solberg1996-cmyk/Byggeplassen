@@ -37,9 +37,9 @@
           +'<div style="width:'+thumbW+'px;height:'+thumbH+'px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer;border-radius:2px;border:1px solid #bbb" title="Klikk for full visning" onclick="currentProjectId=\''+p.id+'\';openOfferFullPreview()">'
             +'<div id="offerPreviewDoc" style="width:'+docW+'px;height:'+docH+'px;background:#fff;transform:scale('+scale+');transform-origin:top left;overflow:hidden;pointer-events:none"></div>'
           +'</div>'
-          +'<button onclick="currentProjectId=\''+p.id+'\';openOfferFullPreview()" style="background:var(--bg-warm);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:6px">🔍 Åpne tilbud</button>'
-          +'<button onclick="currentProjectId=\''+p.id+'\';downloadOfferPDF()" style="background:var(--green);color:#0F0E0C;border:none;border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:6px">⬇️ Last ned PDF</button>'
-          +'<button onclick="currentProjectId=\''+p.id+'\';sendOfferNow()" style="background:var(--accent);color:#0F0E0C;border:none;border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">📧 Send tilbud</button>'
+          +'<button onclick="currentProjectId=\''+p.id+'\';openOfferFullPreview()" style="background:var(--bg-warm);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:6px">Åpne tilbud</button>'
+          +'<button onclick="currentProjectId=\''+p.id+'\';downloadOfferPDF()" style="background:var(--green);color:#0F0E0C;border:none;border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:6px">Last ned PDF</button>'
+          +'<button onclick="currentProjectId=\''+p.id+'\';sendOfferNow()" style="background:var(--accent);color:#0F0E0C;border:none;border-radius:5px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">Send tilbud</button>'
         +'</div>'
       +'</div>';
     }
@@ -128,8 +128,8 @@
 
         // Header with tab title + print button
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-          +'<div style="font-size:16px;font-weight:800">📑 Tilbudsvisning</div>'
-          +'<button class="btn primary" onclick="openAndSendOffer()">📨 Åpne og send tilbud</button>'
+          +'<div style="font-size:16px;font-weight:800">Tilbudsvisning</div>'
+          +'<button class="btn primary" onclick="openAndSendOffer()">Åpne og send tilbud</button>'
         +'</div>'
 
         // ── BOKS 1: Innledning ──────────────────────────────────────────────
@@ -158,7 +158,7 @@
             +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" style="width:auto" '+(os.sections.ikkemedregnet?'checked':'')+' onchange="_offerState.sections.ikkemedregnet=this.checked;renderOfferPreview()" /> Vis</label>'
           +'</div>'
           +imChecks
-          +'<div style="margin-top:6px;padding:8px 10px;background:#f5f5f5;border-radius:8px;font-size:12px;color:var(--muted)">✅ Alltid med: Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</div>'
+          +'<div style="margin-top:6px;padding:8px 10px;background:#f5f5f5;border-radius:8px;font-size:12px;color:var(--muted)">Alltid med: Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</div>'
           +imCustom
           +'<button class="btn small soft" style="margin-top:8px" onclick="_offerState.ikkemedregnet.custom.push(\'\');renderOfferEditorPane();renderOfferPreview()">+ Legg til linje</button>'
         +'</div>'
@@ -186,7 +186,7 @@
 
         // ── BOKS 4b: Beregnet tid ────────────────────────────────────────────
         +'<div class="card" style="margin:0">'
-          +'<div class="section-head"><div class="section-title">⏱️ Beregnet tid</div></div>'
+          +'<div class="section-head"><div class="section-title">Beregnet tid</div></div>'
           +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Totalt beregnet: <strong>'+(ps.hours+cv.hoursTotal)+'t</strong> → ca. '+Math.ceil((ps.hours+cv.hoursTotal)/8)+' arbeidsdager á 8t</div>'
           +'<div style="display:flex;align-items:center;gap:10px">'
             +'<div style="flex:1"><label style="font-size:12px">Antall arbeidsdager i tilbudet</label>'
@@ -210,14 +210,14 @@
               +escapeHtml(ep.name)+' — '+currency(ep.amount)+'</label>';
           }).join('');
           return '<div class="card" style="margin:0">'
-            +'<div class="section-head"><div class="section-title">🔧 Tilleggsposter</div></div>'
+            +'<div class="section-head"><div class="section-title">Tilleggsposter</div></div>'
             +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Fra prosjektkostnader og innleid:</div>'
             +rows+'</div>';
         })()
 
         // ── Postervisning ───────────────────────────────────────────────────
         +'<div class="card" style="margin:0">'
-          +'<div class="section-head"><div class="section-title">📋 Postervisning i tilbud</div></div>'
+          +'<div class="section-head"><div class="section-title">Postervisning i tilbud</div></div>'
           +'<div style="display:flex;flex-direction:column;gap:8px">'
             +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="offerPostMode" value="all" '+(os.postMode==='all'?'checked':'')+' onchange="setOfferPostMode(this.value)" style="width:auto"> Vis alle poster enkeltvis</label>'
             +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="offerPostMode" value="simple" '+(os.postMode==='simple'?'checked':'')+' onchange="setOfferPostMode(this.value)" style="width:auto"> Enkel — Tømrerarbeid + Materialer</label>'

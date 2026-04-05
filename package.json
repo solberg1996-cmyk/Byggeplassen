@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "browser-use": "^0.6.0",
+    "playwright": "^1.59.1"
+  }
+}

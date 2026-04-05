@@ -1,0 +1,203 @@
+{
+  "collected_at": "2026-04-04T15:28:15.289832",
+  "source": "https://www.blocklayer.com/roof/rafter",
+  "test_block": "birdsmouth_seat",
+  "fixed_inputs": {
+    "run": 3000,
+    "roof_angle": 30,
+    "overhang": 300,
+    "rafter_depth": 200
+  },
+  "results": [
+    {
+      "input": {
+        "run": 3000,
+        "roof_angle": 30,
+        "overhang": 300,
+        "rafter_depth": 200,
+        "birdsmouth_seat": 40
+      },
+      "status": "ok",
+      "output": {
+        "rise": 1940.0,
+        "total_rafter_length": 3926.0,
+        "rafter_top_length": 3811.0,
+        "total_rafter_run": 3300.0,
+        "total_fall": 1905.0,
+        "overhang_level": 300.0,
+        "rafter_depth": 200.0,
+        "birdsmouth_depth": 23.0,
+        "birdsmouth_seat": 40.0,
+        "plumb_cut_setback": 115.0,
+        "hap": 207.9,
+        "plumb_cut_angle": 30.0,
+        "seat_cut_angle": 60.0,
+        "roof_angle": 30.0,
+        "plumb_cut_length": 230.9,
+        "hap_raw": 208.0
+      },
+      "expected": {
+        "birdsmouth_depth": 23.1,
+        "hap": 207.8,
+        "rise": 1939.9,
+        "plumb_cut_length": 230.9,
+        "plumb_cut_setback": 115.5,
+        "rafter_top_length": 3810.5,
+        "total_rafter_length": 3926.0
+      },
+      "raw_output": "{\"rise\": 1940.0, \"total_rafter_length\": 3926.0, \"rafter_top_length\": 3811.0, \"total_rafter_run\": 3300.0, \"total_fall\": 1905.0, \"overhang_level\": 300.0, \"rafter_depth\": 200.0, \"birdsmouth_depth\": 23.0, \"birdsmouth_seat\": 40.0, \"plumb_cut_setback\": 115.0, \"hap\": 208.0, \"plumb_cut_angle\": 30.0, \"seat_cut_angle\": 60.0, \"roof_angle\": 30.0}"
+    },
+    {
+      "input": {
+        "run": 3000,
+        "roof_angle": 30,
+        "overhang": 300,
+        "rafter_depth": 200,
+        "birdsmouth_seat": 70
+      },
+      "status": "ok",
+      "output": {
+        "rise": 1923.0,
+        "total_rafter_length": 3926.0,
+        "rafter_top_length": 3811.0,
+        "total_rafter_run": 3300.0,
+        "total_fall": 1905.0,
+        "overhang_level": 300.0,
+        "rafter_depth": 200.0,
+        "birdsmouth_depth": 40.0,
+        "birdsmouth_seat": 70.0,
+        "plumb_cut_setback": 115.0,
+        "hap": 190.9,
+        "plumb_cut_angle": 30.0,
+        "seat_cut_angle": 60.0,
+        "roof_angle": 30.0,
+        "plumb_cut_length": 230.9,
+        "hap_raw": 191.0
+      },
+      "expected": {
+        "birdsmouth_depth": 40.4,
+        "hap": 190.5,
+        "rise": 1922.6,
+        "plumb_cut_length": 230.9,
+        "plumb_cut_setback": 115.5,
+        "rafter_top_length": 3810.5,
+        "total_rafter_length": 3926.0
+      },
+      "raw_output": "{\"rise\": 1923.0, \"total_rafter_length\": 3926.0, \"rafter_top_length\": 3811.0, \"total_rafter_run\": 3300.0, \"total_fall\": 1905.0, \"overhang_level\": 300.0, \"rafter_depth\": 200.0, \"birdsmouth_depth\": 40.0, \"birdsmouth_seat\": 70.0, \"plumb_cut_setback\": 115.0, \"hap\": 191.0, \"plumb_cut_angle\": 60.0, \"seat_cut_angle\": 30.0, \"roof_angle\": 30.0}"
+    },
+    {
+      "input": {
+        "run": 3000,
+        "roof_angle": 30,
+        "overhang": 300,
+        "rafter_depth": 200,
+        "birdsmouth_seat": 100
+      },
+      "status": "ok",
+      "output": {
+        "rise": 1905.0,
+        "total_rafter_length": 3926.0,
+        "rafter_top_length": 3811.0,
+        "total_rafter_run": 3300.0,
+        "total_fall": 1905.0,
+        "overhang_level": 300.0,
+        "rafter_depth": 200.0,
+        "birdsmouth_depth": 58.0,
+        "birdsmouth_seat": 100.0,
+        "plumb_cut_setback": 115.0,
+        "hap": 172.9,
+        "plumb_cut_angle": 30.0,
+        "seat_cut_angle": 60.0,
+        "roof_angle": 30.0,
+        "plumb_cut_length": 230.9,
+        "hap_raw": null
+      },
+      "expected": {
+        "birdsmouth_depth": 57.7,
+        "hap": 173.2,
+        "rise": 1905.3,
+        "plumb_cut_length": 230.9,
+        "plumb_cut_setback": 115.5,
+        "rafter_top_length": 3810.5,
+        "total_rafter_length": 3926.0
+      },
+      "raw_output": "{\"rise\": 1905.0, \"total_rafter_length\": 3926.0, \"rafter_top_length\": 3811.0, \"total_rafter_run\": 3300.0, \"total_fall\": 1905.0, \"overhang_level\": 300.0, \"rafter_depth\": 200.0, \"birdsmouth_depth\": 58.0, \"birdsmouth_seat\": 100.0, \"plumb_cut_setback\": 115.0, \"hap\": null, \"plumb_cut_angle\": 30.0, \"seat_cut_angle\": 60.0, \"roof_angle\": 30.0}"
+    },
+    {
+      "input": {
+        "run": 3000,
+        "roof_angle": 30,
+        "overhang": 300,
+        "rafter_depth": 200,
+        "birdsmouth_seat": 130
+      },
+      "status": "ok",
+      "output": {
+        "rise": 1888.0,
+        "total_rafter_length": 3926.0,
+        "rafter_top_length": 3811.0,
+        "total_rafter_run": 3300.0,
+        "total_fall": 1905.0,
+        "overhang_level": 300.0,
+        "rafter_depth": 200.0,
+        "birdsmouth_depth": 75.0,
+        "birdsmouth_seat": 130.0,
+        "plumb_cut_setback": 115.0,
+        "hap": 155.9,
+        "plumb_cut_angle": 30.0,
+        "seat_cut_angle": 60.0,
+        "roof_angle": 30.0,
+        "plumb_cut_length": 230.9,
+        "hap_raw": null
+      },
+      "expected": {
+        "birdsmouth_depth": 75.1,
+        "hap": 155.9,
+        "rise": 1887.9,
+        "plumb_cut_length": 230.9,
+        "plumb_cut_setback": 115.5,
+        "rafter_top_length": 3810.5,
+        "total_rafter_length": 3926.0
+      },
+      "raw_output": "{\"rise\": 1888.0, \"total_rafter_length\": 3926.0, \"rafter_top_length\": 3811.0, \"total_rafter_run\": 3300.0, \"total_fall\": 1905.0, \"overhang_level\": 300.0, \"rafter_depth\": 200.0, \"birdsmouth_depth\": 75.0, \"birdsmouth_seat\": 130.0, \"plumb_cut_setback\": 115.0, \"hap\": null, \"plumb_cut_angle\": 30.0, \"seat_cut_angle\": 60.0, \"roof_angle\": 30.0}"
+    },
+    {
+      "input": {
+        "run": 3000,
+        "roof_angle": 30,
+        "overhang": 300,
+        "rafter_depth": 200,
+        "birdsmouth_seat": 160
+      },
+      "status": "ok",
+      "output": {
+        "rise": 1871.0,
+        "total_rafter_length": 3926.0,
+        "rafter_top_length": 3811.0,
+        "total_rafter_run": 3300.0,
+        "total_fall": 1905.0,
+        "overhang_level": 300.0,
+        "rafter_depth": 200.0,
+        "birdsmouth_depth": 92.0,
+        "birdsmouth_seat": 160.0,
+        "plumb_cut_setback": 115.0,
+        "hap": 138.9,
+        "plumb_cut_angle": 30.0,
+        "seat_cut_angle": 60.0,
+        "roof_angle": 30.0,
+        "plumb_cut_length": 230.9,
+        "hap_raw": null
+      },
+      "expected": {
+        "birdsmouth_depth": 92.4,
+        "hap": 138.6,
+        "rise": 1870.6,
+        "plumb_cut_length": 230.9,
+        "plumb_cut_setback": 115.5,
+        "rafter_top_length": 3810.5,
+        "total_rafter_length": 3926.0
+      },
+      "raw_output": "{\"rise\": 1871.0, \"total_rafter_length\": 3926.0, \"rafter_top_length\": 3811.0, \"total_rafter_run\": 3300.0, \"total_fall\": 1905.0, \"overhang_level\": 300.0, \"rafter_depth\": 200.0, \"birdsmouth_depth\": 92.0, \"birdsmouth_seat\": 160.0, \"plumb_cut_setback\": 115.0, \"hap\": null, \"plumb_cut_angle\": 30.0, \"seat_cut_angle\": 60.0, \"roof_angle\": 30.0}"
+    }
+  ]
+}

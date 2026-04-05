@@ -38,10 +38,10 @@
         <span class="pill">Kunde: ${escapeHtml(cust?.name||'Ingen')}</span>`;
 
       const tabs=[
-        {id:'info',      label:'📋 Info'},
-        {id:'materials', label:'🪵 Kalkyle'},
-        {id:'offer',     label:'📄 Tilbud'},
-        {id:'preview',   label:'📑 Tilbudsvisning'},
+        {id:'info',      label:'Info'},
+        {id:'materials', label:'Kalkyle'},
+        {id:'offer',     label:'Tilbud'},
+        {id:'preview',   label:'Tilbudsvisning'},
       ];
       const tabBar=`<div class="tab-bar">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}<button class="tab-btn" onclick="openHandleliste()" style="margin-left:auto;font-size:11px;opacity:0.8">Handleliste</button></div>`;
 
@@ -106,14 +106,14 @@
       const opts=['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
       return `
         <div class="tab-section">
-          <div class="tab-section-heading">📋 Prosjektdetaljer</div>
+          <div class="tab-section-heading">Prosjektdetaljer</div>
           <div class="row">
             <div><label>Prosjektnavn</label><input id="fName" value="${escapeAttr(p.name)}" /></div>
             <div><label>Adresse</label><input id="fAddress" value="${escapeAttr(p.address)}" /></div>
           </div>
         </div>
         <div class="tab-section">
-          <div class="tab-section-heading">👤 Kunde og type</div>
+          <div class="tab-section-heading">Kunde og type</div>
           <div class="row">
             <div><label>Kunde</label><select id="fCustomer">${opts}</select></div>
             <div><label>Type jobb</label><select id="fType"><option ${sel(p.type,'Terrasse')}>Terrasse</option><option ${sel(p.type,'Lettvegg')}>Lettvegg</option><option ${sel(p.type,'Vindu')}>Vindu</option><option ${sel(p.type,'Listing')}>Listing</option><option ${sel(p.type,'Kledning')}>Kledning</option><option ${sel(p.type,'Etterisolering')}>Etterisolering</option><option ${sel(p.type,'Rehabilitering')}>Rehabilitering</option><option ${sel(p.type,'Bad')}>Bad</option><option ${sel(p.type,'Tak')}>Tak</option><option ${sel(p.type,'Annet')}>Annet</option></select></div>
@@ -121,14 +121,14 @@
           <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer"><input type="checkbox" id="fBebodd" style="width:auto" ${p.bebodd?'checked':''} /> Bebodd bolig (kunden bor i bygget under arbeidet)</label>
         </div>
         <div class="tab-section">
-          <div class="tab-section-heading">📅 Tidsplan og status</div>
+          <div class="tab-section-heading">Tidsplan og status</div>
           <div class="row">
             <div><label>Ønsket oppstart</label><select id="fStart"><option ${sel(p.startPref,'Snarest')}>Snarest</option><option ${sel(p.startPref,'Innen 2 uker')}>Innen 2 uker</option><option ${sel(p.startPref,'Innen 1 måned')}>Innen 1 måned</option><option ${sel(p.startPref,'Etter avtale')}>Etter avtale</option></select></div>
             <div><label>Status</label><select id="fStatus"><option ${sel(p.status,'Utkast')}>Utkast</option><option ${sel(p.status,'Sendt')}>Sendt</option><option ${sel(p.status,'Vunnet')}>Vunnet</option><option ${sel(p.status,'Tapt')}>Tapt</option><option ${sel(p.status,'Pågår')}>Pågår</option><option ${sel(p.status,'Ferdig')}>Ferdig</option></select></div>
           </div>
         </div>
         <div class="tab-section">
-          <div class="tab-section-heading">📝 Notater</div>
+          <div class="tab-section-heading">Notater</div>
           <label>Beskrivelse</label><textarea id="fDescription">${escapeHtml(p.description)}</textarea>
           <label>Notat</label><textarea id="fNote">${escapeHtml(p.note||'')}</textarea>
         </div>
@@ -320,20 +320,20 @@
         var hasCatalog = state.priceCatalog && state.priceCatalog.length > 0;
         var msgStyle = hasCatalog ? 'background:#f0f7ff;color:#1e40af' : 'background:#fffbf0;color:var(--muted)';
         var msgText = hasCatalog
-          ? '⚠️ Noen materialer ikke funnet i prisfil «'+state.priceFileName+'» — priser settes til 0'
-          : '⚠️ Ingen prisfil lastet — last opp en prisfil for automatiske priser';
+          ? ' Noen materialer ikke funnet i prisfil «'+state.priceFileName+'» — priser settes til 0'
+          : ' Ingen prisfil lastet — last opp en prisfil for automatiske priser';
         html+='<div style="margin-top:6px;padding:6px;border-radius:8px;font-size:11px;'+msgStyle+'">'
           +msgText
           +'</div>';
       }
       if(est.errors && est.errors.length){
         html+='<div style="margin-top:6px;padding:6px;background:#fee2e2;border-radius:8px;font-size:10px;color:#991b1b">'
-          +'⚠️ '+escapeHtml(est.errors.join(' | '))
+          +' '+escapeHtml(est.errors.join(' | '))
           +'</div>';
       }
       // Send to offer button
       html+='<div style="margin-top:8px;display:flex;gap:6px">'
-        +'<button class="btn small primary" style="flex:1;background:var(--accent)" onclick="sendOperationToOffer(\''+opId+'\')">📤 Send til tilbud</button>'
+        +'<button class="btn small primary" style="flex:1;background:var(--accent)" onclick="sendOperationToOffer(\''+opId+'\')">Send til tilbud</button>'
         +'</div>';
       return html;
     }
@@ -704,21 +704,21 @@
           </div>
           <div id="malerContent" style="display:none">
           <div class="footer-note" style="margin-bottom:12px;padding:10px;background:${hasCatalog?'#edfff4':'#fffbea'};border-radius:12px;border:1px solid ${hasCatalog?'#b7f0cf':'#fde68a'}">
-            ${hasCatalog?`✅ Prisfil aktiv: <strong>${escapeHtml(state.priceFileName)}</strong> (${state.priceCatalog.length} varer) — priser hentes automatisk`:'⚠️ Ingen prisfil lastet opp — priser settes til 0 og må fylles inn manuelt'}
+            ${hasCatalog?` Prisfil aktiv: <strong>${escapeHtml(state.priceFileName)}</strong> (${state.priceCatalog.length} varer) — priser hentes automatisk`:' Ingen prisfil lastet opp — priser settes til 0 og må fylles inn manuelt'}
           </div>
           <div style="font-weight:800;font-size:13px;color:var(--muted);margin-bottom:8px">Innebygde maler <span style="font-weight:500;font-size:12px">— rediger og lagre som din egen for å koble til prisfilen din</span></div>
           <div class="package-grid">
             ${builtIn.map(t=>`
               <div style="display:flex;gap:6px">
                 <button class="package-btn" style="flex:1" onclick="applyTemplateById('${t.id}')">${escapeHtml(t.name)}<small>${t.materials.length} materialer</small></button>
-                <button style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;align-self:center;padding:4px 6px;white-space:nowrap" onclick="copyBuiltinTemplate('${t.id}')">✏️</button>
+                <button style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;align-self:center;padding:4px 6px;white-space:nowrap" onclick="copyBuiltinTemplate('${t.id}')"></button>
               </div>`).join('')}
           </div>
           <div style="font-weight:800;font-size:13px;color:var(--muted);margin:14px 0 8px">Mine maler ${userTpls.length?'':'<span style="font-weight:500">(ingen enda)</span>'}</div>
           ${userTpls.length?`<div class="package-grid">${userTpls.map(t=>`
             <div style="display:flex;gap:6px">
               <button class="package-btn user-template" style="flex:1" onclick="applyTemplateById('${t.id}')">${escapeHtml(t.name)}<small>${t.materials.length} materialer • priser fra prisfil</small></button>
-              <button style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;align-self:center;padding:4px 6px;white-space:nowrap" onclick='openTemplateModal(${JSON.stringify(t).replace(/'/g,"&#39;")})'  >✏️</button>
+              <button style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;align-self:center;padding:4px 6px;white-space:nowrap" onclick='openTemplateModal(${JSON.stringify(t).replace(/'/g,"&#39;")})'  ></button>
             </div>`).join('')}</div>`
           :`<div class="footer-note">Klikk <strong>+ Ny mal</strong> for å lage din første egendefinerte mal.</div>`}
         </div>
@@ -766,7 +766,7 @@
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
               ${(p.extras.subcontractors||[]).map(s=>`
                 <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
-                  <select onchange="updSubcontractor('${s.id}','trade',this.value)" style="padding:10px 12px">
+                  <select onchange="updSubcontractor('${s.id}','trade',this.value)">
                     ${['Rørlegger','Elektriker','Maler','Snekker','Flislegger','Tømrer','Annet'].map(t=>`<option value="${t}" ${s.trade===t?'selected':''}>${t}</option>`).join('')}
                   </select>
                   <input type="number" placeholder="Beløp" value="${displayVatValue(p,s.amount||0)}" onchange="updSubcontractor('${s.id}','amount',this.value)" />
@@ -1072,7 +1072,7 @@
       var totalCost = unsentMats.reduce(function(s,m){ return s + (m.totalCost||0); }, 0);
 
       return '<div class="card" style="margin-bottom:14px;background:#fffbf0;border:1px solid #fde68a;border-radius:16px">'
-        +'<div class="section-head"><div class="section-title">💡 Foreslåtte materialer fra operasjoner</div></div>'
+        +'<div class="section-head"><div class="section-title">Foreslåtte materialer fra operasjoner</div></div>'
         +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">'
         +'Basert på '+opCount+' operasjon'+(opCount>1?'er':'')+' som ikke er sendt til tilbud ennå.'
         +'</div>'
@@ -1089,8 +1089,8 @@
           +'</div>'
         +'</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
-          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(true)" style="flex:1;background:#ff9500;border:none">📦 Legg alle '+unsentMats.length+' linjer som én post</button>'
-          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(false)" style="flex:1;background:#a78bfa;border:none">📦 Legg som '+opCount+' poster</button>'
+          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(true)" style="flex:1;background:#ff9500;border:none"> Legg alle '+unsentMats.length+' linjer som én post</button>'
+          +'<button class="btn small primary" onclick="window.addSuggestedMaterialsAsPost(false)" style="flex:1;background:#a78bfa;border:none"> Legg som '+opCount+' poster</button>'
         +'</div>'
         +'</div>';
     }
@@ -1113,31 +1113,31 @@
         </div>
         ${renderSuggestedMaterialsForOffer(p)}
         <div class="card" style="margin-top:8px;background:#fafcff">${renderOfferPosts(p)}</div>
-        ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px">⚠️ Merk: Materialer i materiallisten er ikke med i tilbudssummen. Legg dem inn i tilbudsposter for å få dem med.</div>`:''}
+        ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px"> Merk: Materialer i materiallisten er ikke med i tilbudssummen. Legg dem inn i tilbudsposter for å få dem med.</div>`:''}
         <div class="card" style="margin-top:14px;background:#fafcff">
           <div class="section-head"><div class="section-title">Oppsummering</div></div>
 
           <div class="offer-hours-bar">
             <div class="hours-value" id="offerTotalHoursDisplay">${ps.hours+c.hoursTotal}t</div>
             <div>
-              <div class="hours-label">⏱️ Totalt timebruk</div>
+              <div class="hours-label"> Totalt timebruk</div>
               <div class="hours-detail" id="offerTotalHoursDetail">${c.hoursTotal>0?c.hoursTotal+'t fra arbeid':''} ${ps.hours>0&&c.hoursTotal>0?'+ ':''} ${ps.hours>0?ps.hours+'t fra poster':''}</div>
             </div>
           </div>
 
           <div class="row-3">
             <div class="offer-stat-card blue-theme">
-              <div class="offer-stat-label">🔨 Tømrerarbeid</div>
+              <div class="offer-stat-label"> Tømrerarbeid</div>
               <div class="offer-stat-value" id="summaryLaborVal">${currency(p.settings.vatMode==='inc'?c.totalLaborSaleEx*1.25:c.totalLaborSaleEx)}</div>
               <div class="offer-stat-detail" id="summaryLaborHours">Totalt: ${c.totalHours}t | Tømrer: ${c.hoursTotal}t | Poster: ${ps.hours}t</div>
             </div>
             <div class="offer-stat-card green-theme">
-              <div class="offer-stat-label">🪵 Materialer</div>
+              <div class="offer-stat-label"> Materialer</div>
               <div class="offer-stat-value">${currency(p.settings.vatMode==='inc'?offerMatSaleEx*1.25:offerMatSaleEx)}</div>
               <div class="offer-stat-detail">Innkjøp: ${currency(offerMatCost)}</div>
             </div>
             <div class="offer-stat-card amber-theme">
-              <div class="offer-stat-label">🚗 Andre kostnader</div>
+              <div class="offer-stat-label"> Andre kostnader</div>
               <div class="offer-stat-value">${currency(p.settings.vatMode==='inc'?(c.extrasBase+c.rigEx)*1.25:(c.extrasBase+c.rigEx))}</div>
               <div class="offer-stat-detail">Kjøring, rigg m.m.</div>
             </div>

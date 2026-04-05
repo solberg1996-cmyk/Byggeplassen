@@ -321,6 +321,7 @@ const calcDefs = {
       const stenderLm=Math.ceil(antStendere*v.hoyde*1.05);
       const svilLm=Math.ceil(v.lengde*2*1.1);
       const stDim=mats.stender||'48×148';
+      const isoTykkelse=parseInt(stDim.split('×')[1])||148;
       const totalVirke=stenderLm+svilLm;
       return {
         areal:areal.toFixed(1)+' m²',
@@ -328,6 +329,10 @@ const calcDefs = {
         materialer:[
           {name:`Virke ${stDim} C24 (stender+svill/rem)`,qty:totalVirke,unit:'lm',waste:5},
           {name:'Vindsperre 1,5×50m',qty:Math.ceil(areal/50),unit:'rull',waste:5},
+          {name:'Vindsperre tape 60mm',qty:Math.ceil(v.lengde*2+v.hoyde*4),unit:'lm',waste:5},
+          {name:'Dampsperre 1,5×50m',qty:Math.ceil(areal/50),unit:'rull',waste:5},
+          {name:'Dampsperre tape',qty:Math.ceil(areal*0.15),unit:'lm',waste:5},
+          {name:`Isolasjon ${isoTykkelse}mm`,qty:Math.ceil(areal*1.05),unit:'m²',waste:5},
           {name:'Spiker / skruer montasje',qty:Math.ceil(antStendere*0.3),unit:'pk',waste:0},
           {name:'Vinkelbeslag',qty:antStendere*2,unit:'stk',waste:0},
         ],
@@ -344,6 +349,10 @@ const calcDefs = {
       materialer:[
         {id:'virke',     nameTemplate:'Virke {stender} C24 (stender+svill/rem)', ratioExpr:'stenderLm + svilLm', unit:'lm', waste:5, desc:'Stendere + svill/rem samlet i lm'},
         {id:'vindsperre',name:'Vindsperre 1,5\u00D750m', baseRef:'veggAreal', ratio:0.02, roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'vindsperretape',name:'Vindsperre tape 60mm', baseRef:'veggAreal', ratio:0.3, unit:'lm', waste:5, desc:'Skjøter + kanter'},
+        {id:'dampsperre',name:'Dampsperre 1,5\u00D750m', baseRef:'veggAreal', ratio:0.02, roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'dampsperretape',name:'Dampsperre tape', baseRef:'veggAreal', ratio:0.15, unit:'lm', waste:5, desc:'Skjøter + gjennomføringer'},
+        {id:'isolasjon',nameTemplate:'Isolasjon {isoTykkelse}mm', baseRef:'veggAreal', ratio:1, unit:'m\u00B2', waste:5, desc:'Mineralull i stenderverk'},
         {id:'spiker',    name:'Spiker / skruer montasje', baseRef:'antStendere', ratio:0.3, roundUp:true, unit:'pk', waste:0, desc:'0.3 pk per stender'},
         {id:'beslag',    name:'Vinkelbeslag',             baseRef:'antStendere', ratio:2,   unit:'stk', waste:0, desc:'2 stk per stender'},
       ]
@@ -437,6 +446,7 @@ const calcDefs = {
           ...(harSloeyfe?[{name:'Sløyfe 23×36',qty:Math.ceil(netto/0.6*1.1),unit:'lm',waste:10}]:[]),
           {name:`Lekter ${sloeyfe.includes('36×48')?'36×48':'23×48'}`,qty:Math.ceil(netto/0.6*1.1),unit:'lm',waste:10},
           {name:'Vindsperre',qty:Math.ceil(netto/50),unit:'rull',waste:5},
+          {name:'Vindsperre tape 60mm',qty:Math.ceil(netto*0.3),unit:'lm',waste:5},
           {name:'Spiker ringspiker A2 50mm',qty:Math.ceil(netto/10),unit:'pk',waste:0},
         ],
         timer:Math.round(netto*getCalcRate('kledning')),
@@ -453,6 +463,7 @@ const calcDefs = {
         {id:'sloeyfe',   name:'Sl\u00F8yfe 23\u00D736',              baseRef:'netto', ratio:1.83, roundUp:true, unit:'lm', waste:10, desc:'lm sl\u00F8yfe per m\u00B2 (c/c 600)'},
         {id:'lekter',    name:'Lekter 23\u00D748',                   baseRef:'netto', ratio:1.83, roundUp:true, unit:'lm', waste:10, desc:'lm lekt per m\u00B2 (c/c 600)'},
         {id:'vindsperre',name:'Vindsperre',                          baseRef:'netto', ratio:0.02, roundUp:true, unit:'rull', waste:5, desc:'1 rull per 50 m\u00B2'},
+        {id:'vindsperretape',name:'Vindsperre tape 60mm',           baseRef:'netto', ratio:0.3,  unit:'lm', waste:5, desc:'Skj\u00F8ter og kanter'},
         {id:'spiker',    name:'Spiker ringspiker A2 50mm',           baseRef:'netto', ratio:0.1,  roundUp:true, unit:'pk', waste:0, desc:'1 pk per 10 m\u00B2'},
       ]
     }
@@ -565,10 +576,13 @@ const calcDefs = {
       {id:'hoyde',label:'Høyde (cm)',default:120},
     ],
     calc(v,mats){
-      const omfar=Math.ceil((v.bredde*2+v.hoyde*2)/100*1.2);
+      const karmLm=Math.ceil((v.bredde*2+v.hoyde*2)/100*1.2);
+      const totalLm=karmLm*v.antall;
       const foringType=mats.foring||'Inkludert foring og lister';
       const ekstraMat=foringType.includes('foring')?[
-        {name:'Listverk / foring',qty:omfar*v.antall,unit:'lm',waste:10},
+        {name:'Utforing furu',qty:Math.ceil(totalLm*1.05),unit:'lm',waste:5},
+        {name:'Karmlist',qty:Math.ceil(totalLm*1.05),unit:'lm',waste:5},
+        {name:'Bunnfyllingslist',qty:Math.ceil(v.bredde/100*v.antall*1.1),unit:'lm',waste:10},
       ]:[];
       return {
         areal:v.antall+' vindu(er)',
@@ -576,7 +590,9 @@ const calcDefs = {
         materialer:[
           {name:'Karmskruer 90mm',qty:v.antall,unit:'pk',waste:0},
           {name:'Fugeskum proff',qty:v.antall*2,unit:'stk',waste:0},
-          {name:'Beslag / tetting',qty:v.antall,unit:'pakke',waste:0},
+          {name:'Dynaform tetteremse',qty:Math.ceil(totalLm),unit:'lm',waste:5},
+          {name:'Fugemasse',qty:Math.ceil(v.antall*0.5),unit:'stk',waste:0},
+          {name:'Alu. utsidelist',qty:Math.ceil(totalLm),unit:'lm',waste:5},
           ...ekstraMat,
         ],
         timer:Math.round(v.antall*getCalcRate('vindu')),
@@ -729,9 +745,12 @@ const calcDefs = {
         info:`Bord: ${bordValg}`,
         materialer:[
           {name:`Terrassebord ${bordValg}`,qty:bordLm,unit:'lm',waste:10},
+          {name:'Spikerslag 23×48',qty:Math.ceil(areal*1.8),unit:'lm',waste:10},
           {name:'Bjelkelag 48×198 C24',qty:bjelkeLm,unit:'lm',waste:8},
+          {name:'Kantsargbord 48×198 impr.',qty:Math.ceil((v.lengde+v.bredde)*2*1.1),unit:'lm',waste:10},
           {name:'Fundament / stolpesko',qty:antFund,unit:'stk',waste:0},
           {name:'Terrasseskruer A2',qty:Math.ceil(areal/4),unit:'pk',waste:0},
+          {name:'Beslag / bjelkesko',qty:Math.ceil(bjelkeLm/v.lengde)*2,unit:'stk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('terrasse')),
       };
@@ -1149,9 +1168,13 @@ const calcDefs = {
         info:`${stDim} c/c ${mats.cc||'600 mm'} • ${gipsType}`,
         materialer:[
           {name:`Virke ${stDim} C24 (stender+svill/rem)`,qty:Math.ceil(antStendere*v.hoyde*1.05)+Math.ceil(v.lengde*2*1.1),unit:'lm',waste:5},
-          ...(harGips?[{name:`Gips ${gipsType}`,qty:gipsPlater,unit:'pl',waste:10}]:[]),
+          ...(harGips?[
+            {name:`Gips ${gipsType}`,qty:gipsPlater,unit:'pl',waste:10},
+            {name:'Gipsskruer båndet',qty:Math.ceil(areal/20),unit:'pk',waste:0},
+            {name:'Sparkelpasta',qty:Math.ceil(areal/15),unit:'spann',waste:0},
+            {name:'Fugebånd papir',qty:Math.ceil(v.lengde*3+v.hoyde*2),unit:'lm',waste:5},
+          ]:[]),
           ...isolMat,
-          ...(harGips?[{name:'Gipsskruer båndet',qty:Math.ceil(areal/20),unit:'pk',waste:0}]:[]),
           {name:'Spiker / skruer montasje',qty:Math.ceil(antStendere/10),unit:'pk',waste:0},
         ],
         timer:Math.round(areal*getCalcRate('innevegger')),
@@ -1169,6 +1192,8 @@ const calcDefs = {
         {id:'gips',       nameTemplate:'Gips {gips}',    baseRef:'veggAreal', ratio:0.764, roundUp:true, unit:'pl', waste:10, desc:'2 sider x 1 pl/2.88m\u00B2 x 1.1', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
         {id:'isolasjon',  nameTemplate:'Mineralull {isolasjon}', baseRef:'veggAreal', ratio:0.174, roundUp:true, unit:'pk', waste:5, desc:'1 pk per 5.76 m\u00B2', condition:{matNotEquals:{field:'isolasjon',value:'Ingen'}}},
         {id:'gipsskruer', name:'Gipsskruer b\u00E5ndet',baseRef:'veggAreal', ratio:0.05, roundUp:true, unit:'pk', waste:0, desc:'1 pk per 20 m\u00B2', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
+        {id:'sparkel',    name:'Sparkelpasta',             baseRef:'veggAreal', ratio:0.067, roundUp:true, unit:'spann', waste:0, desc:'1 spann per 15 m\u00B2', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
+        {id:'fugebaand',  name:'Fugeb\u00E5nd papir',     baseRef:'veggAreal', ratio:0.5,  unit:'lm', waste:5, desc:'Skj\u00F8ter mellom gipsplater', condition:{matNotEquals:{field:'gips',value:'Ingen'}}},
         {id:'spiker',     name:'Spiker / skruer montasje', baseRef:'antStendere', ratio:0.1, roundUp:true, unit:'pk', waste:0, desc:'1 pk per 10 stendere'},
       ]
     }

@@ -571,11 +571,17 @@ var matCalcDefs = {
 
 var _matCalcCurrent = 'stender';
 
+var _matCalcCategories = [
+  { id: 'reisverk', label: 'Reisverk', items: ['stender'] },
+  { id: 'utvendig', label: 'Utvendig', items: ['kledning', 'lekter', 'tak', 'terrasse', 'rekkverk'] },
+  { id: 'innvendig', label: 'Innvendig', items: ['gips', 'isolasjon', 'gulv', 'listverk', 'vindu'] }
+];
+
 function openMatCalc() {
   var el = $('#matCalcModal');
   if (el) {
     el.classList.remove('hidden');
-    renderMatCalcTabs();
+    renderMatCalcNav();
     renderMatCalcBody();
   }
 }
@@ -587,18 +593,27 @@ function closeMatCalc() {
 
 function switchMatCalc(id) {
   _matCalcCurrent = id;
-  renderMatCalcTabs();
+  renderMatCalcNav();
   renderMatCalcBody();
 }
 
-function renderMatCalcTabs() {
-  var container = $('#matCalcTabs');
+function renderMatCalcNav() {
+  var container = $('#matCalcNav');
   if (!container) return;
   var html = '';
-  Object.keys(matCalcDefs).forEach(function(key) {
-    var d = matCalcDefs[key];
-    var active = key === _matCalcCurrent ? ' mc-tab-active' : '';
-    html += '<button class="mc-tab' + active + '" onclick="switchMatCalc(\'' + key + '\')">' + (d.icon ? d.icon + ' ' : '') + d.label + '</button>';
+  _matCalcCategories.forEach(function(cat) {
+    html += '<div class="mc-nav-group">';
+    html += '<div class="mc-nav-label">' + cat.label + '</div>';
+    cat.items.forEach(function(key) {
+      var d = matCalcDefs[key];
+      if (!d) return;
+      var active = key === _matCalcCurrent ? ' mc-nav-item-active' : '';
+      html += '<button class="mc-nav-item' + active + '" onclick="switchMatCalc(\'' + key + '\')">';
+      if (d.icon) html += '<span class="mc-nav-icon">' + d.icon + '</span>';
+      html += d.label;
+      html += '</button>';
+    });
+    html += '</div>';
   });
   container.innerHTML = html;
 }
@@ -662,6 +677,12 @@ function calcMatCalc() {
   }
 
   container.className = 'mc-result mc-result-filled';
+
+  if (def.customRender && def.renderResult) {
+    container.innerHTML = '<div class="mc-result-title">Resultat</div>' + def.renderResult(results);
+    return;
+  }
+
   var html = '<div class="mc-result-title">Resultat</div>';
   html += '<div class="mc-result-grid">';
   results.forEach(function(r) {
