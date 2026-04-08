@@ -9,13 +9,15 @@
       else { document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
       _sb.auth.onAuthStateChange(async function(event,session){
         if(event==='SIGNED_IN'&&session){ _sbUser=session.user; await loadFromCloud(); showApp(); }
-        else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; }
+        else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; var bb=document.getElementById('bottomBar'); if(bb) bb.style.display='none'; }
       });
     }
 
     function showApp(){
       document.getElementById('loginView').style.display='none';
       document.getElementById('appSidebar').style.display='';
+      var bb=document.getElementById('bottomBar');
+      if(bb&&window._isMobile&&window._isMobile()) bb.style.display='flex';
       sidebarNav('kalkyle');
     }
 
@@ -79,7 +81,7 @@
           state.settings=Object.assign({},defaultSettings,p.settings||{});
           state.priceCatalog=p.priceCatalog||[]; state.priceFileName=p.priceFileName||'';
           state.favoriteCatalogIds=p.favoriteCatalogIds||[]; state.recentCatalogIds=p.recentCatalogIds||[];
-          state.userTemplates=p.userTemplates||[]; state.calcRates=p.calcRates||{}; state.calcRecipes=p.calcRecipes||{};
+          state.userTemplates=p.userTemplates||[]; state.calcRates=p.calcRates||{}; state.laborRates=p.laborRates||{}; state.calcRecipes=p.calcRecipes||{};
           state.company=Object.assign({},defaultCompany,p.company||{});
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
@@ -93,6 +95,14 @@
         updateSyncIndicator(true);
       } catch(e){ console.log('Cloud save:', e); updateSyncIndicator(false); }
     }
+
+    // Vis/skjul bunnmeny ved resize
+    window.addEventListener('resize',function(){
+      var bb=document.getElementById('bottomBar');
+      if(!bb||!_sbUser) return;
+      bb.style.display=window._isMobile&&window._isMobile()?'flex':'none';
+      if(!window._isMobile||!window._isMobile()) closeMerSheet();
+    });
 
     function updateSyncIndicator(ok){
       const el=document.getElementById('syncIndicator');

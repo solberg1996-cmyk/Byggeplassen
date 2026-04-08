@@ -1217,11 +1217,38 @@
       .sidebar ~ #settingsView{margin-left:240px}
     }
     @media (max-width:900px){
-      .sidebar{
-        transform:translateX(-100%);
-        transition:transform var(--dur-normal) var(--ease);
-      }
-      .sidebar.open{transform:translateX(0)}
+      /* Skjul sidebar, bruk bunnmeny istedenfor */
+      #appSidebar{display:none!important}
+
+      /* Kompakt mobil-spacing */
+      body{font-size:15px}
+      html{background:var(--bg)}
+      .app,#settingsView{padding:20px 16px calc(80px + env(safe-area-inset-bottom,0px))!important;margin-left:0!important}
+      .card{padding:16px}
+      .title{font-size:22px}
+      .topbar{gap:10px;margin-bottom:16px}
+      input,select,textarea,button{min-height:44px}
+      input[type="number"],input[type="text"],select{font-size:16px}
+      .tab-btn{min-height:44px}
+
+      /* Makker/befaring views — fjern sidebar offset */
+      #makkView,#befaringView{left:0!important;bottom:calc(56px + env(safe-area-inset-bottom,0px))!important}
+
+      /* Skjul inline tab-bar i prosjektvisning (erstattes av project-bottom-bar) */
+      #projectView .tab-bar{display:none}
+
+      /* Kompakte oversiktslister */
+      .ov-list .item{padding:10px 14px}
+
+      /* Prosjekt-bottom-tab med ikon+tekst */
+      .project-bottom-tab{flex-direction:column;gap:2px;font-size:10px}
+      .project-bottom-tab svg{width:18px;height:18px}
+
+      /* Tilbuds-2-kolonne → 1 kolonne */
+      .offer-cols{grid-template-columns:1fr!important}
+
+      /* Topbar actions wrapping */
+      .topbar .actions{flex-wrap:nowrap}
     }
 
     /* ══════════════════════════════════════════════════════
@@ -1678,6 +1705,159 @@
       .ov-header-actions{flex-direction:column;align-items:stretch}
       .ov-panel{padding:18px}
       .ov-list{max-height:320px}
+    }
+
+    /* ══════════════════════════════════════════════════════
+       BOTTOM BAR (mobil < 900px)
+       ══════════════════════════════════════════════════════ */
+    .bottom-bar{
+      position:fixed;bottom:0;left:0;right:0;
+      display:none;justify-content:space-around;align-items:stretch;
+      background:var(--card);
+      border-top:1px solid var(--line);
+      box-shadow:0 -1px 8px rgba(22,39,54,.06);
+      z-index:900;
+      padding-bottom:env(safe-area-inset-bottom,0px);
+      height:calc(56px + env(safe-area-inset-bottom,0px));
+    }
+    .bottom-bar-tab{
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:2px;
+      border:none;background:transparent;
+      color:var(--muted);font-size:10px;font-weight:600;
+      font-family:var(--font-display);
+      cursor:pointer;padding:6px 0;
+      min-height:44px;
+      transition:color var(--dur-fast) var(--ease);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .bottom-bar-tab svg{width:22px;height:22px}
+    .bottom-bar-tab.active{color:var(--accent-hover)}
+    .bottom-bar-tab:active{transform:scale(.92)}
+
+    @media (max-width:900px){.bottom-bar{display:flex}}
+    @media (min-width:901px){.bottom-bar{display:none!important}}
+
+    /* ── Mer-sheet (bottom sheet) ────────────────────────── */
+    .mer-sheet-backdrop{
+      position:fixed;inset:0;
+      background:rgba(22,39,54,.3);
+      z-index:950;
+      opacity:0;transition:opacity .25s var(--ease);
+    }
+    .mer-sheet-backdrop.visible{opacity:1}
+    .mer-sheet-content{
+      position:fixed;bottom:0;left:0;right:0;
+      background:var(--card);
+      border-radius:var(--radius) var(--radius) 0 0;
+      padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));
+      z-index:951;
+      transform:translateY(100%);
+      transition:transform .25s cubic-bezier(.32,.72,0,1);
+    }
+    .mer-sheet-content.visible{transform:translateY(0)}
+    .mer-sheet-handle{
+      width:36px;height:4px;
+      background:var(--line-strong);
+      border-radius:2px;margin:0 auto 12px;
+    }
+    .mer-sheet-item{
+      display:flex;align-items:center;gap:12px;
+      width:100%;padding:14px 12px;
+      border:none;background:transparent;
+      font-size:15px;font-weight:600;color:var(--text);
+      font-family:var(--font-display);
+      border-radius:var(--radius-xs);
+      cursor:pointer;min-height:44px;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .mer-sheet-item:active{background:var(--bg-warm)}
+    .mer-sheet-item--danger,.mer-sheet-logout{color:var(--red)}
+    .mer-sheet-item--info,.mer-sheet-sync{color:var(--green);cursor:default}
+    .mer-sheet-item svg{width:20px;height:20px;flex-shrink:0}
+
+    /* ── Prosjekt kontekstuell bunnmeny ──────────────────── */
+    .project-bottom-bar{
+      position:fixed;bottom:0;left:0;right:0;
+      display:none;justify-content:space-around;
+      background:var(--card);
+      border-top:1px solid var(--line);
+      box-shadow:0 -1px 8px rgba(22,39,54,.06);
+      z-index:900;
+      padding-bottom:env(safe-area-inset-bottom,0px);
+      height:calc(52px + env(safe-area-inset-bottom,0px));
+    }
+    @media (min-width:901px){.project-bottom-bar{display:none!important}}
+    .project-bottom-tab{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      border:none;background:transparent;
+      color:var(--muted);font-size:12px;font-weight:600;
+      font-family:var(--font-display);
+      cursor:pointer;min-height:44px;
+      transition:color var(--dur-fast) var(--ease);
+      -webkit-tap-highlight-color:transparent;
+      border-top:2px solid transparent;
+    }
+    .project-bottom-tab.active{color:var(--text);border-top-color:var(--accent)}
+
+    /* ── Tre-prikk overflow-meny ─────────────────────────── */
+    .topbar-overflow-wrap{position:relative}
+    .topbar-overflow{
+      width:44px;height:44px;
+      display:none;align-items:center;justify-content:center;
+      border:1px solid var(--line);background:var(--card);
+      border-radius:var(--radius-xs);cursor:pointer;
+      font-size:20px;color:var(--muted-strong);
+      -webkit-tap-highlight-color:transparent;
+    }
+    @media (max-width:900px){
+      .topbar-overflow{display:inline-flex}
+      .topbar .actions>#saveProjectBtn,
+      .topbar .actions>#deleteProjectBtn{display:none}
+    }
+    .topbar-dropdown{
+      position:absolute;top:100%;right:0;
+      background:var(--card);border:1px solid var(--line);
+      border-radius:var(--radius-sm);
+      box-shadow:0 8px 30px rgba(22,39,54,.12);
+      min-width:200px;z-index:100;padding:6px;
+      display:none;
+    }
+    .topbar-dropdown.open{display:block}
+    .topbar-dropdown-item{
+      display:flex;align-items:center;gap:10px;
+      width:100%;padding:10px 12px;
+      border:none;background:transparent;
+      font-size:14px;font-weight:500;color:var(--text);
+      border-radius:var(--radius-xs);cursor:pointer;min-height:44px;
+      font-family:var(--font-display);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .topbar-dropdown-item:active{background:var(--bg-warm)}
+    .topbar-dropdown-item--danger{color:var(--red)}
+
+    /* ── Komprimerte materialrader (mobil) ────────────────── */
+    @media (max-width:900px){
+      .mat-category-group table thead{display:none}
+      .mat-category-group table tr{
+        display:grid;grid-template-columns:1fr auto;
+        padding:10px 0;border-bottom:1px solid var(--line);
+        cursor:pointer;gap:0;
+      }
+      .mat-category-group table tr td{padding:2px 4px!important}
+      .mat-category-group table tr td:first-child{
+        grid-column:1;font-weight:600;font-size:13px;
+      }
+      .mat-category-group table tr td:last-child{
+        grid-column:2;grid-row:1;text-align:right;font-weight:600;
+      }
+      .mat-category-group table tr td:nth-child(2),
+      .mat-category-group table tr td:nth-child(3),
+      .mat-category-group table tr td:nth-child(4){display:none}
+      .mat-category-group table tr.expanded{grid-template-columns:1fr;background:var(--card-hover);border-radius:var(--radius);padding:10px 8px}
+      .mat-category-group table tr.expanded td{display:block!important;text-align:left!important;padding:2px 0!important;font-size:12px}
+      .mat-category-group table tr.expanded td:first-child{font-size:13px;margin-bottom:4px}
+      .mat-category-group table tr.expanded td:last-child{font-size:14px;margin-top:4px;font-weight:700}
     }
 
     /* ── Scrollbar ────────────────────────────────────────── */

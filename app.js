@@ -136,7 +136,7 @@
       if(!modal){
         modal=document.createElement('div');
         modal.id='calcMatModal';
-        modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:2000;display:flex;flex-direction:column;overflow:hidden';
+        modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-width:95vw;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:2000;display:flex;flex-direction:column';
         document.body.appendChild(modal);
       }
       let backdrop=document.getElementById('calcMatBackdrop');
@@ -154,7 +154,7 @@
         <div style="padding:16px;border-bottom:1px solid #eee">
           <input type="text" id="calcMatModalSearchInput" placeholder="Søk materiale..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:12px" oninput="showCalcMatSearchModal(this.value)" onkeydown="handleCalcMatModalKeydown(event)" />
         </div>
-        <div id="calcMatModalResults" style="flex:1;overflow-y:auto;padding:0"></div>
+        <div id="calcMatModalResults" style="overflow-y:auto;min-height:0;max-height:calc(70vh - 60px);padding:0;-webkit-overflow-scrolling:touch"></div>
       `;
       modal.style.display='block';
       modal.onclick=function(e){
@@ -194,7 +194,7 @@
       const resultsDiv=document.getElementById('calcMatModalResults');
       if(!resultsDiv) return;
 
-      const results=searchPriceCatalog(query).slice(0,15);
+      const results=searchPriceCatalog(query).slice(0,30);
       if(!query.trim() || !results.length){
         resultsDiv.innerHTML=query.trim()?'<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Ingen treff</div>':'<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Skriv for å søke</div>';
         window._calcMatSearchActive=0;
@@ -202,7 +202,7 @@
       }
 
       resultsDiv.innerHTML=results.map((item,idx)=>`
-        <div class="calcMatSearchItem" data-idx="${idx}" style="padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--card-hover)';window._calcMatSearchActive=${idx}" onmouseout="this.style.background='var(--card)'" onclick="selectCalcMatFromModal('${escapeHtml(item.id)}')">
+        <div class="calcMatSearchItem" data-idx="${idx}" style="padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s" onmousemove="calcMatMouseMove(event,${idx})" onclick="selectCalcMatFromModal('${escapeHtml(item.id)}')">
           <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:12px">${escapeHtml(item.productName||item.name)}</div>
           <div style="font-size:11px;color:var(--muted);display:flex;gap:16px;align-items:center">
             <span>${escapeHtml(item.unit||'stk')}</span>
@@ -247,11 +247,11 @@
       if(e.key==='ArrowDown'){
         e.preventDefault();
         window._calcMatSearchActive=Math.min(window._calcMatSearchActive+1,items.length-1);
-        updateCalcMatSearchActiveStyle();
+        updateCalcMatSearchActiveStyle(true);
       }else if(e.key==='ArrowUp'){
         e.preventDefault();
         window._calcMatSearchActive=Math.max(window._calcMatSearchActive-1,0);
-        updateCalcMatSearchActiveStyle();
+        updateCalcMatSearchActiveStyle(true);
       }else if(e.key==='Enter'){
         e.preventDefault();
         const active=items[window._calcMatSearchActive];
@@ -262,14 +262,35 @@
       }
     };
 
-    window.updateCalcMatSearchActiveStyle=function(){
+    // Spor museposisjon for å skille ekte musebevegelse fra scroll
+    window._searchMouseX=0; window._searchMouseY=0;
+
+    window.calcMatMouseMove=function(e,idx){
+      if(e.clientX===window._searchMouseX&&e.clientY===window._searchMouseY) return;
+      window._searchMouseX=e.clientX; window._searchMouseY=e.clientY;
+      if(window._calcMatSearchActive!==idx){
+        window._calcMatSearchActive=idx;
+        updateCalcMatSearchActiveStyle();
+      }
+    };
+
+    window.priceSearchMouseMove=function(e,idx){
+      if(e.clientX===window._searchMouseX&&e.clientY===window._searchMouseY) return;
+      window._searchMouseX=e.clientX; window._searchMouseY=e.clientY;
+      if(window._priceSearchActive!==idx){
+        window._priceSearchActive=idx;
+        updatePriceSearchActiveStyle();
+      }
+    };
+
+    window.updateCalcMatSearchActiveStyle=function(scroll){
       const items=document.querySelectorAll('.calcMatSearchItem');
       items.forEach((item,idx)=>{
         if(idx===window._calcMatSearchActive){
           item.style.background='#e8f4ff';
           item.style.borderLeft='4px solid var(--accent)';
           item.style.paddingLeft='12px';
-          item.scrollIntoView({block:'nearest'});
+          if(scroll) item.scrollIntoView({block:'nearest'});
         }else{
           item.style.background='var(--card)';
           item.style.borderLeft='none';
@@ -614,10 +635,14 @@
      window.recalcCalcMaterials=function(){
       const result=window._lastCalcResult;
       if(!result||!result.materialsWithPrices) return;
+      // Bygg lookup fra eksisterende data (laborId, laborRate, etc.)
+      const oldByMatId={};
+      result.materialsWithPrices.forEach(m=>{ oldByMatId[m.matId]=m; });
       const rows=Array.from(document.querySelectorAll('tr[data-mat-id]'));
       const newMaterials=[];
       rows.forEach(row=>{
         const matId=row.dataset.matId;
+        const old=oldByMatId[matId]||{};
         const name=row.querySelector('.calcMatName')?.value||'';
         const qty=parseFloat(row.querySelector('.calcMatQty')?.value)||0;
         const cost=parseFloat(row.querySelector('.calcMatCost')?.value)||0;
@@ -625,7 +650,8 @@
         const markup=parseFloat(row.querySelector('.calcMatMarkup')?.value)||0;
         const unit=row.querySelector('.calcMatUnit')?.value||'stk';
         const totalCost=Math.round(qty*cost*(1+waste/100)*(1+markup/100));
-        newMaterials.push({matId,name,qty,cost,waste,markup,unit,totalCost});
+        newMaterials.push({matId,name,qty,cost,waste,markup,unit,totalCost,
+          laborId:old.laborId, laborRate:old.laborRate, laborQty:old.laborQty, laborUnit:old.laborUnit});
         const totalSpan=row.querySelector('.calcMatRowTotal');
         if(totalSpan) totalSpan.textContent=currency(totalCost);
         const bruttoCell=row.querySelector('.calcMatBrutto');
@@ -633,27 +659,70 @@
       });
       result.materialsWithPrices=newMaterials;
       result.totalMatCost=newMaterials.reduce((s,m)=>s+(m.totalCost||0),0);
+
+      // Rekalkuler timer fra gjenværende materialer
+      const factors=result.factors||{};
+      const baseTimer=round1(window.calcDirectBaseHours(newMaterials));
+      const directTimer=round1(window.calcAdjustedDirectHours(baseTimer, factors));
+      const rigTimer=parseFloat(document.getElementById('calcRigging')?.value)||0;
+      const planTimer=parseFloat(document.getElementById('calcPlanning')?.value)||0;
+      const cleanupPct=parseFloat(document.getElementById('calcCleanup')?.value)||3;
+      const distance=(factors.distance)||0;
+      const occupied=factors.occupied||false;
+      const occupiedFactor=occupied?1.25:1;
+      const drivingTimer=Math.round(distance*2*0.5);
+      const cleanupTimer=Math.round(directTimer*cleanupPct/100);
+      const indirectTimer=rigTimer+planTimer+drivingTimer+cleanupTimer;
+      const totalTimer=directTimer+indirectTimer;
+
+      result.baseTimer=baseTimer;
+      result.directTimer=directTimer;
+      result.indirectTimer=indirectTimer;
+      result.totalTimer=totalTimer;
+
       const p=getProject(currentProjectId);
-      const laborSaleEx=result.laborSaleEx;
+      const timeRate=(p?.work.timeRate)||850;
+      const laborSaleEx=Math.round(directTimer*timeRate*occupiedFactor);
+      result.laborSaleEx=laborSaleEx;
       const totalSaleEx=laborSaleEx+result.totalMatCost;
-      const laborCost=Math.round(result.directTimer*(p?.work.internalCost||450));
+      const laborCost=Math.round(directTimer*(p?.work.internalCost||450));
       const totalCost=laborCost+result.totalMatCost;
       const profit=totalSaleEx-totalCost;
       const margin=totalSaleEx>0?Math.round(profit/totalSaleEx*100):0;
       result.profit=profit; result.margin=margin; result.totalSaleEx=totalSaleEx; result.totalCost=totalCost;
-      const matGridDiv=document.querySelector('div[style*="grid-template-columns:repeat(3"]');
-      if(matGridDiv){
-        matGridDiv.innerHTML=`<div><div style="font-size:11px;color:var(--muted);font-weight:700"> Arbeid (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#0a84ff;margin-top:2px">${currency(laborSaleEx)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700"> Materialer</div><div style="font-size:16px;font-weight:800;color:#167a42;margin-top:2px">${currency(result.totalMatCost)}</div></div>
-          <div><div style="font-size:11px;color:var(--muted);font-weight:700"> Totalt (eks. mva)</div><div style="font-size:16px;font-weight:800;color:#2e7d32;margin-top:2px">${currency(totalSaleEx)}</div></div>`;
+
+      // Oppdater timer-UI
+      const directBox=document.querySelector('.calc-stat-box.blue .stat-value');
+      if(directBox) directBox.textContent=directTimer+'t';
+      const directDetail=document.querySelector('.calc-stat-box.blue .stat-detail');
+      if(directDetail) directDetail.textContent=baseTimer+'t'+(baseTimer!==directTimer?' + justering':'');
+      const indirectBox=document.querySelector('.calc-stat-box.orange .stat-value');
+      if(indirectBox) indirectBox.textContent=indirectTimer+'t';
+      const indirectDetail=document.querySelector('.calc-stat-box.orange .stat-detail');
+      if(indirectDetail) indirectDetail.textContent='Rigg: '+rigTimer+'t + Plan: '+planTimer+'t + Kjoring: '+drivingTimer+'t + Opprydding: '+cleanupTimer+'t';
+      const totalBox=document.querySelector('.calc-total-box.green .total-value');
+      if(totalBox) totalBox.textContent=totalTimer+'t';
+
+      // Oppdater pris-grid (Arbeid / Materialer / Totalt)
+      const priceGrid=document.querySelector('.calc-price-grid');
+      if(priceGrid){
+        const items=priceGrid.querySelectorAll('.calc-price-item .price-value');
+        if(items[0]) items[0].textContent=currency(laborSaleEx);
+        if(items[1]) items[1].textContent=currency(result.totalMatCost);
+        if(items[2]) items[2].textContent=currency(totalSaleEx);
       }
-      const marginDiv=document.querySelector('div[style*="background:#f0f7ff"][style*="margin"]');
-      if(marginDiv){
-        const marginValueEl=marginDiv.querySelector('div[style*="font-size:22px"]');
-        const profitEl=marginDiv.querySelector('div[style*="font-size:10px"]');
+      // Oppdater margin/fortjeneste
+      const marginBox=document.querySelector('.calc-total-box.blue-border');
+      if(marginBox){
+        const marginValueEl=marginBox.querySelector('.total-value');
+        const profitEl=marginBox.querySelector('.stat-detail');
         if(marginValueEl) marginValueEl.textContent=margin+'%';
         if(profitEl) profitEl.textContent='Fortjeneste: '+currency(profit);
       }
+      // Oppdater "Bruk Xt" knappen
+      const applyBtn=document.querySelector('.calc-result-card .btn.small.primary');
+      if(applyBtn&&applyBtn.textContent.match(/Bruk \d/)) applyBtn.textContent='Bruk '+totalTimer+'t som prosjekttimer';
+
       result.sentToOffer=false;
       updateCalcSendButtonUI();
     };
@@ -745,14 +814,17 @@
       return scored.slice(0,20).map(s=>s.item);
     }
 
+    window._priceSearchActive=0;
+
     function renderPriceSearchResults(query){
       const host=$('#priceSearchResults'); if(!host) return;
       const results=searchPriceCatalog(query);
+      window._priceSearchActive=0;
       if(!query||!query.trim()){ host.innerHTML=''; return; }
       if(!state.priceCatalog.length){ host.innerHTML='<div class="empty">Last opp en prisfil for å søke i varer.</div>'; return; }
       if(!results.length){ host.innerHTML='<div class="empty">Ingen treff.</div>'; return; }
-      host.innerHTML=results.map(item=>`
-        <div class="item">
+      host.innerHTML=results.map((item,idx)=>`
+        <div class="item priceSearchItem" data-idx="${idx}" data-item-id="${escapeHtml(item.id)}" onmousemove="priceSearchMouseMove(event,${idx})" style="cursor:pointer">
           <div>
             <h4>${escapeHtml(item.productName||item.name)}</h4>
             <p>${escapeHtml(item.description||'')}</p>
@@ -769,7 +841,43 @@
           </div>
         </div>
       `).join('');
+      updatePriceSearchActiveStyle();
     }
+
+    window.updatePriceSearchActiveStyle=function(scroll){
+      const items=document.querySelectorAll('.priceSearchItem');
+      items.forEach((item,idx)=>{
+        if(idx===window._priceSearchActive){
+          item.style.background='var(--card-hover)';
+          item.style.borderLeft='3px solid var(--accent)';
+          if(scroll) item.scrollIntoView({block:'nearest'});
+        } else {
+          item.style.background='';
+          item.style.borderLeft='';
+        }
+      });
+    };
+
+    window.handlePriceSearchKeydown=function(e){
+      const items=document.querySelectorAll('.priceSearchItem');
+      if(!items.length) return;
+      if(e.key==='ArrowDown'){
+        e.preventDefault();
+        window._priceSearchActive=Math.min(window._priceSearchActive+1,items.length-1);
+        updatePriceSearchActiveStyle(true);
+      } else if(e.key==='ArrowUp'){
+        e.preventDefault();
+        window._priceSearchActive=Math.max(window._priceSearchActive-1,0);
+        updatePriceSearchActiveStyle(true);
+      } else if(e.key==='Enter'){
+        e.preventDefault();
+        const active=items[window._priceSearchActive];
+        if(active){
+          const itemId=active.dataset.itemId;
+          if(itemId) addCatalogMaterial(itemId);
+        }
+      }
+    };
 
     function getCatalogItem(id){ return state.priceCatalog.find(x=>String(x.id)===String(id)); }
     function getFavoriteCatalogItems(){ return (state.favoriteCatalogIds||[]).map(getCatalogItem).filter(Boolean).slice(0,12); }
@@ -1075,14 +1183,14 @@
         <div style="background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;margin-bottom:2px"> Timer for denne posten</div>
-            <div style="font-size:12px;color:var(--muted)">${calcHours?'Kalkyle beregnet: '+calcHours+'t':''}</div>
+            <div style="font-size:12px;color:var(--muted)">${calcHours?'Kalkulasjon beregnet: '+calcHours+'t':''}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
             <button onclick="adjustModalHours(1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
             <div id="postHoursDisplay" style="font-size:28px;font-weight:800;color:#a96800;min-width:70px;text-align:center">${currentHours||calcHours||0}</div>
             <button onclick="adjustModalHours(-1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
           </div>
-          <div style="font-size:12px;color:var(--muted)">timer<br><span style="font-size:10px">Fra kalkyle: ${calcHours||0}t</span></div>
+          <div style="font-size:12px;color:var(--muted)">timer<br><span style="font-size:10px">Fra kalkulasjon: ${calcHours||0}t</span></div>
         </div>`:``)}
 
 
@@ -1492,9 +1600,7 @@
     };
 
     // ---- MATERIALKALKULATOR ----
-    // difficultyFactors, calcDefaults, getCalcRate → moved to productionData.js / calcEngine.js
-
-    // calcDefs, saveCalcRate → moved to productionData.js / calcEngine.js
+    // adjustmentFactors, calcDefs → defined in productionData.js / calcEngine.js
 
         window.toggleCalcWidget=function(){
       const el=document.getElementById('calcWidget');
@@ -1531,14 +1637,13 @@
       if(!def){ inputsEl.innerHTML=''; resultsEl.innerHTML=''; return; }
       inputsEl.innerHTML=`
         <div class="calc-inputs-section">
-          <label>Vanskelighetsgrad</label>
+          <label>Kompleksitet</label>
           <div class="diff-grid">
-            ${Object.entries(difficultyFactors).map(([k,d])=>`
+            ${Object.entries(adjustmentFactors.kompleksitet).map(([k,d])=>`
               <button class="diff-btn ${k==='normal'?'active':''}" id="diffBtn_${k}"
                 onclick="selectDifficulty('${k}')">
                 <div class="diff-label">${d.label}</div>
-                <div class="diff-desc">${d.desc}</div>
-                <div class="diff-factor">${d.factor}</div>
+                <div class="diff-factor">${d.pct>0?'+':d.pct<0?'':''} ${Math.round(d.pct*100)}%</div>
               </button>`).join('')}
           </div>
         </div>
@@ -1597,7 +1702,7 @@
 
     window.selectDifficulty=function(key){
       window._calcDifficulty=key;
-      Object.keys(difficultyFactors).forEach(k=>{
+      Object.keys(adjustmentFactors.kompleksitet).forEach(k=>{
         const btn=document.getElementById('diffBtn_'+k);
         if(!btn) return;
         if(k===key) btn.classList.add('active');
@@ -1707,12 +1812,9 @@
         if(el) mats[opt.id]=el.value;
       });
 
-      // Get project factors
-      const difficulty=window._calcDifficulty||'normal';
-      const diffFactor=difficultyFactors[difficulty]?.factor||1;
-      const accessFactor=1; // Fixed to normal
-      const heightFactor=1; // Fixed to ground
-      const complexityFactor=1; // Fixed to normal
+      // Get project factors (additive model via adjustmentFactors)
+      const kompleksitet=window._calcDifficulty||'normal';
+      const factors={tilkomst:'normal', hoyde:'bakke', kompleksitet};
       const distance=parseFloat(document.getElementById('calcDistance')?.value)||0;
       const occupied=document.getElementById('calcOccupied')?.checked||false;
       const occupiedFactor=occupied?1.25:1;
@@ -1730,9 +1832,9 @@
         }
       } catch(e){ console.error(e); return; }
 
-      // Calculate direct time with all factors
-      const baseTimer=result.timer;
-      const directTimer=Math.round(baseTimer*diffFactor*accessFactor*heightFactor*complexityFactor);
+      // Calculate direct time with additive factors from material lines
+      const baseTimer=round1(calcDirectBaseHours(result.materialer));
+      const directTimer=round1(calcAdjustedDirectHours(baseTimer, factors));
 
       // Calculate indirect time
       let rigTimer=parseFloat(document.getElementById('calcRigging')?.value)||0;
@@ -1775,7 +1877,7 @@
         materialsWithPrices, totalMatCost,
         laborSaleEx, totalSaleEx, profit, margin,
         type, sentToOffer:false, isRecipe,
-        factors:{difficulty,distance,occupied}
+        baseTimer, factors:{kompleksitet,distance,occupied}
       };
 
       // Build results HTML
@@ -1788,7 +1890,7 @@
             <div class="calc-stat-box blue">
               <div class="stat-label">Direkte timer</div>
               <div class="stat-value">${directTimer}t</div>
-              <div class="stat-detail">${baseTimer}t x ${diffFactor}</div>
+              <div class="stat-detail">${baseTimer}t${baseTimer!==directTimer?' + justering':''}${ (adjustmentFactors.kompleksitet[kompleksitet]||{}).label?' ('+adjustmentFactors.kompleksitet[kompleksitet].label+')':''}</div>
             </div>
             <div class="calc-stat-box orange">
               <div class="stat-label">Indirekte timer</div>
@@ -1883,7 +1985,7 @@
             }
           </div>
           ${window._lastCalcResult?.sentToOffer
-            ?`<div class="calc-sent-msg">Denne kalkylen er sendt til tilbud. Endre inputfelt for a kunne sende en ny kalkyle.</div>`
+            ?`<div class="calc-sent-msg">Denne kalkulasjonen er sendt til tilbud. Endre inputfelt for a kunne sende en ny kalkulasjon.</div>`
             :''
           }
         </div>`;
@@ -1894,7 +1996,7 @@
       const result=window._lastCalcResult; if(!result) return;
       // Safety check: prevent double submission
       if(result.sentToOffer){
-        alert('Denne kalkylen er allerede sendt til tilbud. Endre inputfelt for å sende en ny kalkyle.');
+        alert('Denne kalkulasjonen er allerede sendt til tilbud. Endre inputfelt for å sende en ny kalkulasjon.');
         return;
       }
 
@@ -1916,11 +2018,11 @@
       if(!p.offerPosts) p.offerPosts=[];
 
       // Create offer post from calculation — let user edit name
-      const defaultName=window.calcDefs[result.type]?.label||result.type||'Kalkyle';
+      const defaultName=window.calcDefs[result.type]?.label||result.type||'Kalkulasjon';
       const calcName=prompt('Navn på posten i tilbudet:',defaultName);
       if(calcName===null) return;
       const totalPrice=result.totalMatCost||0;
-      const calcHours=result.timer||0;
+      const calcHours=result.directTimer||0;
       const calcLaborSaleEx=Math.round(calcHours*(Number(p.work.timeRate)||850));
       const calcLaborCost=Math.round(calcHours*(Number(p.work.internalCost)||0));
       const calcSaleEx=calcLaborSaleEx+totalPrice;
@@ -1950,7 +2052,7 @@
 
       // Confirm to user and ask if they want to clear old materials
       const matCount=snapshotMats.length;
-      const msg=' Kalkyle sendt til tilbud!\n\n'+matCount+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
+      const msg=' Kalkulasjon sendt til tilbud!\n\n'+matCount+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
       const shouldClear=confirm(msg);
       if(shouldClear){
         p.materials=[];
@@ -1989,8 +2091,8 @@
         waste:m.waste, markup:p.settings.materialMarkup
       }));
       p.materials.push(...newMats);
-      // Store calculator timer → divide by people so hoursTotal = timer
-      p.work.hours = Math.round(result.timer / Math.max(Number(p.work.people)||1, 1));
+      // Store calculated direct hours → divide by people
+      p.work.hours = Math.round(result.directTimer / Math.max(Number(p.work.people)||1, 1));
       persistAndRenderProject();
       document.getElementById('calcWidget')?.classList.add('hidden');
 
@@ -2319,7 +2421,7 @@
       </div>`:'';
       return mergeBar+p.offerPosts.map(post=>{
         const isOpen=post._open===true; // default closed
-        const typeLabel=post.type==='calc'?'Kalkyle':post.type==='option'?'Opsjon':'Fast';
+        const typeLabel=post.type==='calc'?'Kalkulasjon':post.type==='option'?'Opsjon':'Fast';
         const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
 
         const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'var(--bg-warm)':'var(--card)'};border-radius:${isOpen?'14px 14px 0 0':'14px'}">
@@ -2344,7 +2446,7 @@
             <div><label>Navn</label><input value="${escapeAttr(post.name||'')}" onchange="updatePost('${post.id}','name',this.value)" /></div>
             <div><label>Type</label><select onchange="updatePost('${post.id}','type',this.value)">
               <option value="fast" ${post.type==='fast'?'selected':''}>Fastpris</option>
-              <option value="calc" ${post.type==='calc'?'selected':''}>Kalkyle</option>
+              <option value="calc" ${post.type==='calc'?'selected':''}>Kalkulasjon</option>
               <option value="option" ${post.type==='option'?'selected':''}>Opsjon</option>
             </select></div>
             <div><label>Pris ${vatLbl}</label>
@@ -2450,7 +2552,7 @@
             });
             p.offerPosts.push({
               id:uid(),
-              name:'Materialer: '+productionRates[op.type].label,
+              name:'Materialer: '+((calcDefs[op.type]||{}).label||op.type),
               description:suggestedMats.length+' linjer',
               type:'calc',
               price:Math.round(opPrice),
@@ -2699,3 +2801,118 @@ window.deleteCalcMaterial=function(matId){
 window.updateCalcSendButtonUI=function(){
   // gjør ingenting foreløpig – bare unngår crash
 };
+
+// ── MOBIL: Bunnmeny + Mer-sheet ─────────────────────────────────────────────
+
+window._isMobile=function(){ return window.innerWidth<=900; };
+
+window.bottomNav=function(tab){
+  // Oppdater active-state
+  document.querySelectorAll('.bottom-bar-tab').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.tab===tab);
+  });
+  closeMerSheet();
+
+  if(tab==='oversikt'){
+    sidebarNav('kalkyle');
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else if(tab==='prosjekter'){
+    sidebarNav('kalkyle');
+    var el=document.getElementById('projectList');
+    if(el) el.scrollIntoView({behavior:'smooth'});
+  } else if(tab==='kunder'){
+    sidebarNav('kalkyle');
+    var el=document.getElementById('customerList');
+    if(el) el.scrollIntoView({behavior:'smooth'});
+  } else if(tab==='kalkulator'){
+    sidebarNav('makker');
+  }
+};
+
+window.openMerSheet=function(){
+  var backdrop=document.getElementById('merSheetBackdrop');
+  var content=document.getElementById('merSheetContent');
+  if(!backdrop||!content) return;
+  // Synk status fra sidebar
+  var syncEl=document.getElementById('syncIndicator');
+  var merSync=document.getElementById('merSyncStatus');
+  if(syncEl&&merSync){ merSync.textContent=syncEl.textContent; merSync.style.color=syncEl.style.color; }
+  backdrop.style.display='block';
+  content.style.display='block';
+  requestAnimationFrame(function(){
+    backdrop.classList.add('visible');
+    content.classList.add('visible');
+  });
+  // Highlight "Mer" tab
+  document.querySelectorAll('.bottom-bar-tab').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.tab==='mer');
+  });
+};
+
+window.closeMerSheet=function(){
+  var backdrop=document.getElementById('merSheetBackdrop');
+  var content=document.getElementById('merSheetContent');
+  if(!backdrop||!content) return;
+  backdrop.classList.remove('visible');
+  content.classList.remove('visible');
+  setTimeout(function(){ backdrop.style.display='none'; content.style.display='none'; },300);
+};
+
+// ── MOBIL: Prosjekt-kontekstmeny + overflow ─────────────────────────────────
+
+window.showProjectBottomBar=function(){
+  if(!window._isMobile||!window._isMobile()) return;
+  var main=document.getElementById('bottomBar');
+  var proj=document.getElementById('projectBottomBar');
+  if(main) main.style.display='none';
+  if(proj) proj.style.display='flex';
+  // Synk aktiv tab
+  document.querySelectorAll('.project-bottom-tab').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.ptab===(window._currentProjectTab||'materials'));
+  });
+};
+
+window.hideProjectBottomBar=function(){
+  var main=document.getElementById('bottomBar');
+  var proj=document.getElementById('projectBottomBar');
+  if(proj) proj.style.display='none';
+  if(main&&window._isMobile&&window._isMobile()&&document.getElementById('bottomBar')) main.style.display='flex';
+};
+
+window.switchProjectTab=function(tabId){
+  window._currentProjectTab=tabId;
+  document.querySelectorAll('.project-bottom-tab').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.ptab===tabId);
+  });
+  if(typeof switchTab==='function') switchTab(tabId);
+};
+
+window.toggleProjectOverflow=function(){
+  var menu=document.getElementById('projectOverflowMenu');
+  if(!menu) return;
+  var vis=menu.style.display==='none';
+  menu.style.display=vis?'block':'none';
+  if(vis){
+    // Lukk ved klikk utenfor
+    setTimeout(function(){
+      function close(e){ if(!menu.contains(e.target)&&e.target.id!=='projectOverflowBtn'){ menu.style.display='none'; document.removeEventListener('click',close); } }
+      document.addEventListener('click',close);
+    },0);
+  }
+};
+
+// Inputmode observer — setter inputmode="decimal" på alle nummerfelt
+(function(){
+  function setInputMode(el){ if(!el.getAttribute('inputmode')) el.setAttribute('inputmode','decimal'); }
+  document.querySelectorAll('input[type="number"]').forEach(setInputMode);
+  var obs=new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(function(node){
+        if(node.nodeType!==1) return;
+        if(node.matches&&node.matches('input[type="number"]')) setInputMode(node);
+        if(node.querySelectorAll) node.querySelectorAll('input[type="number"]').forEach(setInputMode);
+      });
+    });
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+})();

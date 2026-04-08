@@ -1,9 +1,10 @@
 // ============================================================
-// calcEngine.js — All beregningslogikk, ingen UI
+// calcEngine.js — Beregningsmotor (timer, pris, økonomi)
 // ============================================================
-// Avhenger av productionData.js (lastes for denne filen).
-// Bruker globale: productionRates, accessFactors, heightFactors,
-//   complexityFactors, calcDefaults, state, uid()
+// Avhenger av:
+//   - productionData.js (laborData, adjustmentFactors)
+//   - recipes.js (calcDefs, calcFromRecipe)
+// Bruker globale: laborData, adjustmentFactors, calcDefs, state, uid()
 // ============================================================
 
 // ── HJELPEFUNKSJON ───────────────────────────────────────────
@@ -11,37 +12,119 @@
 function round1(n) { return Math.round((Number(n) || 0) * 10) / 10; }
 
 
-// ── BASISTID-OPPSLAG ─────────────────────────────────────────
+// ── ARBEIDSTID PER MATERIALLINJE ────────────────────────────
+// Rate-prioritet: line.laborRate → state.laborRates[id] → laborData[id].rate → 0
 
 /**
- * Hent basistid for en jobbtype og et niva.
- * @param {string} jobType  - Nokkel i productionRates (f.eks. 'terrasse')
- * @param {string} [level]  - 'low' | 'normal' | 'high'  (default: 'normal')
- * @returns {number} Timer per enhet
+ * Hent laborRate for en laborId.
+ * Bruker brukerens erfaringstall hvis lagret, ellers laborData.
  */
-function getBaseTime(jobType, level) {
-  var entry = productionRates[jobType] || productionRates.annet;
-  var lvl = (level && entry[level] != null) ? level : 'normal';
-  return entry[lvl];
-}
-
-/**
- * Henter effektiv produksjonsrate for en operasjonstype.
- * Bruker brukerens erfaringstall hvis lagret, ellers standard.
- */
-function getProductionRate(type) {
-  const userRate = (state.calcRates || {})[type];
+function getLaborRate(laborId) {
+  if (!laborId) return 0;
+  var userRate = (state.laborRates || {})[laborId];
   if (userRate != null) return userRate;
-  return getBaseTime(type, 'normal');
+  var entry = laborData[laborId];
+  if (!entry) {
+    console.warn('getLaborRate: ukjent laborId "' + laborId + '" — returnerer 0');
+    return 0;
+  }
+  return entry.rate;
 }
 
 /**
- * Henter rate for materialkalkulator.
- * Bruker brukerens erfaringstall, ellers calcDefaults.
+ * Lagre brukerens egen laborRate for et materiale.
  */
-function getCalcRate(type){
-  const user=(state.calcRates||{})[type];
-  return user!=null ? user : calcDefaults[type]?.tPerM2 ?? 1;
+function saveLaborRate(laborId, val) {
+  state.laborRates = state.laborRates || {};
+  state.laborRates[laborId] = parseFloat(val);
+}
+
+/**
+ * Beregn timer for én materiallinje. Full presisjon (ingen avrunding).
+ * Validerer at unit matcher laborData-enhet — advarer hvis laborQty mangler ved mismatch.
+ */
+function calcLineHours(line) {
+  var qty = Number(line.laborQty != null ? line.laborQty : line.qty) || 0;
+  if (line.laborRate != null) return qty * line.laborRate;
+  // Valider enhetsmatch når laborQty ikke er eksplisitt satt
+  if (line.laborId && line.laborQty == null && line.unit) {
+    var entry = laborData[line.laborId];
+    if (entry) {
+      var laborUnit = entry.unit.replace('t/', '');
+      if (line.unit !== laborUnit) {
+        console.warn('calcLineHours: enhetsmismatch for "' + (line.name || '') + '" — unit="' + line.unit + '" men laborData.' + line.laborId + ' er ' + entry.unit + '. Mangler laborQty?');
+      }
+    }
+  }
+  return qty * getLaborRate(line.laborId);
+}
+
+/**
+ * Summer timer for alle materiallinjer. Full presisjon.
+ * Advarer hvis samme laborId forekommer med ulike enheter — mulig dobbeltelling.
+ */
+function calcDirectBaseHours(materialLines) {
+  var total = 0;
+  var seenIds = {};
+  for (var i = 0; i < materialLines.length; i++) {
+    var line = materialLines[i];
+    total += calcLineHours(line);
+    if (line.laborId) {
+      var effectiveUnit = line.laborQty != null ? 'laborQty' : line.unit;
+      if (seenIds[line.laborId] && seenIds[line.laborId] !== effectiveUnit) {
+        console.warn('calcDirectBaseHours: laborId "' + line.laborId + '" brukt med ulike enheter (' + seenIds[line.laborId] + ' og ' + effectiveUnit + ') — mulig dobbeltelling i "' + (line.name || '') + '"');
+      }
+      seenIds[line.laborId] = effectiveUnit;
+    }
+  }
+  return total;
+}
+
+/**
+ * Beregn additivt påslag basert på tilkomst, høyde, kompleksitet.
+ * Returnerer detaljer + uavrundet tillegg.
+ */
+function calcAdjustments(baseHours, factors) {
+  var t = (adjustmentFactors.tilkomst[(factors && factors.tilkomst) || 'normal'] || adjustmentFactors.tilkomst.normal).pct;
+  var h = (adjustmentFactors.hoyde[(factors && factors.hoyde) || 'bakke'] || adjustmentFactors.hoyde.bakke).pct;
+  var k = (adjustmentFactors.kompleksitet[(factors && factors.kompleksitet) || 'normal'] || adjustmentFactors.kompleksitet.normal).pct;
+  var sumPct = t + h + k;
+  return {
+    tilkomst: t,
+    hoyde: h,
+    kompleksitet: k,
+    sumPct: sumPct,
+    tillegg: baseHours * sumPct,
+  };
+}
+
+/**
+ * Beregn justerte direkte timer = baseHours × (1 + sumPåslag). Full presisjon.
+ */
+function calcAdjustedDirectHours(baseHours, factors) {
+  var adj = calcAdjustments(baseHours, factors);
+  return baseHours + adj.tillegg;
+}
+
+/**
+ * Hent materiallinjer for en operasjon via calcDefs.
+ */
+function getMaterialLines(op) {
+  var def = window.calcDefs && window.calcDefs[op.type];
+  if (!def) return [];
+  var inputs = {};
+  (def.inputs || []).forEach(function(inp) {
+    inputs[inp.id] = (op.materialValues && op.materialValues[inp.id]) != null
+      ? op.materialValues[inp.id] : inp.default;
+  });
+  var mats = op.materialChoices || {};
+  var result;
+  if (def.recipe) {
+    result = window.calcFromRecipe(op.type, inputs, mats);
+  } else if (def.calc) {
+    result = def.calc(inputs, mats);
+  }
+  return (result && result.materialer) || [];
 }
 
 
@@ -177,29 +260,25 @@ function calcIndirectTime(project, direkteTimer) {
 }
 
 
-// ── OPERASJONSBEREGNING ──────────────────────────────────────
+// ── OPERASJONSBEREGNING (materiallinjebasert) ───────────────
 
 /**
- * Beregner direkte timer for en enkelt operasjon.
+ * Beregner direkte timer for en enkelt operasjon fra materiallinjer.
+ * Erstatter gamle calcOperationHours() som brukte jobbtype-rater.
  */
 function calcOperationHours(op) {
-  const userRate = (state.calcRates || {})[op.type || 'annet'];
-  const rate = userRate != null ? userRate : getBaseTime(op.type || 'annet', op.level || 'normal');
-  const mengde = Number(op.mengde) || 0;
-
-  const baseTimer = mengde * rate;
-
-  const af = (accessFactors[op.tilkomst] || accessFactors.normal).factor;
-  const hf = (heightFactors[op.hoyde] || heightFactors.bakke).factor;
-  const cf = (complexityFactors[op.kompleksitet] || complexityFactors.normal).factor;
-
-  const samletFaktor = af * hf * cf;
-  const faktorTimer = round1(baseTimer * samletFaktor);
+  var materialLines = getMaterialLines(op);
+  var baseHours = calcDirectBaseHours(materialLines);
+  var factors = { tilkomst: op.tilkomst, hoyde: op.hoyde, kompleksitet: op.kompleksitet };
+  var adj = calcAdjustments(baseHours, factors);
+  var adjustedHours = baseHours + adj.tillegg;
 
   return {
-    baseTimer: round1(baseTimer),
-    faktorTimer,
-    faktorer: { tilkomst: af, hoyde: hf, kompleksitet: cf, samlet: Math.round(samletFaktor * 100) / 100 },
+    baseTimer: round1(baseHours),
+    faktorTimer: round1(adjustedHours),
+    adjustedHours: adjustedHours,
+    faktorer: adj,
+    materialLines: materialLines,
   };
 }
 
@@ -210,25 +289,26 @@ function calcProject(project) {
   if (!project) return { direkteTimer: 0, indirektTimer: 0, totalTimer: 0, operasjoner: [], indirekte: [], laborSaleEx: 0, laborCost: 0, profit: 0, margin: 0, timeRate: 850, internalCost: 450 };
 
   var work = project.work || {};
-  const ops = project.operations || [];
-  const timeRate = Number(work.timeRate) || 850;
-  const internalCost = Number(work.internalCost) || 450;
+  var ops = project.operations || [];
+  var timeRate = Number(work.timeRate) || 850;
+  var internalCost = Number(work.internalCost) || 450;
 
   var direkteTimer = 0;
   var breakdown = ops.map(function(op) {
     if (!op) return null;
     var result = calcOperationHours(op);
-    direkteTimer += result.faktorTimer;
-    var rateDef = (productionRates && productionRates[op.type]) || (productionRates && productionRates.annet) || { label: '', unit: '' };
+    direkteTimer += result.adjustedHours;
+    var labelDef = (window.calcDefs && window.calcDefs[op.type]) || {};
     return {
       id: op.id,
-      navn: op.navn || (rateDef && rateDef.label) || '',
+      navn: op.navn || labelDef.label || '',
       type: op.type,
       mengde: op.mengde,
-      enhet: (rateDef && rateDef.unit) || '',
+      enhet: '',
       baseTimer: result.baseTimer,
       faktorTimer: result.faktorTimer,
       faktorer: result.faktorer,
+      materialLines: result.materialLines,
     };
   }).filter(function(x) { return x != null; });
   direkteTimer = round1(direkteTimer);
@@ -349,23 +429,10 @@ function blankOperation() {
     type: 'annet',
     navn: '',
     mengde: 0,
-    level: 'normal',
     tilkomst: 'normal',
     hoyde: 'bakke',
     kompleksitet: 'normal',
   };
-}
-
-/** Rask oversikt: estimert timer for en type+mengde (uten faktorer) */
-function quickEstimate(type, mengde) {
-  var rate = getProductionRate(type);
-  return Math.round(mengde * rate * 10) / 10;
-}
-
-/** Lagre brukerens erfaringsrate (ren data, ingen UI) */
-function saveCalcRate(type, val){
-  state.calcRates=state.calcRates||{};
-  state.calcRates[type]=parseFloat(val)||calcDefaults[type]?.tPerM2||1;
 }
 
 
@@ -441,7 +508,7 @@ function generateWarnings(project, computeResult) {
   }
 
   if (!(indirect.avstandKm > 0) && ops.length > 0) {
-    w.push({ severity: 'info', text: 'Ingen avstand oppgitt — kjoring er ikke med i kalkylen.' });
+    w.push({ severity: 'info', text: 'Ingen avstand oppgitt — kjoring er ikke med i kalkulasjonen.' });
   }
 
   if (indirect.avstandKm > 60) {
@@ -521,57 +588,41 @@ function buildOperationEstimate(op, priceCatalog, manualPrices) {
   priceCatalog = priceCatalog || {};
   var errors = [];
 
-  // 1. BEREGN TIMER fra operasjonsdata
+  // 1. BEREGN TIMER fra materiallinjer (ny modell)
   var timeResult = calcOperationHours(op);
   var direkteTimer = timeResult.faktorTimer;
 
-  // 2. FORESLÅ MATERIALER (hvis calcDefs finnes for denne typen)
+  // 2. PRIS-OPPSLAG for materiallinjene
+  var materialLines = timeResult.materialLines || [];
   var materialer = [];
   var totalMaterialCost = 0;
 
-  if (window.calcDefs && window.calcDefs[op.type]) {
-    var calcDef = window.calcDefs[op.type];
-    try {
-      // Sett opp inputs fra operasjons materialValues eller calcDef defaults
-      var inputs = {};
-      (calcDef.inputs || []).forEach(function(inp) {
-        inputs[inp.id] = (op.materialValues && op.materialValues[inp.id]) != null
-          ? op.materialValues[inp.id]
-          : inp.default;
-      });
+  try {
+    materialer = materialLines.map(function(m) {
+      var catalogEntry = findCatalogPrice(m.name, priceCatalog, manualPrices);
+      var qty = Number(m.qty) || 0;
+      var cost = Number(catalogEntry.cost) || 0;
+      var waste = Number(m.waste) || 0;
 
-      // Sett opp material-valg fra operasjons materialChoices
-      var mats = op.materialChoices || {};
+      var withWaste = qty * cost * (1 + waste / 100);
+      totalMaterialCost += withWaste;
 
-      // Kjør material-kalkulatoren for denne operasjonstypen
-      var calcResult = calcDef.calc(inputs, mats);
-
-      // Konverter til material-objekt med pris
-      materialer = (calcResult.materialer || []).map(function(m) {
-        var catalogEntry = findCatalogPrice(m.name, priceCatalog, manualPrices);
-        var qty = Number(m.qty) || 0;
-        var cost = Number(catalogEntry.cost) || 0;
-        var waste = Number(m.waste) || 0;
-
-        // Kostnad = mengde * pris * (1 + waste%)
-        var withWaste = qty * cost * (1 + waste / 100);
-        totalMaterialCost += withWaste;
-
-        var qtyWithWaste = Math.ceil(qty * (1 + waste / 100) * 10) / 10;
-        return {
-          name: m.name,
-          qty: qty,
-          qtyWithWaste: qtyWithWaste,
-          unit: m.unit || catalogEntry.unit || 'stk',
-          waste: waste,
-          cost: cost,
-          totalCost: Math.round(withWaste),
-          priceSource: catalogEntry.source || 'none'
-        };
-      });
-    } catch (e) {
-      errors.push('Material-beregning feilet for ' + op.type + ': ' + e.message);
-    }
+      var qtyWithWaste = Math.ceil(qty * (1 + waste / 100) * 10) / 10;
+      return {
+        name: m.name,
+        qty: qty,
+        qtyWithWaste: qtyWithWaste,
+        unit: m.unit || catalogEntry.unit || 'stk',
+        waste: waste,
+        cost: cost,
+        totalCost: Math.round(withWaste),
+        priceSource: catalogEntry.source || 'none',
+        laborId: m.laborId || null,
+        lineHours: round1(calcLineHours(m)),
+      };
+    });
+  } catch (e) {
+    errors.push('Material-beregning feilet for ' + op.type + ': ' + e.message);
   }
 
   return {
@@ -821,153 +872,18 @@ function groupMaterialsByCategory(materials) {
 }
 
 
-// ── RESEPTMENGDE-MOTOR ───────────────────────────────────────
-
-function evalRecipeExpr(expr, ctx) {
-  var result = String(expr);
-  var keys = Object.keys(ctx).sort(function(a,b){ return b.length - a.length; });
-  keys.forEach(function(k) {
-    result = result.replace(new RegExp('\\{' + k + '\\}', 'g'), '(' + (Number(ctx[k]) || 0) + ')');
-    result = result.replace(new RegExp('\\b' + k + '\\b', 'g'), '(' + (Number(ctx[k]) || 0) + ')');
-  });
-  result = result.replace(/ceil\(/g, 'Math.ceil(');
-  result = result.replace(/floor\(/g, 'Math.floor(');
-  result = result.replace(/round\(/g, 'Math.round(');
-  result = result.replace(/max\(/g, 'Math.max(');
-  result = result.replace(/min\(/g, 'Math.min(');
-  try { return new Function('return ' + result)(); }
-  catch(e) { return 0; }
-}
-
-function getRecipeRatio(type, materialId) {
-  var userOverride = ((state.calcRecipes || {})[type] || {})[materialId];
-  if (userOverride && userOverride.ratio != null) return userOverride.ratio;
-  return null;
-}
-
-function saveRecipeRatio(type, materialId, val) {
-  state.calcRecipes = state.calcRecipes || {};
-  state.calcRecipes[type] = state.calcRecipes[type] || {};
-  state.calcRecipes[type][materialId] = { ratio: parseFloat(val) };
-}
-
-function resetRecipeRatio(type, materialId) {
-  if (state.calcRecipes && state.calcRecipes[type]) {
-    delete state.calcRecipes[type][materialId];
-  }
-}
-
-function calcFromRecipe(type, inputs, materialChoices) {
-  var def = window.calcDefs && window.calcDefs[type];
-  if (!def || !def.recipe) return null;
-
-  var recipe = def.recipe;
-  var ctx = {};
-  var key;
-
-  // Copy inputs into context
-  for (key in inputs) {
-    ctx[key] = Number(inputs[key]) || 0;
-  }
-
-  // Parse special material choices into numeric context
-  if (materialChoices.cc) ctx.cc = parseInt(materialChoices.cc) / 1000 || 0.6;
-
-  // Evaluate computed intermediate values
-  var computed = {};
-  if (recipe.computed) {
-    for (key in recipe.computed) {
-      var comp = recipe.computed[key];
-      computed[key] = evalRecipeExpr(comp.expr, ctx);
-      ctx[key] = computed[key];
-    }
-  }
-
-  // Evaluate each material line
-  var materialer = [];
-  recipe.materialer.forEach(function(mat) {
-    // Check condition
-    if (mat.condition) {
-      var condResult = evalRecipeCondition(mat.condition, ctx, materialChoices);
-      if (!condResult) return;
-    }
-
-    // Resolve material choice references in name
-    var name = (mat.nameTemplate || mat.name || '').replace(/\{(\w+)\}/g, function(_, k) {
-      return materialChoices[k] || ctx[k] || k;
-    });
-
-    // Calculate quantity
-    var userRatio = getRecipeRatio(type, mat.id);
-    var baseVal = ctx[mat.baseRef] || 0;
-    var qty;
-
-    if (userRatio != null && mat.baseRef) {
-      qty = baseVal * userRatio;
-    } else if (mat.ratio != null && mat.baseRef) {
-      qty = baseVal * mat.ratio;
-    } else if (mat.ratioExpr) {
-      qty = evalRecipeExpr(mat.ratioExpr, ctx);
-    } else if (mat.fixedQty != null) {
-      qty = mat.fixedQty;
-    } else {
-      qty = 0;
-    }
-
-    if (mat.roundUp) qty = Math.ceil(qty);
-
-    materialer.push({
-      id: mat.id,
-      name: name,
-      qty: qty,
-      unit: mat.unit || 'stk',
-      waste: mat.waste || 0,
-      baseRef: mat.baseRef || null,
-      baseVal: baseVal,
-      defaultRatio: mat.ratio,
-      userRatio: userRatio
-    });
-  });
-
-  // Calculate timer
-  var timerBase = computed.areal || computed.veggAreal || computed.lopemeter || ctx.lopemeter || 1;
-  var timer = Math.round(timerBase * getCalcRate(type));
-
-  // Build areal/info strings
-  var arealStr = '';
-  if (computed.veggAreal) arealStr = computed.veggAreal.toFixed(1) + ' m\u00B2 vegg';
-  else if (computed.areal) arealStr = computed.areal.toFixed(1) + ' m\u00B2';
-  else if (computed.lopemeter) arealStr = computed.lopemeter.toFixed(1) + ' lm';
-
-  return {
-    areal: arealStr,
-    info: recipe.info || '',
-    materialer: materialer,
-    timer: timer,
-    _computed: computed,
-    _recipe: true
-  };
-}
-
-function evalRecipeCondition(condition, ctx, mats) {
-  if (condition.matNotEquals) {
-    var val = mats[condition.matNotEquals.field] || '';
-    return !val.includes(condition.matNotEquals.value);
-  }
-  if (condition.matEquals) {
-    var val2 = mats[condition.matEquals.field] || '';
-    return val2.includes(condition.matEquals.value);
-  }
-  return true;
-}
 
 
 // ── EKSPORTER TIL GLOBALT SCOPE ──────────────────────────────
 
 window.round1 = round1;
-window.getBaseTime = getBaseTime;
-window.getProductionRate = getProductionRate;
-window.getCalcRate = getCalcRate;
+window.getLaborRate = getLaborRate;
+window.saveLaborRate = saveLaborRate;
+window.calcLineHours = calcLineHours;
+window.calcDirectBaseHours = calcDirectBaseHours;
+window.calcAdjustments = calcAdjustments;
+window.calcAdjustedDirectHours = calcAdjustedDirectHours;
+window.getMaterialLines = getMaterialLines;
 window.calculateDrivingTime = calculateDrivingTime;
 window.calculateRiggingTime = calculateRiggingTime;
 window.calculatePlanningTime = calculatePlanningTime;
@@ -977,8 +893,6 @@ window.calcProject = calcProject;
 window.compute = compute;
 window.computeOfferPostsTotal = computeOfferPostsTotal;
 window.blankOperation = blankOperation;
-window.quickEstimate = quickEstimate;
-window.saveCalcRate = saveCalcRate;
 window.generateWarnings = generateWarnings;
 window.findCatalogPrice = findCatalogPrice;
 window.buildOperationEstimate = buildOperationEstimate;
@@ -988,8 +902,3 @@ window.normalizeMaterialName = normalizeMaterialName;
 window.MATERIAL_CATEGORIES = MATERIAL_CATEGORIES;
 window.categorizeMaterial = categorizeMaterial;
 window.groupMaterialsByCategory = groupMaterialsByCategory;
-window.calcFromRecipe = calcFromRecipe;
-window.getRecipeRatio = getRecipeRatio;
-window.saveRecipeRatio = saveRecipeRatio;
-window.resetRecipeRatio = resetRecipeRatio;
-window.evalRecipeExpr = evalRecipeExpr;

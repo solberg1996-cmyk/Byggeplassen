@@ -2,7 +2,7 @@
       return {
         id:uid(), name:'', customerId:'', address:'', type:'Annet', startPref:'Snarest', status:'Utkast',
         description:'', note:'', settings:{...state.settings},
-        work:{people:1,hours:8,timeRate:state.settings.timeRate,internalCost:state.settings.internalCost,risk:'Normal',actualHours:0,laborHireHours:0},
+        work:{people:1,hours:0,timeRate:state.settings.timeRate,internalCost:state.settings.internalCost,risk:'Normal',actualHours:0,laborHireHours:0},
         materials:[], extras:{rental:0,waste:0,subcontractors:[],laborHire:0,rigPercent:10,misc:0,driftRate:0,scaffolding:0,drawings:0},
         offer:{included:'Arbeid, standard materialer og rydding.',excluded:'Skjulte feil og ekstraarbeid.',validity:'14 dager'},
         bebodd:false,
@@ -22,6 +22,8 @@
       const p=getProject(id); if(!p) return;
       $('#dashboardView').classList.add('hidden');
       $('#projectView').classList.remove('hidden');
+      window._currentProjectTab='materials';
+      if(window.showProjectBottomBar) window.showProjectBottomBar();
       renderProjectView();
     }
 
@@ -39,7 +41,7 @@
 
       const tabs=[
         {id:'info',      label:'Info'},
-        {id:'materials', label:'Kalkyle'},
+        {id:'materials', label:'Kalkulasjon'},
         {id:'offer',     label:'Tilbud'},
         {id:'preview',   label:'Tilbudsvisning'},
       ];
@@ -100,7 +102,7 @@
       const summaryModeNote=$('#summaryModeNote'); if(summaryModeNote) summaryModeNote.textContent=(p.offerPosts&&p.offerPosts.length)?'Viser sum av tilbudsposter':(p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva');
     }
 
-    function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
+    function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); if(window.hideProjectBottomBar) window.hideProjectBottomBar(); renderDashboard(); }
 
     function renderTabInfo(p){
       const opts=['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
@@ -166,7 +168,8 @@
     }
 
     function renderOperationRow(op){
-      var rateDef=productionRates[op.type]||productionRates.annet;
+      var typeDef=(window.calcDefs||{})[op.type]||{};
+      var rateDef=(window.calcDefs||{})[op.type]||{};
       var result=calcOperationHours(op);
       var id=op.id;
       // Build optgroups for operation type selector using subgroups
@@ -174,16 +177,18 @@
       utvendigSubgroups.forEach(function(g){
         typeOptions+='<optgroup label="Utv: '+g.label+'">';
         g.jobs.forEach(function(k){
-          var v=productionRates[k];
-          typeOptions+='<option value="'+k+'" '+(op.type===k?'selected':'')+'>'+(v?v.label:k)+'</option>';
+          var def=(window.calcDefs||{})[k];
+          var lbl=def?def.label:k;
+          typeOptions+='<option value="'+k+'" '+(op.type===k?'selected':'')+'>'+lbl+'</option>';
         });
         typeOptions+='</optgroup>';
       });
       innvendigSubgroups.forEach(function(g){
         typeOptions+='<optgroup label="Inn: '+g.label+'">';
         g.jobs.forEach(function(k){
-          var v=productionRates[k];
-          typeOptions+='<option value="'+k+'" '+(op.type===k?'selected':'')+'>'+(v?v.label:k)+'</option>';
+          var def=(window.calcDefs||{})[k];
+          var lbl=def?def.label:k;
+          typeOptions+='<option value="'+k+'" '+(op.type===k?'selected':'')+'>'+lbl+'</option>';
         });
         typeOptions+='</optgroup>';
       });
@@ -199,28 +204,22 @@
           +(op.sentToOffer?'<span class="op-sent-badge" style="align-self:end;margin-bottom:1px">Sendt</span>':'<button class="btn small danger" onclick="removeOperation(\''+id+'\')" style="align-self:end;margin-bottom:1px">Slett</button>')
         +'</div>'
         +'<div class="op-row-factors">'
-          +'<div><label>Produksjonstakt</label>'
-          +'<select data-field="level" onchange="updOperation(\''+id+'\',\'level\',this.value)">'
-          +'<option value="low" '+(op.level==='low'?'selected':'')+'>Lav ('+rateDef.low+' t/'+rateDef.unit+')</option>'
-          +'<option value="normal" '+((op.level||'normal')==='normal'?'selected':'')+'>Normal ('+rateDef.normal+' t/'+rateDef.unit+')</option>'
-          +'<option value="high" '+(op.level==='high'?'selected':'')+'>Hoy ('+rateDef.high+' t/'+rateDef.unit+')</option>'
-          +'</select></div>'
           +'<div><label>Tilkomst</label>'
           +'<select data-field="tilkomst" onchange="updOperation(\''+id+'\',\'tilkomst\',this.value)">'
-          +opSelectHtml(op.tilkomst||'normal',accessFactors)
+          +opSelectHtml(op.tilkomst||'normal',adjustmentFactors.tilkomst)
           +'</select></div>'
           +'<div><label>Hoyde</label>'
           +'<select data-field="hoyde" onchange="updOperation(\''+id+'\',\'hoyde\',this.value)">'
-          +opSelectHtml(op.hoyde||'bakke',heightFactors)
+          +opSelectHtml(op.hoyde||'bakke',adjustmentFactors.hoyde)
           +'</select></div>'
           +'<div><label>Kompleksitet</label>'
           +'<select data-field="kompleksitet" onchange="updOperation(\''+id+'\',\'kompleksitet\',this.value)">'
-          +opSelectHtml(op.kompleksitet||'normal',complexityFactors)
+          +opSelectHtml(op.kompleksitet||'normal',adjustmentFactors.kompleksitet)
           +'</select></div>'
         +'</div>'
         +'<div class="op-result">'
           +'<span class="op-basis">Basis: '+result.baseTimer+'t'
-          +(result.faktorer.samlet!==1?' | Faktor: x'+result.faktorer.samlet:'')+'</span>'
+          +(result.faktorer.sumPct!==0?' | Påslag: '+(result.faktorer.sumPct>0?'+':'')+Math.round(result.faktorer.sumPct*100)+'%':'')+'</span>'
           +'<span class="op-hours">'+result.faktorTimer+' timer</span>'
         +'</div>'
         +'<div id="op-materials-'+id+'" class="op-materials-panel" style="display:none;margin-top:10px;padding:10px 14px;background:#f9fbff;border:1px solid #dce8ff;border-radius:12px">'
@@ -376,7 +375,7 @@
       if(!p.offerPosts) p.offerPosts=[];
 
       // Create offer post from operation
-      var opTypeName=productionRates[op.type]?.label||op.type||'Operasjon';
+      var opTypeName=((window.calcDefs||{})[op.type]||{}).label||op.type||'Operasjon';
       var totalPrice=est.totalMaterialCost||0;
 
       p.offerPosts.push({
@@ -397,7 +396,7 @@
       op.sentToOffer=true;
 
       // Ask user if they want to delete from active operations
-      var shouldRemove=confirm('Operasjonen sendt til tilbud!\n\n'+snapshotMats.length+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne operasjonen fra aktiv kalkyle?');
+      var shouldRemove=confirm('Operasjonen sendt til tilbud!\n\n'+snapshotMats.length+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne operasjonen fra aktiv kalkulasjon?');
       if(shouldRemove){
         p.operations=p.operations.filter(function(o){return o.id!==opId;});
       }
@@ -481,7 +480,7 @@
       var resEl=row.querySelector('.op-result');
       if(resEl){
         resEl.innerHTML='<span style="font-size:12px;color:var(--muted)">Basis: '+result.baseTimer+'t'
-          +(result.faktorer.samlet!==1?' | Faktor: x'+result.faktorer.samlet:'')+'</span>'
+          +(result.faktorer.sumPct!==0?' | Faktor: '+(result.faktorer.sumPct>0?'+':'')+Math.round(result.faktorer.sumPct*100)+'%':'')+'</span>'
           +'<span style="font-size:15px;font-weight:800;color:var(--blue)">'+result.faktorTimer+' timer</span>';
       }
     }
@@ -528,11 +527,11 @@
       var result=window.calcProject(p);
       showModal(
         '<div class="section-head">'
-        +'<div class="section-title">Send kalkyle til tilbud</div>'
+        +'<div class="section-title">Send kalkulasjon til tilbud</div>'
         +'<button class="btn small secondary" onclick="closeModal()">Lukk</button>'
         +'</div>'
         +'<label>Navn pa tilbudspost</label>'
-        +'<input id="calcEnginePostName" value="'+escapeAttr(p.name||'Kalkyle')+'" />'
+        +'<input id="calcEnginePostName" value="'+escapeAttr(p.name||'Kalkulasjon')+'" />'
         +'<div style="margin-top:12px;padding:12px;background:#f5f8ff;border-radius:14px;font-size:13px;color:var(--muted)">'
         +result.operasjoner.length+' operasjoner | '+result.totalTimer+' timer | '+currency(result.laborSaleEx)+' arbeid'
         +'</div>'
@@ -578,12 +577,11 @@
 
     function buildRecipeSettingsHtml(){
       var defs = window.calcDefs || {};
-      var rates = window.productionRates || {};
       var html = '';
       Object.keys(defs).forEach(function(type){
         var def = defs[type];
         if(!def.recipe || !def.recipe.materialer) return;
-        var label = (rates[type]||{}).label || def.label || type;
+        var label = def.label || type;
         var matRows = def.recipe.materialer.filter(function(m){ return m.ratio!=null && m.baseRef; }).map(function(m){
           var userOverride = ((state.calcRecipes||{})[type]||{})[m.id];
           var currentVal = userOverride && userOverride.ratio!=null ? userOverride.ratio : m.ratio;
@@ -617,7 +615,7 @@
         <!-- KALKYLEMOTOR (DEACTIVATED) -->
         <div class="card" style="background:#fafcff;border:1px solid var(--line);box-shadow:none;margin-bottom:14px;display:none">
           <div class="section-head">
-            <div class="section-title">Kalkylemotor</div>
+            <div class="section-title">Kalkulasjonsmotor</div>
             <button class="btn small secondary" onclick="addOperation()">+ Legg til jobb</button>
           </div>
           ${renderOperations(p)}
@@ -641,8 +639,8 @@
                   ${utvendigSubgroups.map(g =>
                     '<optgroup label="'+g.label+'">'
                     +g.jobs.map(k => {
-                      const r = productionRates[k];
-                      return '<option value="'+k+'">'+(r ? r.label : k)+'</option>';
+                      const def = (window.calcDefs||{})[k];
+                      return '<option value="'+k+'">'+(def ? def.label : k)+'</option>';
                     }).join('')
                     +'</optgroup>'
                   ).join('')}
@@ -655,8 +653,8 @@
                   ${innvendigSubgroups.map(g =>
                     '<optgroup label="'+g.label+'">'
                     +g.jobs.map(k => {
-                      const r = productionRates[k];
-                      return '<option value="'+k+'">'+(r ? r.label : k)+'</option>';
+                      const def = (window.calcDefs||{})[k];
+                      return '<option value="'+k+'">'+(def ? def.label : k)+'</option>';
                     }).join('')
                     +'</optgroup>'
                   ).join('')}
@@ -667,7 +665,7 @@
             <div id="calcInputs"></div>
             <div id="calcResults"></div>
             <div id="calcRateSettings" class="hidden rate-settings-panel">
-              <div class="rate-settings-header">Mine egne erfaringstimer (t/m2 eller t/stk)</div>
+              <div class="rate-settings-header">Mine egne erfaringstimer (per enhet)</div>
               ${rateSettingsGroups.map((group,gi) => `
                 <div class="rate-section">
                   <div class="rate-section-toggle" onclick="toggleRateSection(this)" aria-expanded="false" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRateSection(this)}">
@@ -677,15 +675,16 @@
                   <div class="rate-section-body" id="rateGroup_${gi}">
                     <div class="row-3">
                       ${group.keys.map(k => {
-                        const v = calcDefaults[k];
-                        if(!v) return '';
-                        const rateLabel = (productionRates[k]||{}).label || k;
-                        return '<div><label>'+rateLabel+' ('+v.label+')</label><input type="number" step="0.1" value="'+((state.calcRates||{})[k]!=null?(state.calcRates||{})[k]:v.tPerM2)+'" onchange="saveCalcRate(\''+k+'\',this.value);saveState();if(window.runCalcWidget)runCalcWidget()" /></div>';
+                        const entry = laborData[k];
+                        if(!entry) return '';
+                        const userRate = (state.laborRates||{})[k];
+                        const currentVal = userRate != null ? userRate : entry.rate;
+                        return '<div><label>'+entry.label+' ('+entry.unit+')</label><input type="number" step="0.001" value="'+currentVal+'" onchange="saveLaborRate(\''+k+'\',this.value);saveState();if(window.runCalcWidget)runCalcWidget()" /></div>';
                       }).join('')}
                     </div>
                   </div>
                 </div>`).join('')}
-              <div class="footer-note" style="margin-top:8px">Endre verdiene over for a justere timesatser basert pa din erfaring</div>
+              <div class="footer-note" style="margin-top:8px">Endre verdiene over for å justere tider basert på din erfaring</div>
               <div class="rate-settings-header" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">Materialresepter (forholdstall)</div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Juster mengdeforholdstall for materialer. P\u00E5virker beregning for jobbtyper med resept.</div>
               ${buildRecipeSettingsHtml()}
@@ -739,7 +738,7 @@
             </div>
             <div>
               <label>Søk i prisfil — marker som favoritt</label>
-              <input id="priceSearchInput" placeholder="Søk varenummer, navn eller beskrivelse" value="" />
+              <input id="priceSearchInput" placeholder="Søk varenummer, navn eller beskrivelse" value="" onkeydown="handlePriceSearchKeydown(event)" />
             </div>
           </div>
           <div id="priceSearchResults" class="list" style="margin-top:12px"></div>
@@ -903,7 +902,7 @@
           }
           var totalStr = m.totalCost > 0 ? currency(m.totalCost) : '<span style="color:var(--muted)">\u2014</span>';
           var sourceTip = m.sources && m.sources.length > 1 ? ' title="Fra: '+escapeHtml(m.sources.join(', '))+'"' : '';
-          html += '<tr style="border-bottom:1px solid var(--line)">'
+          html += '<tr class="mat-row" onclick="this.classList.toggle(\'expanded\')" style="border-bottom:1px solid var(--line)">'
             +'<td style="padding:5px 8px"'+sourceTip+'>'+escapeHtml(m.name)
               +(m.sources && m.sources.length > 1 ? ' <span style="color:var(--muted);font-size:10px">('+m.sources.length+')</span>' : '')
             +'</td>'
@@ -930,7 +929,7 @@
       var priceCatalogMap = buildPriceCatalogMap();
       var projectEst = window.buildProjectEstimate(p, priceCatalogMap);
       if(!projectEst || !projectEst.materialer || projectEst.materialer.length===0){
-        alert('Ingen materialer \u00E5 vise. Kj\u00F8r en kalkyle f\u00F8rst.');
+        alert('Ingen materialer \u00E5 vise. Kj\u00F8r en kalkulasjon f\u00F8rst.');
         return;
       }
       var mats = projectEst.materialer;

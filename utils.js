@@ -54,13 +54,13 @@
           return {customers:p.customers||[], projects:p.projects||[], settings:{...defaultSettings,...(p.settings||{})},
             priceCatalog:p.priceCatalog||[], priceFileName:p.priceFileName||'',
             favoriteCatalogIds:p.favoriteCatalogIds||[], recentCatalogIds:p.recentCatalogIds||[],
-            userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},calcRecipes:p.calcRecipes||{},
+            userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},laborRates:p.laborRates||{},calcRecipes:p.calcRecipes||{},
             company:{...defaultCompany,...(p.company||{})}};
         // migrate old subcontractor field
         state.projects.forEach(pr=>{ if(pr.extras && pr.extras.subcontractor>0 && !pr.extras.subcontractors){ pr.extras.subcontractors=[{id:uid(),trade:'Underentreprenør',amount:pr.extras.subcontractor}]; } pr.extras.subcontractors=pr.extras.subcontractors||[]; });
         }
       }catch(e){}
-      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},calcRecipes:{}};
+      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},laborRates:{},calcRecipes:{}};
     }
 
     let state = loadState();
@@ -105,7 +105,7 @@
           state={customers:p.customers||[],projects:p.projects||[],settings:{...defaultSettings,...(p.settings||{})},
             priceCatalog:p.priceCatalog||[],priceFileName:p.priceFileName||'',
             favoriteCatalogIds:p.favoriteCatalogIds||[],recentCatalogIds:p.recentCatalogIds||[],
-            userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},calcRecipes:p.calcRecipes||{},
+            userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},laborRates:p.laborRates||{},calcRecipes:p.calcRecipes||{},
             company:{...defaultCompany,...(p.company||{})}};
           saveState(); renderDashboard(); alert('Data importert.');
         }catch(err){ alert('Kunne ikke lese filen.'); }
