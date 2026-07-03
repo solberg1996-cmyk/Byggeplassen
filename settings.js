@@ -227,6 +227,7 @@
       initColorPicker(currentColor);
       // Logo
       if(co.logo){ showLogoPreview(co.logo); }
+      renderPkgManager();
     }
 
     function updateColorPreview(hex){
@@ -260,6 +261,138 @@
       var prev=$('#logoPreview');
       if(prev) prev.innerHTML='<span style="color:var(--muted);font-size:12px">Ingen logo</span>';
       var btn=$('#removeLogoBtn'); if(btn) btn.style.display='none';
+    };
+
+    // ---- MATERIALPAKKER (oversikt og redigering) ----
+    var _pkgExpanded={};
+    var _pkgSearch={};
+
+    function renderPkgManager(){
+      var host=document.getElementById('pkgManagerBody');
+      if(!host) return;
+      var pkgs=state.materialPackages||[];
+      if(!pkgs.length){
+        host.innerHTML='<div class="empty">Ingen pakker enda. Lagre din første fra Tilpass-modalen i et prosjekt, eller opprett en her.</div>'
+          +'<div class="toolbar" style="margin-top:10px"><button class="btn small secondary" onclick="pkgCreate()">+ Ny pakke</button></div>';
+        return;
+      }
+      host.innerHTML=pkgs.map(function(pk){
+        var open=!!_pkgExpanded[pk.id];
+        var items=pk.items||[];
+        var linesHtml='';
+        if(open){
+          linesHtml='<div style="margin-top:10px">'
+            +(items.length?items.map(function(it,i){
+              return '<div style="display:grid;grid-template-columns:1fr 70px 70px 90px 32px;gap:6px;align-items:center;margin-bottom:5px">'
+                +'<input value="'+escapeAttr(it.name||'')+'" placeholder="Materialnavn..." onchange="pkgLineUpd(\''+pk.id+'\','+i+',\'name\',this.value)" />'
+                +'<input type="number" value="'+(it.qty||1)+'" title="Antall" step="0.1" min="0" style="text-align:right" onchange="pkgLineUpd(\''+pk.id+'\','+i+',\'qty\',this.value)" />'
+                +'<input value="'+escapeAttr(it.unit||'stk')+'" title="Enhet" onchange="pkgLineUpd(\''+pk.id+'\','+i+',\'unit\',this.value)" />'
+                +'<input type="number" value="'+(it.cost||0)+'" title="Innpris (fallback — dagens pris hentes fra prisfila)" step="0.01" min="0" style="text-align:right" onchange="pkgLineUpd(\''+pk.id+'\','+i+',\'cost\',this.value)" />'
+                +'<button class="btn small danger" style="padding:6px 8px" onclick="pkgLineDel(\''+pk.id+'\','+i+')">✕</button>'
+                +'</div>';
+            }).join(''):'<div class="empty" style="padding:8px">Ingen linjer.</div>')
+            +'<div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px">'
+              +'<input id="pkgSearch_'+pk.id+'" placeholder="Søk i prisfil for å legge til linje..." value="'+escapeAttr(_pkgSearch[pk.id]||'')+'" oninput="pkgSearchInput(\''+pk.id+'\',this.value)" />'
+              +'<button class="btn small soft" onclick="pkgLineAddBlank(\''+pk.id+'\')">+ Tom linje</button>'
+            +'</div>'
+            +pkgSearchResultsHtml(pk.id)
+            +'</div>';
+        }
+        return '<div style="border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px">'
+          +'<div style="display:flex;gap:8px;align-items:center">'
+            +'<button class="btn small soft" style="padding:4px 10px" onclick="pkgToggleExpand(\''+pk.id+'\')">'+(open?'▼':'▶')+'</button>'
+            +'<input value="'+escapeAttr(pk.name)+'" style="flex:1;font-weight:700" onchange="pkgRename(\''+pk.id+'\',this.value)" />'
+            +'<span style="font-size:12px;color:var(--muted);white-space:nowrap">'+items.length+' varer</span>'
+            +'<button class="btn small danger" onclick="pkgDelete(\''+pk.id+'\')">Slett</button>'
+          +'</div>'
+          +linesHtml
+          +'</div>';
+      }).join('')
+      +'<div class="toolbar" style="margin-top:10px"><button class="btn small secondary" onclick="pkgCreate()">+ Ny pakke</button></div>';
+    }
+
+    function pkgSearchResultsHtml(pkgId){
+      var q=(_pkgSearch[pkgId]||'').trim();
+      if(!q) return '';
+      var results=searchPriceCatalog(q).slice(0,8);
+      if(!results.length) return '<div class="empty" style="padding:8px">Ingen treff i prisfila.</div>';
+      return '<div style="margin-top:6px;max-height:180px;overflow-y:auto">'
+        +results.map(function(item){
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:4px">'
+            +'<div><div style="font-weight:700;font-size:13px">'+escapeHtml(item.productName||item.name)+'</div>'
+            +'<div style="font-size:11px;color:var(--muted)">'+escapeHtml(item.unit||'-')+' • '+currency(item.userPrice||0)+'</div></div>'
+            +'<button class="btn small primary" onclick="pkgAddFromCatalog(\''+pkgId+'\',\''+escapeAttr(String(item.id))+'\')">+ Legg til</button>'
+            +'</div>';
+        }).join('')
+        +'</div>';
+    }
+
+    function getPkg(id){ return (state.materialPackages||[]).find(function(x){return x.id===id;}); }
+
+    window.pkgCreate=function(){
+      var name=prompt('Navn på ny pakke:');
+      if(!name||!name.trim()) return;
+      state.materialPackages=state.materialPackages||[];
+      var pkg={id:uid(),name:name.trim(),items:[]};
+      state.materialPackages.push(pkg);
+      _pkgExpanded[pkg.id]=true;
+      saveState(); renderPkgManager();
+    };
+
+    window.pkgToggleExpand=function(id){
+      _pkgExpanded[id]=!_pkgExpanded[id];
+      renderPkgManager();
+    };
+
+    window.pkgRename=function(id,val){
+      var pkg=getPkg(id); if(!pkg) return;
+      if(!val.trim()){ renderPkgManager(); return; }
+      pkg.name=val.trim();
+      saveState();
+    };
+
+    window.pkgDelete=function(id){
+      var pkg=getPkg(id); if(!pkg) return;
+      if(!confirm('Slette pakken «'+pkg.name+'»?')) return;
+      state.materialPackages=state.materialPackages.filter(function(x){return x.id!==id;});
+      saveState(); renderPkgManager();
+    };
+
+    window.pkgLineUpd=function(id,idx,key,val){
+      var pkg=getPkg(id); if(!pkg||!pkg.items[idx]) return;
+      pkg.items[idx][key]=(key==='qty'||key==='cost')?(Number(val)||0):val;
+      saveState();
+    };
+
+    window.pkgLineDel=function(id,idx){
+      var pkg=getPkg(id); if(!pkg) return;
+      pkg.items.splice(idx,1);
+      saveState(); renderPkgManager();
+    };
+
+    window.pkgLineAddBlank=function(id){
+      var pkg=getPkg(id); if(!pkg) return;
+      pkg.items.push({name:'',itemNo:'',qty:1,unit:'stk',cost:0});
+      saveState(); renderPkgManager();
+    };
+
+    window.pkgSearchInput=function(id,val){
+      _pkgSearch[id]=val;
+      renderPkgManager();
+      // Behold fokus i søkefeltet etter re-render
+      var input=document.getElementById('pkgSearch_'+id);
+      if(input){ input.focus(); input.setSelectionRange(input.value.length,input.value.length); }
+    };
+
+    window.pkgAddFromCatalog=function(id,itemId){
+      var pkg=getPkg(id); if(!pkg) return;
+      var item=getCatalogItem(itemId); if(!item) return;
+      pkg.items.push({
+        name:item.productName||item.name, itemNo:item.itemNo||'',
+        qty:1, unit:item.unit||'stk', cost:item.userPrice||0
+      });
+      _pkgSearch[id]='';
+      saveState(); renderPkgManager();
     };
 
     function saveSettings(){

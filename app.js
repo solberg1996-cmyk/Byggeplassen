@@ -469,6 +469,88 @@
       }
     };
 
+    // ---- MATERIALPAKKER ----
+    // Egendefinerte pakker med materialer (state.materialPackages, synkes til sky).
+    // Samme dropdown-mønster og kontekster som favorittene over.
+
+    window.togglePkgDropdown=function(dropdownId){
+      const dd=document.getElementById(dropdownId);
+      if(!dd) return;
+      const isOpen=!dd.classList.contains('hidden');
+      document.querySelectorAll('.fav-dropdown').forEach(d=>d.classList.add('hidden'));
+      if(isOpen) return;
+      const pkgs=state.materialPackages||[];
+      const context=dropdownId.includes('Modal')?`'modal'`:dropdownId.includes('Calc')?'true':'false';
+      if(!pkgs.length){
+        dd.innerHTML=`<div class="fav-dropdown-header">Materialpakker</div>
+          <div class="fav-dropdown-footer">Ingen pakker enda.<br>Bygg materiallisten og trykk «Lagre som pakke».</div>`;
+      } else {
+        dd.innerHTML=`<div class="fav-dropdown-header">Materialpakker</div>`
+          +pkgs.map(pk=>`<button class="fav-dropdown-item" onclick="addPackageToContext(${context},'${pk.id}');togglePkgDropdown('${dropdownId}')">
+            <span class="fav-item-name">${escapeHtml(pk.name)}</span>
+            <span class="fav-item-meta">${(pk.items||[]).length} varer</span>
+          </button>`).join('')
+          +`<div class="fav-dropdown-footer">Administrer pakkene under Innstillinger</div>`;
+      }
+      dd.classList.remove('hidden');
+    };
+
+    window.addPackageToContext=function(context,pkgId){
+      const pkg=(state.materialPackages||[]).find(x=>x.id===pkgId);
+      if(!pkg||!(pkg.items||[]).length) return;
+      // Ferske priser: slå opp hver linje i priskatalogen, pakkens pris som fallback
+      const priceMap=buildPriceCatalogMap();
+      const p=getProject(currentProjectId);
+      const markup=(p?.settings?.materialMarkup)||20;
+      pkg.items.forEach(it=>{
+        const hit=priceMap[(it.name||'').trim()];
+        const cost=hit&&hit.cost?hit.cost:(Number(it.cost)||0);
+        const qty=Number(it.qty)||1;
+        const unit=it.unit||'stk';
+        if(context==='modal'){
+          if(!window._cpm) return;
+          window._cpm.push({id:uid(),name:it.name,itemNo:it.itemNo||'',qty,unit,cost,waste:0,markup});
+        } else if(context===true||context==='calc'){
+          const result=window._lastCalcResult;
+          if(!result) return;
+          addFavToProject(true,it.name,unit,cost);
+          const mat=result.materialsWithPrices[result.materialsWithPrices.length-1];
+          if(mat){
+            const qtyInput=document.querySelector('.calcMatQty[data-mat-id="'+mat.matId+'"]');
+            if(qtyInput) qtyInput.value=qty;
+          }
+        } else {
+          if(!p) return;
+          p.materials.push({id:uid(),name:it.name,qty,unit,cost,waste:0,markup:p.settings.materialMarkup});
+        }
+      });
+      if(context==='modal') rerenderCalcModal();
+      else if(context===true||context==='calc') recalcCalcMaterials();
+      else persistAndRenderProject();
+    };
+
+    window.saveCurrentModalAsPackage=function(){
+      const mats=window._cpm||[];
+      const items=mats.filter(m=>(m.name||'').trim()).map(m=>({
+        name:m.name.trim(), itemNo:m.itemNo||'', qty:Number(m.qty)||1,
+        unit:m.unit||'stk', cost:Number(m.cost)||0
+      }));
+      if(!items.length){ alert('Ingen materialer å lagre som pakke.'); return; }
+      const name=prompt('Navn på pakken:');
+      if(!name||!name.trim()) return;
+      const trimmed=name.trim();
+      state.materialPackages=state.materialPackages||[];
+      const existing=state.materialPackages.find(x=>x.name.toLowerCase()===trimmed.toLowerCase());
+      if(existing){
+        if(!confirm('Pakken «'+trimmed+'» finnes fra før. Overskrive den?')) return;
+        existing.items=items;
+      } else {
+        state.materialPackages.push({id:uid(),name:trimmed,items});
+      }
+      saveState();
+      alert('Pakke lagret: '+trimmed);
+    };
+
     window.showMatAutocomplete=function(matId,query){
       const dropdown=document.querySelector('.matAutocomplete[data-mat-id="'+matId+'"]');
       if(!dropdown) return;
@@ -1386,6 +1468,11 @@
             <button class="btn small soft" onclick="toggleFavDropdown('favDropdownModal')">★ Favoritter</button>
             <div id="favDropdownModal" class="fav-dropdown hidden"></div>
           </div>
+          <div class="fav-dropdown-wrap" style="position:relative">
+            <button class="btn small soft" onclick="togglePkgDropdown('pkgDropdownModal')">📦 Pakker</button>
+            <div id="pkgDropdownModal" class="fav-dropdown hidden"></div>
+          </div>
+          <button class="btn small soft" onclick="saveCurrentModalAsPackage()">💾 Lagre som pakke</button>
         </div>
 
         <div style="margin-top:14px;padding:12px 16px;background:#f5f8ff;border-radius:14px;border:1px solid #dce8ff;display:flex;justify-content:space-between;align-items:center">
@@ -1428,6 +1515,10 @@
     // ── OFFER VIEW STATE ─────────────────────────────────────────────────────
         function initOfferPreviewTab(p){
       if(!p) return;
+      // Tilbudsredigeringen lever på prosjektet så den lagres/synkes og ikke
+      // lekker mellom prosjekter. _offerState peker rett inn i prosjektet.
+      if(!p.offerState) p.offerState=defaultOfferState();
+      _offerState=p.offerState;
       _offerState.texts.innledning = _offerState.texts.innledning || (p.description||'');
       _offerState.texts.fremdrift = _offerState.texts.fremdrift || ('Planlagt oppstart: '+(p.startPref||'Etter avtale')+'\nOppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.');
       _offerState.texts.forbehold = _offerState.texts.forbehold || ('Tilbudet er gyldig i '+(p.offer&&p.offer.validity?p.offer.validity:'14')+' dager fra tilbudsdato, dersom annet ikke er avtalt.');
@@ -1562,22 +1653,80 @@
 
 
 
-        window.openOfferFullPreview=function(){
+    // Scope the offer document CSS under the overlay page so it can live
+    // inside the app DOM without clobbering app styles. `body` rules map to
+    // the page container.
+    function scopeOfferCSS(css,scope){
+      return css.split('}').map(function(rule){
+        var i=rule.indexOf('{');
+        if(i<0) return '';
+        var sels=rule.slice(0,i), body=rule.slice(i+1);
+        var scoped=sels.split(',').map(function(s){
+          s=s.trim();
+          return s==='body'?scope:scope+' '+s;
+        }).join(',');
+        return scoped+'{'+body+'}';
+      }).join('');
+    }
+
+    function closeOfferFullPreview(){
+      var overlay=document.getElementById('offerFullOverlay');
+      if(overlay) overlay.remove();
+      var style=document.getElementById('offerFullOverlayStyle');
+      if(style) style.remove();
+      document.removeEventListener('keydown',handleOfferOverlayKeydown);
+    }
+    window.closeOfferFullPreview=closeOfferFullPreview;
+
+    function handleOfferOverlayKeydown(e){
+      if(e.key==='Escape') closeOfferFullPreview();
+    }
+
+    // Full preview lives as an overlay in the app itself and prints via the
+    // main page (same pattern as handleliste). Printing from popup/blob
+    // windows renders blank PDFs in Safari and can reload the app tab.
+    window.openOfferFullPreview=function(){
       const doc=document.getElementById('offerPreviewDoc'); if(!doc) return;
       const co=state.company||{};
       const color=co.color||'#2e75b6';
-      var css=getOfferCSS(color);
-      var html='<!DOCTYPE html><html lang="no"><head><meta charset="UTF-8"><title>Tilbud</title><style>'+css
-        +'body{padding:30px 40px}@media print{.no-print{display:none!important}}'
-        +'</style></head><body>'
-        +'<div style="text-align:center;margin-bottom:20px" class="no-print">'
-        +'<button onclick="window.print()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer"> Skriv ut / Lagre som PDF</button>'
+      closeOfferFullPreview();
+
+      var style=document.createElement('style');
+      style.id='offerFullOverlayStyle';
+      style.textContent=
+        '#offerFullOverlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;background:rgba(28,25,23,.55);overflow:auto;padding:24px 16px}'
+        +'#offerFullOverlay .offer-print-toolbar{max-width:794px;margin:0 auto 6px;display:flex;gap:10px;justify-content:center}'
+        +'#offerFullOverlay .offer-print-hint{max-width:794px;margin:0 auto 14px;text-align:center;color:rgba(255,255,255,.85);font-size:12px}'
+        +'#offerFullOverlay .offer-print-page{background:#fff;max-width:794px;margin:0 auto;padding:30px 40px;box-shadow:0 6px 24px rgba(0,0,0,.35);border-radius:4px}'
+        +scopeOfferCSS(getOfferCSS(color),'#offerFullOverlay .offer-print-page')
+        // force background colors into the PDF — must live OUTSIDE the
+        // @media print block, Safari ignores print-color-adjust declared there
+        +'#offerFullOverlay,#offerFullOverlay *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
+        // margin:0 on @page drops the browser's print header/footer (URL/IP,
+        // date, page numbers); the page margin moves to content padding instead.
+        +'@page{size:A4;margin:0}'
+        +'@media print{'
+          +'body>*:not(#offerFullOverlay){display:none!important}'
+          +'#offerFullOverlay{position:static;background:none;padding:0;overflow:visible}'
+          +'#offerFullOverlay .offer-print-toolbar{display:none}'
+          +'#offerFullOverlay .offer-print-page{box-shadow:none;border-radius:0;max-width:none;margin:0;padding:15mm 18mm}'
+        +'}';
+      document.head.appendChild(style);
+
+      var overlay=document.createElement('div');
+      overlay.id='offerFullOverlay';
+      overlay.innerHTML=
+        '<div class="offer-print-toolbar">'
+          +'<button onclick="window.print()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer">Skriv ut / Lagre som PDF</button>'
+          +'<button onclick="closeOfferFullPreview()" style="background:#fff;color:#333;border:1px solid #ccc;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer">Lukk</button>'
         +'</div>'
-        +doc.innerHTML+'</body></html>';
-      var blob=new Blob([html],{type:'text/html'});
-      var url=URL.createObjectURL(blob);
-      window.open(url,'_blank');
-      setTimeout(function(){URL.revokeObjectURL(url);},30000);
+        +'<div class="offer-print-hint">Huk av «Skriv ut bakgrunner» i utskriftsdialogen for å få med fargene i PDF-en</div>'
+        +'<div class="offer-print-page">'+doc.innerHTML+'</div>';
+      overlay.addEventListener('click',function(e){
+        if(e.target===overlay) closeOfferFullPreview();
+      });
+      document.body.appendChild(overlay);
+      document.addEventListener('keydown',handleOfferOverlayKeydown);
     };
 
     window.downloadOfferPDF=function(){
@@ -1634,113 +1783,6 @@
     window.printOffer=function(){
       openOfferFullPreview();
     };
-
-
-
-
-        window.generateOfferPDF=function(){
-      const p=getProject(currentProjectId); if(!p) return;
-      const cust=getCustomer(p.customerId);
-      const cv=compute(p);
-      const ps=computeOfferPostsTotal(p);
-      const co=state.company||{};
-      const color=co.color||'#2e75b6';
-      const today=new Date().toLocaleDateString('nb-NO');
-      const validity=p.offer&&p.offer.validity?p.offer.validity:'14 dager';
-      function fmt(n){return Math.round(n||0).toLocaleString('nb-NO')+' kr';}
-      function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-      function nl(s){return esc(s||'').replace(/\n/g,'<br>');}
-
-      // Price rows
-      var priceRows='';
-      if(p.offerPosts&&p.offerPosts.length){
-        p.offerPosts.filter(function(post){return post.type!=='option'||post.enabled;}).forEach(function(post){
-          priceRows+='<tr><td class="dc"><b>'+esc(post.name||'')+'</b>'+(post.description?'<br><span style="font-size:10pt;color:#555">'+esc(post.description)+'</span>':'')+(post.type==='option'?'<span style="font-size:9pt;color:#a96800;margin-left:6px">(opsjon)</span>':'')+'</td><td class="ac">'+fmt(post.price||0)+'</td></tr>';
-        });
-      } else {
-        priceRows='<tr><td class="dc"><b>Tomrerarbeider</b><br><span style="font-size:10pt;color:#555">'+(cv.totalWorkHours!=null?cv.totalWorkHours:cv.totalHours)+' timer</span></td><td class="ac">'+fmt(cv.totalLaborSaleEx)+'</td></tr>';
-        if(cv.totalMatSaleEx>0) priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(cv.totalMatSaleEx)+'</td></tr>';
-        if(cv.extrasBase+cv.rigEx>0) priceRows+='<tr><td class="dc"><b>Rigg og drift</b></td><td class="ac">'+fmt(cv.extrasBase+cv.rigEx)+'</td></tr>';
-      }
-      var totalEx=p.offerPosts&&p.offerPosts.length?ps.total:cv.totalSaleEx;
-      var totalInc=Math.round(totalEx*1.25);
-      var mva=Math.round(totalEx*0.25);
-
-      // Logo: use uploaded logo from settings, or fallback
-      var logoSrc=co.logo||window._fallbackLogo||'';
-      var logoHtml=logoSrc?'<div style="width:350px;height:140px;display:flex;align-items:center"><img src="'+logoSrc+'" style="max-width:100%;max-height:100%;object-fit:contain"></div>':'';
-      // Company block
-     var coBlock=
-  (co.name?'<strong style="display:block;margin-bottom:4px">'+esc(co.name)+'</strong>':'')
-  +(co.address?'<div>'+esc(co.address)+'</div>':'')
-  +((co.zip||co.city)?'<div>'+ (esc(co.zip||'')+' '+esc(co.city||'')).trim() +'</div>':'')
-  +(co.phone?'<div>Tlf: '+esc(co.phone)+'</div>':'')
-  +(co.email?'<div>'+esc(co.email)+'</div>':'')
-  +(co.orgNr?'<div>Org.nr: '+esc(co.orgNr)+'</div>':'');
-
-      var custBlock=(cust?esc(cust.name):'NAVN')+'<br>'
-        +(cust&&cust.phone?esc(cust.phone)+'<br>':'')
-        +(p.address?esc(p.address)+'<br>':'')
-        +(cust&&cust.email?esc(cust.email):'');
-
-      var c1=color;
-      var css='*{box-sizing:border-box;margin:0;padding:0}'
-        +'body{font-family:Calibri,Arial,sans-serif;color:#000;font-size:11pt;line-height:1.5}'
-        +'.page{max-width:800px;margin:0 auto;padding:30px 40px 50px}'
-        +'.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}'
-        +'.co{text-align:left;font-size:10.5pt;line-height:1.5}'
-        +'.co strong{font-size:11.5pt;display:block}'
-        +'.divider{border:none;border-top:2.5px solid '+c1+';margin:10px 0 24px}'
-        +'.boxes{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px}'
-        +'.box{border:2.5px solid '+c1+';padding:16px 18px;font-size:10.5pt;line-height:2.1;min-height:90px;border-radius:4px}'
-        +'.title{font-size:26pt;font-weight:700;margin-bottom:18px}'
-        +'.mt{width:100%;border-collapse:collapse;margin-bottom:20px}'
-        +'.mt .hr th{background:'+c1+';color:#fff;padding:8px 12px;text-align:left;font-size:10pt;font-weight:600}'
-        +'.mt .hr th.ac{text-align:right}'
-        +'.mt td{padding:7px 12px;border-bottom:1px solid #e8e8e8;font-size:10.5pt;vertical-align:top}'
-        +'.mt tr:nth-child(odd) td{background:#f4f8fd}'
-        +'.mt tr:nth-child(even) td{background:#fff}'
-        +'.dc{width:65%}'
-        +'.ac{text-align:right;font-weight:700;white-space:nowrap}'
-        +'.sum-row td{border-top:1.5px solid #aaa;font-weight:700;background:#f4f8fd!important}'
-        +'.mva-row td{color:#666;font-size:10pt;background:#fff!important}'
-        +'.total-row td{background:'+c1+'!important;color:#fff!important;font-weight:800;font-size:12pt;padding:10px 12px}'
-        +'.sec{margin-bottom:16px}'
-        +'.sec h3{font-size:10.5pt;font-weight:700;text-transform:uppercase;margin-bottom:5px}'
-        +'.sec p{font-size:10.5pt;line-height:1.65;color:#222;margin-bottom:6px}'
-        +'.print-btn{display:block;margin:28px auto 0;background:'+c1+';color:#fff;border:none;border-radius:6px;padding:13px 36px;font-size:14px;font-weight:700;cursor:pointer}'
-        +'@media print{.print-btn{display:none!important}.page{padding:20px 30px}}';
-
-      var body='<div class="page">'
-        +'<div class="hdr">'+logoHtml+'<div class="co">'+coBlock+'</div></div>'
-        +'<hr class="divider">'
-        +'<div class="boxes"><div class="box">'+custBlock+'</div><div class="box">Deres ref.<br><br>Dato: '+today+'<br>Prosjekt: '+esc(p.name||'')+'</div></div>'
-        +'<div class="title">TILBUD</div>'
-        +'<table class="mt"><thead><tr class="hr"><th class="dc">BESKRIVELSE</th><th class="ac">SUM eks mva</th></tr></thead><tbody>'
-        +priceRows
-        +'<tr class="mva-row"><td class="dc">MVA 25%</td><td class="ac">'+fmt(mva)+'</td></tr>'
-        +'<tr class="sum-row"><td class="dc">Sum eks. mva</td><td class="ac">'+fmt(totalEx)+'</td></tr>'
-        +'<tr class="total-row"><td class="dc">TOTALPRIS INKL. MVA</td><td class="ac">'+fmt(totalInc)+'</td></tr>'
-        +'</tbody></table>'
-        +'<div class="sec"><h3>Innledning</h3><p>Tilbudet gjelder tomrerarbeider i forbindelse med '+esc(p.name||'')+'. '+esc(p.description||'Arbeidet utfores iht. befaring og avtalt omfang.')+'</p></div>'
-        +'<div class="sec"><h3>Grunnlag for tilbudet</h3><p>Tilbudet er basert pa befaring, mottatte tegninger og normale arbeidsforhold.</p></div>'
-        +'<div class="sec"><h3>Arbeidsomfang</h3><p>'+nl(p.offer&&p.offer.included?p.offer.included:'Folgende arbeid er inkludert i tilbudet:')+'</p></div>'
-        +'<div class="sec"><h3>Ikke medregnet i tilbudet</h3><p>'+nl(p.offer&&p.offer.excluded?p.offer.excluded:'- Elektrikerarbeider\n- Rorleggerarbeider\n- Maling og sparkling\n- Byggesoknad og prosjektering')+'</p></div>'
-        +'<div class="sec"><h3>Pris og betaling</h3><p>Arbeidet utfores til avtalt fastpris eller etter medgatt tid og materialer. Betalingsfrist er 10 dager netto.</p>'
-        +'<p>Timepris tomrer: kr '+Math.round(p.work.timeRate||850)+' eks. mva pr time</p>'
-        +'<p>- Paslag pa materiell: '+(p.settings.materialMarkup||15)+'%</p></div>'
-        +'<div class="sec"><h3>Fremdrift</h3><p>Planlagt oppstart: '+esc(p.startPref||'Etter avtale')+'<br>Oppstart er estimert og kan pavirkes av vaerforhold og leveranser.</p></div>'
-        +'<div class="sec"><h3>Forbehold</h3><p>Tilbudet er basert pa dagens priser. Tilbudet er gyldig i <strong>'+esc(validity)+'</strong> fra tilbudsdato.</p></div>'
-        +(p.note?'<div class="sec"><h3>Notat</h3><p>'+nl(p.note)+'</p></div>':'')
-        +'</div>'
-        +'<button class="print-btn" onclick="window.print()">Skriv ut / Lagre som PDF</button>';
-
-      var html='<!DOCTYPE html><html lang="no"><head><meta charset="UTF-8"><title>Tilbud</title><style>'+css+'</style></head><body>'+body+'</body></html>';
-      var blob=new Blob([html],{type:'text/html'});
-      var url=URL.createObjectURL(blob);
-      var win=window.open(url,'_blank');
-      setTimeout(function(){URL.revokeObjectURL(url);},30000);
-    };;
 
         window.resetTotalHours=function(){
       const p=getProject(currentProjectId); if(!p) return;
@@ -2127,6 +2169,10 @@
             <div class="fav-dropdown-wrap" style="flex:1;position:relative">
               <button class="calc-add-mat-btn" onclick="toggleFavDropdown('favDropdownCalc')" style="width:100%">★ Favoritter</button>
               <div id="favDropdownCalc" class="fav-dropdown hidden"></div>
+            </div>
+            <div class="fav-dropdown-wrap" style="flex:1;position:relative">
+              <button class="calc-add-mat-btn" onclick="togglePkgDropdown('pkgDropdownCalc')" style="width:100%">📦 Pakker</button>
+              <div id="pkgDropdownCalc" class="fav-dropdown hidden"></div>
             </div>
           </div>
 
