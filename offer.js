@@ -1,26 +1,32 @@
-    var _offerState = {
-      postMode: 'all',
-      customPosts: [],
-      sections: {
-        innledning: true, grunnlag: true, arbeidsomfang: true,
-        ikkemedregnet: true, prisogbetaling: true, fremdrift: true, forbehold: true
-      },
-      texts: { innledning: '', fremdrift: '', forbehold: '' },
-      // Arbeidsomfang: checked post ids + custom items
-      arbeidsomfangPosts: [],   // [{id, name, checked}]
-      arbeidsomfangExtra: [],   // [{id, text}] custom added lines
-      // Ikke medregnet: checkboxes
-      ikkemedregnet: {
-        elektriker: true, rorlegger: true, maling: true,
-        byggesoknad: true, avfall: true, stillas: false, custom: []
-      },
-      // Pris og betaling type
-      prisType: 'medgaatt',  // 'medgaatt' | 'fastpris' | 'begge'
-      freeSections: [],
-      estDays: '',
-      rigChecked: true,        // Rigg og Drift post checkbox
-      extraPostsChecked: {}    // {postId: true/false} for auto-generated extra posts
-    };
+    function defaultOfferState(){
+      return {
+        postMode: 'all',
+        customPosts: [],
+        sections: {
+          innledning: true, grunnlag: true, arbeidsomfang: true,
+          ikkemedregnet: true, prisogbetaling: true, fremdrift: true, forbehold: true
+        },
+        texts: { innledning: '', fremdrift: '', forbehold: '' },
+        // Arbeidsomfang: checked post ids + custom items
+        arbeidsomfangPosts: [],   // [{id, name, checked}]
+        arbeidsomfangExtra: [],   // [{id, text}] custom added lines
+        // Ikke medregnet: checkboxes
+        ikkemedregnet: {
+          elektriker: true, rorlegger: true, maling: true,
+          byggesoknad: true, avfall: true, stillas: false, custom: []
+        },
+        // Pris og betaling type
+        prisType: 'medgaatt',  // 'medgaatt' | 'fastpris' | 'begge'
+        freeSections: [],
+        estDays: '',
+        rigChecked: true,        // Rigg og Drift post checkbox
+        extraPostsChecked: {}    // {postId: true/false} for auto-generated extra posts
+      };
+    }
+    // Peker til aktivt prosjekts offerState (settes i initOfferPreviewTab) —
+    // redigeringer muterer prosjektet direkte og lagres via saveState.
+    var _offerState = defaultOfferState();
+    var _offerSaveTimer = null;
 
     function renderTabPreview(p){
       const scale=0.214, docW=794, docH=1123;
@@ -33,7 +39,7 @@
           +'</div>'
           +'<div class="toolbar-spacer"></div>'
           +'<div class="toolbar-actions">'
-            +'<button class="btn secondary" onclick="currentProjectId=\''+pid+'\';downloadOfferPDF()">Last ned PDF</button>'
+            +'<button class="btn secondary" onclick="currentProjectId=\''+pid+'\';downloadOfferPDF()">Last ned HTML</button>'
             +'<button class="btn primary" onclick="currentProjectId=\''+pid+'\';sendOfferNow()">Send tilbud</button>'
           +'</div>'
         +'</div>'
@@ -389,6 +395,10 @@
 
     function renderOfferPreview(){
       const p=getProject(currentProjectId); if(!p) return;
+      // Alle redigeringshandlere ender her — lagre prosjektet (debounced,
+      // saveState håndterer selv sky-synk)
+      if(_offerSaveTimer) clearTimeout(_offerSaveTimer);
+      _offerSaveTimer=setTimeout(saveState, 800);
       rebuildExtraPosts(p);
       const cv=compute(p);
       const ps=computeOfferPostsTotal(p);
