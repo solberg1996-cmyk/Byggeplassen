@@ -43,8 +43,35 @@
     };
 
     const STORAGE_KEY = 'kalkyleapp_round6';
-    const defaultSettings = { timeRate:850, internalCost:450, materialMarkup:20, driveCost:650, vatMode:'ex' };
+    const defaultSettings = { timeRate:850, internalCost:450, materialMarkup:20, vatMode:'ex' };
     const defaultCompany = { name:'', address:'', zip:'', city:'', phone:'', email:'', website:'', orgNr:'', vatRegistered:true, logo:'', color:'#2e75b6', extraInfo:'' };
+    // Bump denne når det er en oppdatering brukerne bør varsles om (se maybeShowChangelog i app.js)
+    const APP_UPDATE_VERSION = '2026-08-16-tilbud';
+
+    // ── TILBUDSMAL ────────────────────────────────────────────
+    // Startpunkt for nye prosjekters offerState (se offer.js). Eksisterende
+    // prosjekter påvirkes ikke når malen endres — de har allerede sin egen
+    // kopi av tekst/rekkefølge/titler.
+    const OFFER_SECTION_ORDER_DEFAULT=['innledning','grunnlag','arbeidsomfang','ikkemedregnet','prisogbetaling','fremdrift','forbehold'];
+    function defaultOfferTemplate(){
+      return {
+        sectionOrder: OFFER_SECTION_ORDER_DEFAULT.slice(),
+        sections: {
+          innledning: {title:'Innledning', text:'Tilbudet gjelder tømrerarbeider i forbindelse med {{beskrivelse}}. Arbeidet utføres iht. befaring og avtalt omfang.', enabled:true},
+          grunnlag: {title:'Grunnlag for tilbudet', text:'Tilbudet er basert på befaring, mottatte tegninger/skisser og normale arbeidsforhold. Dersom forutsetningene endres eller det avdekkes forhold som ikke var synlige ved befaring, kan dette medføre endringer i pris og fremdrift.', enabled:true},
+          arbeidsomfang: {title:'Arbeidsomfang', enabled:true},
+          ikkemedregnet: {title:'Ikke medregnet i tilbudet', enabled:true},
+          prisogbetaling: {title:'Pris og betaling', text:'Arbeidet utføres {{betalingsform}}. Betalingsfrist er 10 dager netto. Ved større arbeider kan det faktureres delbetaling underveis.\n\nTimepris tømrer: kr {{timepris}} eks. mva pr time\nPåslag på materiell: {{material_paslag}}%\nArbeid utover beskrevet omfang regnes som tilleggsarbeid og utføres etter avtale med kunde.', enabled:true},
+          fremdrift: {title:'Fremdrift', text:'Planlagt oppstart: {{oppstart}}\nOppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.', enabled:true},
+          forbehold: {title:'Forbehold', text:'Tilbudet er basert på dagens priser på materialer og lønn. Det tas forbehold om prisendringer fra leverandører eller uforutsette forhold utenfor entreprenørens kontroll. Riggposten omfatter transport/frakt av materialer, materialhåndtering, tildekking av konstruksjonen i byggetiden, organisering/koordinering, rigging av utstyr og verktøy, vernerunder, HMS-tiltak og retur, etc.\n\nTilbudet er gyldig i {{gyldighet}} dager fra tilbudsdato, dersom annet ikke er avtalt.', enabled:true},
+        },
+        customSections: [], // [{id, title, text}] — sås inn i freeSections på nye prosjekter
+        // E-post som åpnes når «Send tilbud» trykkes. {{prosjekt}}, {{firma}}
+        // og {{kunde}} erstattes ved sending.
+        emailSubject: 'Tilbud - {{prosjekt}} - {{firma}}',
+        emailBody: 'Hei,\n\nVedlagt finner du tilbud på {{prosjekt}}.\n\nGi gjerne tilbakemelding dersom du har spørsmål.\n\nMvh\n{{firma}}'
+      };
+    }
 
     function loadState(){
       try{
@@ -57,12 +84,14 @@
             favoriteCatalogIds:p.favoriteCatalogIds||[], recentCatalogIds:p.recentCatalogIds||[],
             userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},laborRates:p.laborRates||{},calcRecipes:p.calcRecipes||{},
             materialPackages:p.materialPackages||[],
+            offerTemplate:p.offerTemplate||defaultOfferTemplate(),
+            seenUpdateVersion:p.seenUpdateVersion||'',
             company:{...defaultCompany,...(p.company||{})}};
         // migrate old subcontractor field
         state.projects.forEach(pr=>{ if(pr.extras && pr.extras.subcontractor>0 && !pr.extras.subcontractors){ pr.extras.subcontractors=[{id:uid(),trade:'Underentreprenør',amount:pr.extras.subcontractor}]; } pr.extras.subcontractors=pr.extras.subcontractors||[]; });
         }
       }catch(e){}
-      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',manualPriceCatalog:[],favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},laborRates:{},calcRecipes:{},materialPackages:[]};
+      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',manualPriceCatalog:[],favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},laborRates:{},calcRecipes:{},materialPackages:[],offerTemplate:defaultOfferTemplate(),seenUpdateVersion:''};
     }
 
     let state = loadState();
@@ -117,6 +146,8 @@
             favoriteCatalogIds:p.favoriteCatalogIds||[],recentCatalogIds:p.recentCatalogIds||[],
             userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},laborRates:p.laborRates||{},calcRecipes:p.calcRecipes||{},
             materialPackages:p.materialPackages||[],
+            offerTemplate:p.offerTemplate||defaultOfferTemplate(),
+            seenUpdateVersion:p.seenUpdateVersion||'',
             company:{...defaultCompany,...(p.company||{})}};
           saveState(); renderDashboard(); alert('Data importert.');
         }catch(err){ alert('Kunne ikke lese filen.'); }

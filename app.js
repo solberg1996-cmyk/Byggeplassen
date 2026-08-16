@@ -1513,15 +1513,43 @@
     };
 
     // ── OFFER VIEW STATE ─────────────────────────────────────────────────────
+        // Sår firmamalen (state.offerTemplate) inn i et prosjekts offerState —
+        // kun ved aller første init, styrt av templateApplied. Endres malen
+        // senere, påvirker det ikke prosjekter som allerede har fått sin kopi.
+        function applyOfferTemplateDefaults(p){
+      var os=p.offerState;
+      if(os.templateApplied) return;
+      var tpl=state.offerTemplate||defaultOfferTemplate();
+      os.sectionOrder=(tpl.sectionOrder&&tpl.sectionOrder.length)?tpl.sectionOrder.slice():OFFER_SECTION_ORDER_DEFAULT.slice();
+      Object.keys(tpl.sections||{}).forEach(function(key){
+        var def=tpl.sections[key]||{};
+        os.sectionTitles[key]=def.title||key;
+        if(def.enabled===false) os.sections[key]=false;
+        if(key==='innledning'){
+          os.innledningTemplate=def.text||'';
+        } else if(def.text!=null){
+          os.texts[key]=def.text;
+        }
+      });
+      if(tpl.customSections&&tpl.customSections.length){
+        tpl.customSections.forEach(function(cs){
+          os.freeSections.push({id:uid(),title:cs.title||'',text:cs.text||''});
+        });
+      }
+      os.templateApplied=true;
+    }
+
         function initOfferPreviewTab(p){
       if(!p) return;
       // Tilbudsredigeringen lever på prosjektet så den lagres/synkes og ikke
       // lekker mellom prosjekter. _offerState peker rett inn i prosjektet.
       if(!p.offerState) p.offerState=defaultOfferState();
+      // Migrering: eldre prosjekter mangler skjultefeil-avkrysningen (var
+      // tidligere alltid med, uten avhukingsmulighet) — behold "med" som default.
+      if(p.offerState.ikkemedregnet.skjultefeil===undefined) p.offerState.ikkemedregnet.skjultefeil=true;
+      applyOfferTemplateDefaults(p);
       _offerState=p.offerState;
       _offerState.texts.innledning = _offerState.texts.innledning || (p.description||'');
-      _offerState.texts.fremdrift = _offerState.texts.fremdrift || ('Planlagt oppstart: '+(p.startPref||'Etter avtale')+'\nOppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.');
-      _offerState.texts.forbehold = _offerState.texts.forbehold || ('Tilbudet er gyldig i '+(p.offer&&p.offer.validity?p.offer.validity:'14')+' dager fra tilbudsdato, dersom annet ikke er avtalt.');
       // Init arbeidsomfang from offer posts
       if(!_offerState.arbeidsomfangPosts.length && p.offerPosts&&p.offerPosts.length){
         _offerState.arbeidsomfangPosts = p.offerPosts.map(function(post){
@@ -1534,45 +1562,11 @@
           return {id:uid(), name:post.name, price:post.price||0, sourceIds:[post.id]};
         });
       }
-      // Build extra posts from prosjektkostnader + innleid
+      // Build extra posts from prosjektkostnader
       rebuildExtraPosts(p);
       renderOfferEditorPane();
       renderOfferPreview();
     }
-
-        window.openOfferView=function(){
-      const p=getProject(currentProjectId); if(!p) return;
-      // Init texts from project offer data
-      _offerState.texts.innledning = p.description||'';
-      _offerState.texts.arbeidsomfang = p.offer&&p.offer.included?p.offer.included:'';
-      _offerState.texts.ikkemedregnet = p.offer&&p.offer.excluded?p.offer.excluded:'- Elektrikerarbeider\n- Rørleggerarbeider\n- Maling og sparkling\n- Byggesøknad og prosjektering';
-      _offerState.texts.fremdrift = 'Planlagt oppstart: '+(p.startPref||'Etter avtale')+'\nOppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.';
-      _offerState.texts.forbehold = 'Tilbudet er basert på dagens priser på materialer og lønn. Det tas forbehold om prisendringer fra leverandører eller uforutsette forhold utenfor entreprenørens kontroll.\n\nTilbudet er gyldig i '+(p.offer&&p.offer.validity?p.offer.validity:'14 dager')+' fra tilbudsdato, dersom annet ikke er avtalt.';
-      // Init custom posts from offer posts
-      if(!_offerState.customPosts.length && p.offerPosts&&p.offerPosts.length){
-        _offerState.customPosts = p.offerPosts.map(function(post){
-          return {id:uid(), name:post.name, price:post.price||0, sourceIds:[post.id]};
-        });
-      }
-      // Show view
-      $('#projectView').classList.add('hidden');
-      $('#offerView').classList.remove('hidden');
-      $('#offerViewTitle').textContent = 'Tilbud — '+(p.name||'');
-      renderOfferEditor();
-      renderOfferPreview();
-    };
-
-    document.getElementById('backFromOfferBtn')&&document.getElementById('backFromOfferBtn').addEventListener('click',function(){
-      $('#offerView').classList.add('hidden');
-      $('#projectView').classList.remove('hidden');
-    });
-
-    window.setOfferPostMode=function(mode){
-      _offerState.postMode=mode;
-      document.getElementById('customPostEditor').style.display=mode==='custom'?'':'none';
-      renderOfferPreview();
-      if(mode==='custom') renderCustomPostEditor();
-    };
 
     function renderCustomPostEditor(){
       const p=getProject(currentProjectId); if(!p) return;
@@ -1601,57 +1595,6 @@
       renderCustomPostEditor();
       renderOfferPreview();
     };
-
-    function renderOfferEditor(){
-      // Section toggles
-      const toggleEl=document.getElementById('sectionToggles'); if(!toggleEl) return;
-      const sectionLabels={
-        innledning:'Innledning', grunnlag:'Grunnlag for tilbudet',
-        arbeidsomfang:'Arbeidsomfang', ikkemedregnet:'Ikke medregnet',
-        prisogbetaling:'Pris og betaling', fremdrift:'Fremdrift', forbehold:'Forbehold'
-      };
-      toggleEl.innerHTML=Object.keys(sectionLabels).map(function(key){
-        return '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">'
-          +'<input type="checkbox" style="width:auto" '+((_offerState.sections[key])?'checked':'')+' onchange="_offerState.sections.'+key+'=this.checked;renderOfferPreview()" />'
-          +sectionLabels[key]+'</label>';
-      }).join('');
-
-      // Editable text fields
-      const textEl=document.getElementById('offerTextFields'); if(!textEl) return;
-      const editableLabels={
-        innledning:'Innledning', arbeidsomfang:'Inkludert i tilbudet',
-        ikkemedregnet:'Ikke inkludert'
-      };
-      textEl.innerHTML=Object.keys(editableLabels).map(function(key){
-        return '<div><label style="font-size:11px;font-weight:700;color:var(--muted)">'
-          +editableLabels[key]+'</label>'
-          +'<textarea style="font-size:12px;min-height:70px;margin-top:4px" oninput="_offerState.texts.'+key+'=this.value;renderOfferPreview()">'+escapeHtml(_offerState.texts[key]||'')+'</textarea></div>';
-      }).join('');
-
-      renderFreeSectionList();
-    }
-
-    window.addFreeSection=function(){
-      _offerState.freeSections.push({id:uid(),title:'Ny seksjon',text:''});
-      renderFreeSectionList();
-      renderOfferPreview();
-    };
-
-    function renderFreeSectionList(){
-      const el=document.getElementById('freeSectionList'); if(!el) return;
-      el.innerHTML=_offerState.freeSections.map(function(sec,i){
-        return '<div style="background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:8px">'
-          +'<div style="display:flex;gap:6px;margin-bottom:6px">'
-          +'<input value="'+escapeAttr(sec.title)+'" placeholder="Tittel" style="flex:1;font-size:12px;padding:5px 8px;font-weight:700" oninput="_offerState.freeSections['+i+'].title=this.value;renderOfferPreview()" />'
-          +'<button onclick="_offerState.freeSections.splice('+i+',1);renderFreeSectionList();renderOfferPreview()" style="border:none;background:var(--red-soft);color:var(--red);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px">✕</button>'
-          +'</div>'
-          +'<textarea style="font-size:12px;min-height:60px" placeholder="Tekst..." oninput="_offerState.freeSections['+i+'].text=this.value;renderOfferPreview()">'+escapeHtml(sec.text||'')+'</textarea>'
-          +'</div>';
-      }).join('');
-    }
-
-
-
 
     // Scope the offer document CSS under the overlay page so it can live
     // inside the app DOM without clobbering app styles. `body` rules map to
@@ -1749,35 +1692,6 @@
       a.click();
       a.remove();
       setTimeout(function(){URL.revokeObjectURL(url);},30000);
-    };
-
-    window.sendOfferNow=function(){
-      const p=getProject(currentProjectId); if(!p) return;
-      const cust=getCustomer(p.customerId);
-      const co=state.company||{};
-      const toEmail=cust&&cust.email?cust.email:'';
-      const subject='Tilbud - '+(p.name||'Prosjekt')+(co.name?' - '+co.name:'');
-      const body=
-        'Hei,\n\n'
-        +'Vedlagt finner du tilbud på '+(p.name||'prosjekt')+'.\n\n'
-        +'Gi gjerne tilbakemelding dersom du har spørsmål.\n\n'
-        +'Mvh\n'
-        +(co.name||'');
-      const mailtoLink=
-        'mailto:'+encodeURIComponent(toEmail)
-        +'?subject='+encodeURIComponent(subject)
-        +'&body='+encodeURIComponent(body);
-
-      openOfferFullPreview();
-
-      setTimeout(function(){
-        var a=document.createElement('a');
-        a.href=mailtoLink;
-        a.style.display='none';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      },1000);
     };
 
     window.printOffer=function(){
@@ -2923,11 +2837,8 @@
       const beb=$('#fBebodd'); if(beb) beb.addEventListener('change',()=>{ p.bebodd=beb.checked; persistAndUpdate(); });
       const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
       const sI=$('#sInternalCost'); if(sI) sI.addEventListener('input',()=>{ p.settings.internalCost=Number(sI.value)||0; p.work.internalCost=p.settings.internalCost; const l=$('#wInternalCost'); if(l&&document.activeElement!==l) l.value=p.work.internalCost; persistAndUpdate(); });
-      const sD=$('#sDriveCost'); if(sD) sD.addEventListener('input',()=>{ p.settings.driveCost=parseVatInput(p,sD.value); p.extras.driveCost=p.settings.driveCost; p.extras.driftRate=p.settings.driveCost; const l=$('#eDrive'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.extras.driveCost); persistAndUpdate(); });
       bindNum('#wActualHours',v=>p.work.actualHours=v);
-      bindNum('#wLaborHireHours',v=>p.work.laborHireHours=v); bindNumVat('#wLaborHireRate',v=>p.extras.laborHire=v);
       bindNumVat('#wTimeRate',v=>p.work.timeRate=v); bindNum('#wInternalCost',v=>p.work.internalCost=v);
-      bindNum('#eDriftRate',v=>p.extras.driftRate=v);
       bindNumVat('#eRental',v=>p.extras.rental=v);
       bindNumVat('#eWaste',v=>p.extras.waste=v); bindNumVat('#eScaffolding',v=>p.extras.scaffolding=v); bindNumVat('#eDrawings',v=>p.extras.drawings=v);
       // subcontractors handled via onclick
@@ -2987,7 +2898,11 @@
       if(t.id==='deleteProjectBtn') deleteCurrentProject();
       if(t.id==='settingsBtn'||t.closest('#settingsBtn')) openSettings();
       if(t.id==='saveSettingsBtn') saveSettings();
-      if(t.id==='backToOverviewBtn'){ $('#settingsView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
+      if(t.id==='backToOverviewBtn'){
+        $('#settingsView').classList.add('hidden');
+        if(currentProjectId&&getProject(currentProjectId)){ $('#projectView').classList.remove('hidden'); renderProjectView(); }
+        else { $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
+      }
       if(t.id==='backupBtn') exportData();
       if(t.id==='importBtn') $('#importFile').click();
       if(t.id==='toggleEx'){ const p=getProject(currentProjectId); if(p){ p.settings.vatMode='ex'; persistAndRenderProject(); } }

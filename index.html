@@ -360,52 +360,6 @@
     </div>
   </div>
 
-  <!-- OFFER PREVIEW VIEW -->
-  <div id="offerView" class="hidden">
-    <div class="topbar">
-      <div>
-        <button class="btn secondary small" id="backFromOfferBtn">← Tilbake til prosjekt</button>
-        <div class="title" id="offerViewTitle">Tilbud</div>
-      </div>
-      <div class="actions">
-        <button class="btn primary" onclick="printOffer()">Skriv ut / PDF</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 64px);overflow:hidden">
-      <div style="overflow-y:auto;border-right:1px solid var(--line);background:#f8f9fc;padding:16px;display:flex;flex-direction:column;gap:12px" id="offerEditorPane">
-        <div class="card" style="margin:0">
-          <div class="section-head"><div class="section-title" style="font-size:13px">Postervisning</div></div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="offerPostMode" value="all" checked onchange="setOfferPostMode(this.value)" style="width:auto"> Vis alle poster enkeltvis</label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="offerPostMode" value="simple" onchange="setOfferPostMode(this.value)" style="width:auto"> Enkel (Tømrerarbeid + Materialer)</label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="offerPostMode" value="custom" onchange="setOfferPostMode(this.value)" style="width:auto"> Tilpasset — slå sammen og gi nye navn</label>
-          </div>
-          <div id="customPostEditor" style="display:none;margin-top:10px"></div>
-        </div>
-        <div class="card" style="margin:0">
-          <div class="section-head"><div class="section-title" style="font-size:13px">Tekst og seksjoner</div></div>
-          <div id="offerTextFields" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
-        </div>
-        <div class="card" style="margin:0">
-          <div class="section-head">
-            <div class="section-title" style="font-size:13px">Vis/skjul seksjoner</div>
-          </div>
-          <div id="sectionToggles" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
-        </div>
-        <div class="card" style="margin:0">
-          <div class="section-head">
-            <div class="section-title" style="font-size:13px">Egne seksjoner</div>
-            <button class="btn small soft" onclick="addFreeSection()">+ Legg til</button>
-          </div>
-          <div id="freeSectionList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
-        </div>
-      </div>
-      <div style="overflow-y:auto;background:#e8eaf0;padding:24px" id="offerPreviewPane">
-        <div id="offerPreviewDoc" style="background:#fff;max-width:800px;margin:0 auto;min-height:1100px;box-shadow:0 4px 24px rgba(0,0,0,.12);padding:30px 40px 50px;font-family:Calibri,Arial,sans-serif;font-size:11pt"></div>
-      </div>
-    </div>
-  </div>
-
   <div id="settingsView" class="hidden">
     <div class="topbar">
       <div>
@@ -522,10 +476,6 @@
           <div><label>Intern timekost (kr)</label><input id="sDefInternalCost" type="number" /></div>
           <div><label>Påslag materialer (%)</label><input id="sDefMatMarkup" type="number" /></div>
         </div>
-        <div class="row-3" style="margin-top:8px">
-          <div><label>Kjøring / drift per time (kr)</label><input id="sDefDriveCost" type="number" /></div>
-          <div></div><div></div>
-        </div>
         <div class="footer-note">Disse brukes automatisk på alle nye prosjekter.</div>
       </div>
 
@@ -533,6 +483,16 @@
         <div class="section-head"><div class="section-title">Materialpakker</div></div>
         <div id="pkgManagerBody"></div>
         <div class="footer-note">Pakker settes inn via «📦 Pakker»-knappen når du legger til materialer, og kan lagres direkte fra Tilpass-modalen med «Lagre som pakke».</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div class="section-title">Tilbudsmal</div></div>
+        <div id="offerTemplateBody"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div class="section-title">E-postmal</div></div>
+        <div id="emailTemplateBody"></div>
       </div>
 
     </div>

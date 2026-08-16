@@ -8,7 +8,15 @@
       if(session){ _sbUser=session.user; await loadFromCloud(); showApp(); }
       else { document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
       _sb.auth.onAuthStateChange(async function(event,session){
-        if(event==='SIGNED_IN'&&session){ _sbUser=session.user; await loadFromCloud(); showApp(); }
+        // Supabase re-fires SIGNED_IN whenever the tab/window regains focus,
+        // not just on a real login. Only reload from cloud on an actual new
+        // sign-in (no user, or a different user) — otherwise this clobbers
+        // local edits that haven't finished their debounced cloud sync yet.
+        if(event==='SIGNED_IN'&&session){
+          const isNewSignIn = !_sbUser || _sbUser.id!==session.user.id;
+          _sbUser=session.user;
+          if(isNewSignIn){ await loadFromCloud(); showApp(); }
+        }
         else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; var bb=document.getElementById('bottomBar'); if(bb) bb.style.display='none'; }
       });
     }
@@ -19,7 +27,35 @@
       var bb=document.getElementById('bottomBar');
       if(bb&&window._isMobile&&window._isMobile()) bb.style.display='flex';
       sidebarNav('kalkyle');
+      maybeShowChangelog();
     }
+
+    function maybeShowChangelog(){
+      if(state.seenUpdateVersion===APP_UPDATE_VERSION) return;
+      showModal(`
+        <div class="section-head">
+          <div class="section-title">Nytt i Byggeplassen</div>
+        </div>
+        <ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7">
+          <li>Utskrift av tilbud til PDF er fikset — krasjet appen og ga blanke sider før, fungerer nå med fargene med</li>
+          <li><b>Nytt:</b> Materialpakker — lag egne faste materiallister og legg dem til i en post med ett klikk</li>
+          <li><b>Nytt:</b> Tilbudsmal i Innstillinger — bestem selv rekkefølge, titler og standardtekst for alle avsnitt i tilbudet</li>
+          <li><b>Nytt:</b> E-postmal i Innstillinger — tilpass emne og tekst på e-posten «Send tilbud» åpner</li>
+          <li>Fikset: Rigg &amp; drift % ble ikke alltid regnet med i totalsummen — gjør det nå</li>
+          <li>Fikset: Tekst i tilbud (som egne seksjoner) kunne forsvinne ved omlasting — lagres nå riktig</li>
+          <li>Ryddet opp: Innstillinger havner ikke lenger «under» prosjektet du sto i</li>
+        </ul>
+        <div class="toolbar">
+          <button class="btn primary" onclick="dismissChangelog()">Skjønner, lukk</button>
+        </div>
+      `);
+    }
+
+    window.dismissChangelog=function(){
+      state.seenUpdateVersion=APP_UPDATE_VERSION;
+      saveState();
+      closeModal();
+    };
 
     window.sidebarNav=function(view){
       // Hide all views
@@ -83,6 +119,8 @@
           state.favoriteCatalogIds=p.favoriteCatalogIds||[]; state.recentCatalogIds=p.recentCatalogIds||[];
           state.userTemplates=p.userTemplates||[]; state.calcRates=p.calcRates||{}; state.laborRates=p.laborRates||{}; state.calcRecipes=p.calcRecipes||{};
           state.materialPackages=p.materialPackages||[];
+          state.offerTemplate=p.offerTemplate||defaultOfferTemplate();
+          state.seenUpdateVersion=p.seenUpdateVersion||'';
           state.company=Object.assign({},defaultCompany,p.company||{});
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
