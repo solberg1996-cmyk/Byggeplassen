@@ -2,8 +2,8 @@
       return {
         id:uid(), name:'', customerId:'', address:'', type:'Annet', startPref:'Snarest', status:'Utkast',
         description:'', note:'', settings:{...state.settings},
-        work:{people:1,hours:0,timeRate:state.settings.timeRate,internalCost:state.settings.internalCost,risk:'Normal',actualHours:0,laborHireHours:0},
-        materials:[], extras:{rental:0,waste:0,subcontractors:[],laborHire:0,rigPercent:10,misc:0,driftRate:0,scaffolding:0,drawings:0},
+        work:{people:1,hours:0,timeRate:state.settings.timeRate,internalCost:state.settings.internalCost,risk:'Normal',actualHours:0},
+        materials:[], extras:{rental:0,waste:0,subcontractors:[],rigPercent:10,misc:0,scaffolding:0,drawings:0},
         offer:{included:'Arbeid, standard materialer og rydding.',excluded:'Skjulte feil og ekstraarbeid.',validity:'14 dager'},
         bebodd:false,
         operations:[], indirect:{avstandKm:0,antallDager:0,antallTurer:0,people:1,riggTimer:null,planTimer:null,oppryddingPct:3},
@@ -86,7 +86,7 @@
       const extrasEl=document.getElementById('summaryExtrasVal');
       if(extrasEl) extrasEl.textContent=currency(vatM?(c.extrasBase+c.rigEx)*1.25:(c.extrasBase+c.rigEx));
       const extrasDetailEl=document.getElementById('summaryExtrasDetail');
-      if(extrasDetailEl) extrasDetailEl.textContent=(c.rigHours>0?'Rigg '+c.rigHours+'t + kjøring, drift m.m.':'Kjøring, rigg m.m.');
+      if(extrasDetailEl) extrasDetailEl.textContent=(c.rigHours>0?'Rigg '+c.rigHours+'t m.m.':'Rigg m.m.');
       const totalDisplayHours=(c.hoursTotal||0)+(ps.hours||0);
       const hoursEl=document.getElementById('summaryLaborHours');
       if(hoursEl) hoursEl.textContent='Totalt: '+totalDisplayHours+'t | Tømrer: '+(c.hoursTotal||0)+'t | Poster: '+(ps.hours||0)+'t';
@@ -146,7 +146,6 @@
               <div><label>Intern timekost</label><input id="wInternalCost" type="number" value="${p.work.internalCost}" /></div>
             </div>
             <div class="row-3" style="margin-top:12px">
-              <div><label>Kjøring / drift per time</label><input id="sDriveCost" type="number" value="${displayVatValue(p,p.settings.driveCost)}" /></div>
               <div><label>Påslag materialer %</label><input id="wMatMarkup" type="number" value="${p.settings.materialMarkup}" /></div>
               <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
             </div>
@@ -823,11 +822,9 @@
         </div>
 
         <div class="tab-section collapsed">
-          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Innleid håndverker</div>
+          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Timelogg</div>
           <div class="tab-section-body">
             <div class="row-3">
-              <div><label>Timepris innleid</label><input id="wLaborHireRate" type="number" value="${displayVatValue(p,p.extras.laborHire||0)}" /></div>
-              <div><label>Antall timer</label><input id="wLaborHireHours" type="number" value="${p.work.laborHireHours||0}" /></div>
               <div><label>Faktiske timer brukt (logging)</label><input id="wActualHours" type="number" value="${p.work.actualHours||0}" /></div>
             </div>
           </div>
@@ -1183,7 +1180,7 @@
             <div class="offer-stat-card amber-theme">
               <div class="offer-stat-label"> Andre kostnader</div>
               <div class="offer-stat-value" id="summaryExtrasVal">${currency(p.settings.vatMode==='inc'?(c.extrasBase+c.rigEx)*1.25:(c.extrasBase+c.rigEx))}</div>
-              <div class="offer-stat-detail" id="summaryExtrasDetail">${c.rigHours>0?'Rigg '+c.rigHours+'t + kjøring, drift m.m.':'Kjøring, rigg m.m.'}</div>
+              <div class="offer-stat-detail" id="summaryExtrasDetail">${c.rigHours>0?'Rigg '+c.rigHours+'t m.m.':'Rigg m.m.'}</div>
             </div>
           </div>
 

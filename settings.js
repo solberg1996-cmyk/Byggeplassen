@@ -211,6 +211,7 @@
 
     function openSettings(){
       $('#dashboardView').classList.add('hidden');
+      $('#projectView').classList.add('hidden');
       $('#settingsView').classList.remove('hidden');
       var co=state.company;
       ['Name','OrgNr','Address','City','Phone','Email','Website','ExtraInfo'].forEach(function(k){
@@ -219,7 +220,6 @@
       $('#sDefTimeRate').value=state.settings.timeRate||850;
       $('#sDefInternalCost').value=state.settings.internalCost||450;
       $('#sDefMatMarkup').value=state.settings.materialMarkup||20;
-      $('#sDefDriveCost').value=state.settings.driveCost||650;
       // Color picker
       var currentColor = co.color || '#2e75b6';
       var colorEl = $('#cColor');
@@ -228,6 +228,8 @@
       // Logo
       if(co.logo){ showLogoPreview(co.logo); }
       renderPkgManager();
+      renderOfferTemplateManager();
+      renderEmailTemplateManager();
     }
 
     function updateColorPreview(hex){
@@ -395,6 +397,171 @@
       saveState(); renderPkgManager();
     };
 
+    // ---- TILBUDSMAL (oversikt og redigering) ----
+    // Malen er kun startpunktet for NYE prosjekter (sås inn i p.offerState ved
+    // første init, se applyOfferTemplateDefaults i app.js). Å endre malen her
+    // påvirker aldri prosjekter som allerede finnes.
+    var OFFER_TEMPLATE_LABELS={
+      innledning:{hint:'Setningsmal — {{beskrivelse}} erstattes med prosjektets korte beskrivelse (skrives inn per tilbud).'},
+      grunnlag:{hint:'Ren tekst, ingen plassholdere.'},
+      arbeidsomfang:{structured:true,hint:'Generert fra tilbudsposter/avkrysninger — kun tittel og rekkefølge kan endres her.'},
+      ikkemedregnet:{structured:true,hint:'Generert fra avkrysninger — kun tittel og rekkefølge kan endres her.'},
+      prisogbetaling:{hint:'{{betalingsform}}, {{timepris}} og {{material_paslag}} fylles inn automatisk.'},
+      fremdrift:{hint:'{{oppstart}} fylles inn automatisk fra prosjektets planlagte oppstart.'},
+      forbehold:{hint:'{{gyldighet}} fylles inn automatisk fra tilbudets gyldighet.'}
+    };
+
+    function getOfferTemplate(){
+      if(!state.offerTemplate) state.offerTemplate=defaultOfferTemplate();
+      return state.offerTemplate;
+    }
+
+    // Rader vises kollapset som standard — kun tittel/rekkefølge/på-av synlig.
+    // Klikk for å åpne teksten. Holder siden oversiktlig med 7+ seksjoner.
+    var _offerTplExpanded={};
+
+    function renderOfferTemplateManager(){
+      var host=document.getElementById('offerTemplateBody');
+      if(!host) return;
+      var tpl=getOfferTemplate();
+      var order=(tpl.sectionOrder&&tpl.sectionOrder.length)?tpl.sectionOrder:OFFER_SECTION_ORDER_DEFAULT.slice();
+
+      var sectionsHtml=order.map(function(key,i){
+        var def=tpl.sections[key]||{title:key,enabled:true};
+        var meta=OFFER_TEMPLATE_LABELS[key]||{};
+        var open=!!_offerTplExpanded[key];
+        return '<div style="border:1px solid var(--line);border-radius:10px;margin-bottom:6px;overflow:hidden">'
+          +'<div style="display:flex;gap:6px;align-items:center;padding:8px 10px">'
+            +'<button class="btn small soft" style="padding:2px 7px" title="Flytt opp" '+(i===0?'disabled':'')+' onclick="event.stopPropagation();offerTplMove('+i+',-1)">▲</button>'
+            +'<button class="btn small soft" style="padding:2px 7px" title="Flytt ned" '+(i===order.length-1?'disabled':'')+' onclick="event.stopPropagation();offerTplMove('+i+',1)">▼</button>'
+            +'<div style="flex:1;font-weight:700;font-size:13px;cursor:pointer" onclick="offerTplToggle(\''+key+'\')">'+(open?'▾':'▸')+' '+escapeHtml(def.title||key)+'</div>'
+            +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap">'
+              +'<input type="checkbox" style="width:auto" '+(def.enabled!==false?'checked':'')+' onchange="offerTplUpd(\''+key+'\',\'enabled\',this.checked)" />'
+              +'Med</label>'
+          +'</div>'
+          +(open?(
+            '<div style="padding:0 10px 10px;border-top:1px solid var(--line)">'
+              +'<label style="font-size:11px;color:var(--muted);margin:8px 0 2px;display:block">Tittel</label>'
+              +'<input value="'+escapeAttr(def.title||'')+'" onchange="offerTplUpd(\''+key+'\',\'title\',this.value)" />'
+              +'<div class="footer-note" style="margin:8px 0 4px">'+meta.hint+'</div>'
+              +(meta.structured?'':
+                '<textarea style="min-height:80px;font-size:13px;width:100%" onchange="offerTplUpd(\''+key+'\',\'text\',this.value)">'+escapeHtml(def.text||'')+'</textarea>')
+            +'</div>'
+          ):'')
+        +'</div>';
+      }).join('');
+
+      var customHtml=(tpl.customSections||[]).map(function(cs,i){
+        var open=!!_offerTplExpanded['custom_'+i];
+        return '<div style="border:1px solid var(--line);border-radius:10px;margin-bottom:6px;overflow:hidden">'
+          +'<div style="display:flex;gap:6px;align-items:center;padding:8px 10px">'
+            +'<div style="flex:1;font-weight:700;font-size:13px;cursor:pointer" onclick="offerTplToggle(\'custom_'+i+'\')">'+(open?'▾':'▸')+' '+(escapeHtml(cs.title||'')||'<span style="color:var(--muted);font-weight:400">Uten tittel</span>')+'</div>'
+            +'<button class="btn small danger" style="padding:3px 8px" onclick="offerTplCustomDel('+i+')">Slett</button>'
+          +'</div>'
+          +(open?(
+            '<div style="padding:0 10px 10px;border-top:1px solid var(--line)">'
+              +'<label style="font-size:11px;color:var(--muted);margin:8px 0 2px;display:block">Tittel</label>'
+              +'<input value="'+escapeAttr(cs.title||'')+'" placeholder="Tittel" onchange="offerTplCustomUpd('+i+',\'title\',this.value)" />'
+              +'<textarea style="margin-top:8px;min-height:70px;font-size:13px;width:100%" placeholder="Tekst..." onchange="offerTplCustomUpd('+i+',\'text\',this.value)">'+escapeHtml(cs.text||'')+'</textarea>'
+            +'</div>'
+          ):'')
+        +'</div>';
+      }).join('');
+
+      host.innerHTML=
+        '<div class="footer-note" style="margin-bottom:10px">Standarden for NYE tilbud. Klikk en seksjon for å redigere teksten. Endringer her påvirker ikke prosjekter du allerede har laget.</div>'
+        +sectionsHtml
+        +'<div class="section-head" style="margin-top:10px"><div class="section-title" style="font-size:13px">Egne faste seksjoner</div></div>'
+        +'<div class="footer-note" style="margin-bottom:8px">Legges til på slutten av alle nye tilbud (som «Egne seksjoner» i tilbudsfanen).</div>'
+        +customHtml
+        +'<div class="toolbar" style="margin-top:4px;margin-bottom:14px">'
+          +'<button class="btn small soft" onclick="offerTplCustomAdd()">+ Legg til seksjon</button>'
+        +'</div>'
+        +'<button class="btn small danger" onclick="offerTplReset()">↺ Tilbakestill til standard</button>';
+    }
+
+    window.offerTplToggle=function(key){
+      _offerTplExpanded[key]=!_offerTplExpanded[key];
+      renderOfferTemplateManager();
+    };
+
+    // ---- E-POSTMAL («Send tilbud»-knappen) ----
+    function renderEmailTemplateManager(){
+      var host=document.getElementById('emailTemplateBody');
+      if(!host) return;
+      var tpl=getOfferTemplate();
+      var def=defaultOfferTemplate();
+      host.innerHTML=
+        '<div class="footer-note" style="margin-bottom:10px">Åpnes i e-postprogrammet ditt når du trykker «Send tilbud». {{prosjekt}}, {{firma}} og {{kunde}} erstattes automatisk.</div>'
+        +'<label style="font-size:11px;color:var(--muted);margin-bottom:2px;display:block">Emne</label>'
+        +'<input value="'+escapeAttr(tpl.emailSubject!=null?tpl.emailSubject:def.emailSubject)+'" onchange="emailTplUpd(\'emailSubject\',this.value)" />'
+        +'<label style="font-size:11px;color:var(--muted);margin:10px 0 2px;display:block">Tekst</label>'
+        +'<textarea style="min-height:120px;font-size:13px;width:100%" onchange="emailTplUpd(\'emailBody\',this.value)">'+escapeHtml(tpl.emailBody!=null?tpl.emailBody:def.emailBody)+'</textarea>'
+        +'<div class="toolbar" style="margin-top:10px">'
+          +'<button class="btn small danger" onclick="emailTplReset()">↺ Tilbakestill til standard</button>'
+        +'</div>';
+    }
+
+    window.emailTplUpd=function(field,val){
+      var tpl=getOfferTemplate();
+      tpl[field]=val;
+      saveState();
+    };
+
+    window.emailTplReset=function(){
+      if(!confirm('Tilbakestille e-postmalen til standardversjonen?')) return;
+      var tpl=getOfferTemplate();
+      var def=defaultOfferTemplate();
+      tpl.emailSubject=def.emailSubject;
+      tpl.emailBody=def.emailBody;
+      saveState(); renderEmailTemplateManager();
+    };
+
+    window.offerTplUpd=function(key,field,val){
+      var tpl=getOfferTemplate();
+      if(!tpl.sections[key]) tpl.sections[key]={title:key,enabled:true};
+      tpl.sections[key][field]=val;
+      saveState();
+      if(field==='title') renderOfferTemplateManager();
+    };
+
+    window.offerTplMove=function(index,dir){
+      var tpl=getOfferTemplate();
+      var order=(tpl.sectionOrder&&tpl.sectionOrder.length)?tpl.sectionOrder:OFFER_SECTION_ORDER_DEFAULT.slice();
+      var newIndex=index+dir;
+      if(newIndex<0||newIndex>=order.length) return;
+      var tmp=order[index]; order[index]=order[newIndex]; order[newIndex]=tmp;
+      tpl.sectionOrder=order;
+      saveState(); renderOfferTemplateManager();
+    };
+
+    window.offerTplCustomAdd=function(){
+      var tpl=getOfferTemplate();
+      tpl.customSections=tpl.customSections||[];
+      tpl.customSections.push({id:uid(),title:'Ny seksjon',text:''});
+      _offerTplExpanded['custom_'+(tpl.customSections.length-1)]=true;
+      saveState(); renderOfferTemplateManager();
+    };
+
+    window.offerTplCustomUpd=function(i,field,val){
+      var tpl=getOfferTemplate();
+      if(!tpl.customSections[i]) return;
+      tpl.customSections[i][field]=val;
+      saveState();
+    };
+
+    window.offerTplCustomDel=function(i){
+      var tpl=getOfferTemplate();
+      tpl.customSections.splice(i,1);
+      saveState(); renderOfferTemplateManager();
+    };
+
+    window.offerTplReset=function(){
+      if(!confirm('Tilbakestille tilbudsmalen til standardversjonen? Dette påvirker ikke prosjekter du allerede har laget.')) return;
+      state.offerTemplate=defaultOfferTemplate();
+      saveState(); renderOfferTemplateManager();
+    };
+
     function saveSettings(){
       state.company.name=$('#cName')?.value.trim()||'';
       state.company.orgNr=$('#cOrgNr')?.value.trim()||'';
@@ -408,12 +575,11 @@
       state.settings.timeRate=Number($('#sDefTimeRate')?.value)||850;
       state.settings.internalCost=Number($('#sDefInternalCost')?.value)||450;
       state.settings.materialMarkup=Number($('#sDefMatMarkup')?.value)||20;
-      state.settings.driveCost=Number($('#sDefDriveCost')?.value)||0;
       // Apply accent color to app
       document.documentElement.style.setProperty('--blue', state.company.color);
       saveState();
-      // Back to dashboard
+      // Tilbake til der brukeren kom fra — prosjektet hvis ett var åpent, ellers Dashboard
       $('#settingsView').classList.add('hidden');
-      $('#dashboardView').classList.remove('hidden');
-      renderDashboard();
+      if(currentProjectId&&getProject(currentProjectId)){ $('#projectView').classList.remove('hidden'); renderProjectView(); }
+      else { $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
     }

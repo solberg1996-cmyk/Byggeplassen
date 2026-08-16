@@ -341,7 +341,7 @@ function calcProject(project) {
 // ── FINANSIELL KALKYLE (tidl. compute() i projects.js) ───────
 
 function compute(project){
-  if (!project) return { hoursTotal: 0, laborCost: 0, laborSaleEx: 0, matCost: 0, matSaleEx: 0, extrasBase: 0, rigEx: 0, costPrice: 0, saleEx: 0, saleInc: 0, vat: 0, profit: 0, margin: 0, db: 0, driftCost: 0, totalMatCost: 0, totalMatSaleEx: 0, totalHours: 0, totalLaborSaleEx: 0, totalLaborCost: 0, totalCostPrice: 0, totalSaleEx: 0, totalProfit: 0, totalMargin: 0 };
+  if (!project) return { hoursTotal: 0, laborCost: 0, laborSaleEx: 0, matCost: 0, matSaleEx: 0, extrasBase: 0, rigEx: 0, costPrice: 0, saleEx: 0, saleInc: 0, vat: 0, profit: 0, margin: 0, db: 0, totalMatCost: 0, totalMatSaleEx: 0, totalHours: 0, totalLaborSaleEx: 0, totalLaborCost: 0, totalCostPrice: 0, totalSaleEx: 0, totalProfit: 0, totalMargin: 0 };
 
   var work = project.work || {};
   var materials = project.materials || [];
@@ -369,10 +369,8 @@ function compute(project){
     const withWaste=qty*cost*(1+waste/100);
     matCost+=withWaste; matSaleEx+=withWaste*(1+markup/100);
   });
-  const lhh=Number(work.laborHireHours)||0, lhr=Number(extras.laborHire)||0;
-  const laborHireTotal=lhh>0?(lhr*lhh):lhr;
   const subTotal=((extras.subcontractors)||[]).reduce((s,x)=>s+(Number(x.amount)||0),0);
-  const extrasFixed=(Number(extras.rental)||0)+(Number(extras.waste)||0)+subTotal+laborHireTotal+(Number(extras.misc)||0)+(Number(extras.scaffolding)||0)+(Number(extras.drawings)||0);
+  const extrasFixed=(Number(extras.rental)||0)+(Number(extras.waste)||0)+subTotal+(Number(extras.misc)||0)+(Number(extras.scaffolding)||0)+(Number(extras.drawings)||0);
 
   let snapMatCost=0, snapMatSaleEx=0, snapHours=0, snapLaborSaleEx=0, snapLaborCost=0;
   offerPosts.forEach(post=>{
@@ -394,12 +392,16 @@ function compute(project){
     ? Number(work.hoursOverride)
     : computedTotal;
 
-  const driftRate=Number(extras.driftRate)||Number(extras.driveCost)||0;
-  const driftCost=totalHours*driftRate;
-  const extrasBase=extrasFixed+driftCost;
+  const extrasBase=extrasFixed;
 
+  const totalLaborSaleEx=laborSaleExAdj + snapLaborSaleEx;
+  const totalLaborCost=laborCostAdj + snapLaborCost;
+
+  // Rigg-% regnes av HELE jobbens salgsverdi (arbeid + materialer), inkludert
+  // poster sendt til tilbud fra kalkulasjonsmotoren — ikke bare p.materials/
+  // p.work.hours, som ofte står på 0 når alt er sendt til tilbud som poster.
   const rigPercentNum=(Number(extras.rigPercent)||0)/100;
-  const rigPercentSale=(laborSaleExAdj+matSaleEx)*rigPercentNum;
+  const rigPercentSale=(totalLaborSaleEx+totalMatSaleEx)*rigPercentNum;
   const rigEx=rigHoursSale+rigPercentSale;
   // Prosent-rigg har null margin (kost=salg). Rigg-timer har normal margin via internalCost.
   const rigCost=rigHoursCost+rigPercentSale;
@@ -408,15 +410,13 @@ function compute(project){
   const saleInc=saleEx*1.25, profit=saleEx-costPrice;
   const margin=saleEx?(profit/saleEx*100):0;
 
-  const totalLaborSaleEx=laborSaleExAdj + snapLaborSaleEx;
-  const totalLaborCost=laborCostAdj + snapLaborCost;
   const totalCostPrice=totalLaborCost+totalMatCost+extrasBase+rigCost;
   const totalSaleEx=totalLaborSaleEx+totalMatSaleEx+extrasBase+rigEx;
   const totalProfit=totalSaleEx-totalCostPrice;
   const totalMargin=totalSaleEx?(totalProfit/totalSaleEx*100):0;
 
   const totalWorkHours=Math.max(0, totalHours - rigHoursExplicit);
-  return {hoursTotal,laborCost,laborSaleEx,matCost,matSaleEx,extrasBase,rigEx,rigHours:rigHoursExplicit,costPrice,saleEx,saleInc,vat:saleEx*0.25,profit,margin,db:margin,driftCost,
+  return {hoursTotal,laborCost,laborSaleEx,matCost,matSaleEx,extrasBase,rigEx,rigHours:rigHoursExplicit,costPrice,saleEx,saleInc,vat:saleEx*0.25,profit,margin,db:margin,
     totalMatCost,totalMatSaleEx,totalHours,totalWorkHours,totalLaborSaleEx,totalLaborCost,totalCostPrice,totalSaleEx,totalProfit,totalMargin};
 }
 

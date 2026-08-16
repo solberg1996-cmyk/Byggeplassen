@@ -2,25 +2,33 @@
       return {
         postMode: 'all',
         customPosts: [],
+        // Seksjonsrekkefølge og titler — sås fra state.offerTemplate ved
+        // første init (se applyOfferTemplateDefaults i app.js), redigerbare
+        // per prosjekt deretter.
+        sectionOrder: OFFER_SECTION_ORDER_DEFAULT.slice(),
+        sectionTitles: {},
         sections: {
           innledning: true, grunnlag: true, arbeidsomfang: true,
           ikkemedregnet: true, prisogbetaling: true, fremdrift: true, forbehold: true
         },
-        texts: { innledning: '', fremdrift: '', forbehold: '' },
+        texts: { innledning: '', grunnlag: '', prisogbetaling: '', fremdrift: '', forbehold: '' },
+        innledningTemplate: null, // firmamalens setningsmal for innledning, sås ved init
         // Arbeidsomfang: checked post ids + custom items
         arbeidsomfangPosts: [],   // [{id, name, checked}]
         arbeidsomfangExtra: [],   // [{id, text}] custom added lines
         // Ikke medregnet: checkboxes
         ikkemedregnet: {
           elektriker: true, rorlegger: true, maling: true,
-          byggesoknad: true, avfall: true, stillas: false, custom: []
+          byggesoknad: true, avfall: true, stillas: true,
+          skjultefeil: true, custom: []
         },
         // Pris og betaling type
         prisType: 'medgaatt',  // 'medgaatt' | 'fastpris' | 'begge'
         freeSections: [],
         estDays: '',
         rigChecked: true,        // Rigg og Drift post checkbox
-        extraPostsChecked: {}    // {postId: true/false} for auto-generated extra posts
+        extraPostsChecked: {},   // {postId: true/false} for auto-generated extra posts
+        templateApplied: false   // sikrer at firmamalen kun sås inn én gang
       };
     }
     // Peker til aktivt prosjekts offerState (settes i initOfferPreviewTab) —
@@ -60,8 +68,6 @@
       var posts=[];
       var cv=compute(p);
       var subTotal=(p.extras.subcontractors||[]).reduce(function(s,x){return s+(Number(x.amount)||0);},0);
-      var lhh=Number(p.work.laborHireHours)||0, lhr=Number(p.extras.laborHire)||0;
-      var laborHireTotal=lhh>0?(lhr*lhh):lhr;
       var rental=Number(p.extras.rental)||0;
       var waste=Number(p.extras.waste)||0;
       var harStillasOp=(p.operations||[]).some(function(op){ return op && op.type==='stillas'; });
@@ -70,7 +76,6 @@
       var misc=Number(p.extras.misc)||0;
       var rigEx=cv.rigEx||0;
 
-      if(laborHireTotal>0) posts.push({id:'__laborhire',name:'Innleid håndverker',amount:laborHireTotal});
       if(subTotal>0){
         (p.extras.subcontractors||[]).forEach(function(s){
           if(Number(s.amount)>0) posts.push({id:'__sub_'+s.id,name:s.trade,amount:Number(s.amount)});
@@ -109,6 +114,7 @@
           +'Vis</label>';
       }
 
+
       const imStd=[
         {key:'elektriker',label:'Elektrikerarbeider'},
         {key:'rorlegger',label:'Rørleggerarbeider'},
@@ -116,6 +122,7 @@
         {key:'byggesoknad',label:'Byggesøknad og prosjektering'},
         {key:'avfall',label:'Avfallshåndtering'},
         {key:'stillas',label:'Stillas'},
+        {key:'skjultefeil',label:'Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon'},
       ];
       const imChecks=imStd.map(function(item){
         return '<label class="offer-check">'
@@ -170,7 +177,7 @@
         return ''
           +'<div class="offer-card">'
             +'<div class="offer-card-head"><div class="offer-card-title">Tilleggsposter</div></div>'
-            +'<div class="offer-card-hint">Fra prosjektkostnader og innleid arbeid:</div>'
+            +'<div class="offer-card-hint">Fra prosjektkostnader:</div>'
             +'<div class="offer-card-list">'+rows+'</div>'
           +'</div>';
       }
@@ -221,7 +228,6 @@
               +visToggle('ikkemedregnet')
             +'</div>'
             +'<div class="offer-card-list">'+imChecks+'</div>'
-            +'<div class="offer-info-pill"><strong>Alltid med:</strong> Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</div>'
             +imCustom
             +'<button class="offer-add-line" onclick="_offerState.ikkemedregnet.custom.push(\'\');renderOfferEditorPane();renderOfferPreview()">+ Legg til linje</button>'
           +'</div>'
@@ -343,13 +349,14 @@
       const cust=getCustomer(p.customerId);
       const co=state.company||{};
       const toEmail=cust&&cust.email?cust.email:'';
-      const subject='Tilbud - '+(p.name||'Prosjekt')+(co.name?' - '+co.name:'');
-      const body=
-        'Hei,\n\n'
-        +'Vedlagt finner du tilbud på '+(p.name||'prosjekt')+'.\n\n'
-        +'Gi gjerne tilbakemelding dersom du har spørsmål.\n\n'
-        +'Mvh\n'
-        +(co.name||'');
+      const tpl=state.offerTemplate||defaultOfferTemplate();
+      const emailCtx={
+        prosjekt: p.name||'Prosjekt',
+        firma: co.name||'',
+        kunde: cust&&cust.name?cust.name:''
+      };
+      const subject=resolveOfferTokens(tpl.emailSubject||defaultOfferTemplate().emailSubject,emailCtx);
+      const body=resolveOfferTokens(tpl.emailBody||defaultOfferTemplate().emailBody,emailCtx);
       const mailtoLink=
         'mailto:'+encodeURIComponent(toEmail)
         +'?subject='+encodeURIComponent(subject)
@@ -366,6 +373,22 @@
         a.remove();
       },1000);
     };
+
+    // Seksjoner med generert (ikke ren tekst) innhold — kan flyttes/omdøpes
+    // via malen, men teksten deres bygges fra prosjektdata, ikke fra os.texts.
+    var OFFER_STRUCTURED_SECTIONS=['arbeidsomfang','ikkemedregnet'];
+
+    function resolveOfferTokens(text,ctx){
+      return String(text||'').replace(/\{\{(\w+)\}\}/g,function(_,key){
+        return ctx[key]!=null?String(ctx[key]):'';
+      });
+    }
+
+    function offerSectionTitle(os,key){
+      return (os.sectionTitles&&os.sectionTitles[key])
+        ||(defaultOfferTemplate().sections[key]||{}).title
+        ||key;
+    }
 
     function getOfferCSS(color){
       return '*{box-sizing:border-box;margin:0;padding:0}'
@@ -424,10 +447,10 @@
         if(lEx>0){priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx)+'</td></tr>';totalEx+=lEx;}
         if(mEx>0){priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx)+'</td></tr>';totalEx+=mEx;}
         if(eEx>0){priceRows+='<tr><td class="dc"><b>Rigg og Drift</b></td><td class="ac">'+fmt(eEx)+'</td></tr>';totalEx+=eEx;}
-      } else if(os.postMode==='custom'){
-        os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(cp.price)+'</td></tr>';totalEx+=cp.price;});
       } else {
-        if(p.offerPosts&&p.offerPosts.length){
+        if(os.postMode==='custom'){
+          os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(cp.price)+'</td></tr>';totalEx+=cp.price;});
+        } else if(p.offerPosts&&p.offerPosts.length){
           p.offerPosts.filter(function(post){return post.type!=='option'||post.enabled;}).forEach(function(post){
             // Calc posts: show "Tømrerarbeid + Materialer" instead of timer info
             var desc='';
@@ -449,13 +472,14 @@
           if(lEx2>0){priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx2)+'</td></tr>';totalEx+=lEx2;}
           if(mEx2>0){priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx2)+'</td></tr>';totalEx+=mEx2;}
         }
-      // Add extra posts (prosjektkostnader + innleid) if checked
-      getExtraPosts(p).forEach(function(ep){
-        if(os.extraPostsChecked[ep.id]!==false){
-          priceRows+='<tr><td class="dc"><b>'+esc(ep.name)+'</b></td><td class="ac">'+fmt(ep.amount)+'</td></tr>';
-          totalEx+=ep.amount;
-        }
-      });
+        // Prosjektkostnader (rigg/drift, underentreprenører, leie, m.m.) — vises
+        // for 'all' og 'custom', ikke 'simple' (som allerede slår dem sammen over).
+        getExtraPosts(p).forEach(function(ep){
+          if(os.extraPostsChecked[ep.id]!==false){
+            priceRows+='<tr><td class="dc"><b>'+esc(ep.name)+'</b></td><td class="ac">'+fmt(ep.amount)+'</td></tr>';
+            totalEx+=ep.amount;
+          }
+        });
       }
       var mva=Math.round(totalEx*0.25);
       var totalInc=Math.round(totalEx*1.25);
@@ -474,14 +498,67 @@
         +(p.address?esc(p.address)+'<br>':'')
         +(cust&&cust.email?esc(cust.email):'');
 
-      function sec(key,title,content){
-        if(!os.sections[key]) return '';
-        return '<div class="sec"><h3>'+title+'</h3>'+content+'</div>';
+      var validity=p.offer&&p.offer.validity?p.offer.validity:'14';
+
+      var tokenCtx={
+        beskrivelse: os.texts.innledning||p.name||'[prosjekt]',
+        betalingsform: os.prisType==='fastpris'?'til avtalt fastpris':os.prisType==='begge'?'etter medgått tid og fastpris':'etter medgått tid og materialer',
+        timepris: Math.round(p.work.timeRate||850),
+        material_paslag: p.settings.materialMarkup||15,
+        oppstart: p.startPref||'Etter avtale',
+        gyldighet: validity
+      };
+
+      function textToParagraphs(text){
+        return String(text||'').split(/\n\s*\n/).filter(function(b){return b.trim();}).map(function(block){
+          return '<p>'+nl2br(block)+'</p>';
+        }).join('');
       }
 
-      var innlDesc=os.texts.innledning||p.name||'[prosjekt]';
-      var innl='Tilbudet gjelder tømrerarbeider i forbindelse med '+esc(innlDesc)+'. Arbeidet utføres iht. befaring og avtalt omfang.';
-      var validity=p.offer&&p.offer.validity?p.offer.validity:'14';
+      function structuredSectionBody(key){
+        if(key==='arbeidsomfang'){
+          return '<p>Følgende arbeid er inkludert i tilbudet:</p>'
+            +os.arbeidsomfangPosts.filter(function(i){return i.checked;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.name)+'</p>';}).join('')
+            +os.arbeidsomfangExtra.filter(function(i){return i.text;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.text)+'</p>';}).join('');
+        }
+        if(key==='ikkemedregnet'){
+          return '<p>Følgende arbeider er ikke inkludert dersom annet ikke er spesifisert:</p>'
+            +(os.ikkemedregnet.elektriker?'<p style="padding-left:16px">- Elektrikerarbeider</p>':'')
+            +(os.ikkemedregnet.rorlegger?'<p style="padding-left:16px">- Rørleggerarbeider</p>':'')
+            +(os.ikkemedregnet.maling?'<p style="padding-left:16px">- Maling og sparkling</p>':'')
+            +(os.ikkemedregnet.byggesoknad?'<p style="padding-left:16px">- Byggesøknad og prosjektering</p>':'')
+            +(os.ikkemedregnet.avfall?'<p style="padding-left:16px">- Avfallshåndtering</p>':'')
+            +(os.ikkemedregnet.stillas?'<p style="padding-left:16px">- Stillas</p>':'')
+            +(os.ikkemedregnet.skjultefeil?'<p style="padding-left:16px">- Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</p>':'')
+            +os.ikkemedregnet.custom.filter(function(t){return t;}).map(function(t){return '<p style="padding-left:16px">- '+esc(t)+'</p>';}).join('');
+        }
+        return '';
+      }
+
+      // Bygger seksjonene i rekkefølgen fra firmamalen (os.sectionOrder).
+      // 'arbeidsomfang'/'ikkemedregnet' har generert innhold og bruker ikke
+      // os.texts; 'innledning' kombinerer setningsmalen med prosjektets korte
+      // beskrivelse (samme redigerbare felt som før). De øvrige er ren
+      // maltekst med {{token}}-erstatning.
+      var tplDefaults=defaultOfferTemplate().sections;
+      var order=(os.sectionOrder&&os.sectionOrder.length)?os.sectionOrder:OFFER_SECTION_ORDER_DEFAULT;
+      var sectionsHtml=order.map(function(key){
+        if(!os.sections[key]) return '';
+        var title=offerSectionTitle(os,key);
+        var body='';
+        if(OFFER_STRUCTURED_SECTIONS.indexOf(key)>=0){
+          body=structuredSectionBody(key);
+        } else if(key==='innledning'){
+          var innlTpl=os.innledningTemplate!=null?os.innledningTemplate:((tplDefaults.innledning||{}).text||'');
+          body=textToParagraphs(resolveOfferTokens(innlTpl,tokenCtx));
+        } else {
+          var raw=(os.texts[key]!=null&&os.texts[key]!=='')?os.texts[key]:((tplDefaults[key]||{}).text||'');
+          body=textToParagraphs(resolveOfferTokens(raw,tokenCtx));
+          if(key==='fremdrift'&&os.estDays) body+='<p>Beregnet tid: <strong>'+esc(os.estDays)+'</strong> arbeidsdager.</p>';
+        }
+        if(!body) return '';
+        return '<div class="sec"><h3>'+esc(title)+'</h3>'+body+'</div>';
+      }).join('');
 
       var css=getOfferCSS(color);
 
@@ -496,36 +573,7 @@
         +'<tr class="sum-row"><td class="dc">Sum eks. mva</td><td class="ac">'+fmt(totalEx)+'</td></tr>'
         +'<tr class="total-row"><td class="dc"><b>ESTIMERT TOTALPRIS INKL. MVA</b></td><td class="ac">'+fmt(totalInc)+'</td></tr>'
         +'</tbody></table>'
-        +sec('innledning','Innledning','<p>'+innl+'</p>')
-        +sec('grunnlag','Grunnlag for tilbudet','<p>Tilbudet er basert på befaring, mottatte tegninger/skisser og normale arbeidsforhold. Dersom forutsetningene endres eller det avdekkes forhold som ikke var synlige ved befaring, kan dette medføre endringer i pris og fremdrift.</p>')
-        +sec('arbeidsomfang','Arbeidsomfang',
-          '<p>Følgende arbeid er inkludert i tilbudet:</p>'
-          +os.arbeidsomfangPosts.filter(function(i){return i.checked;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.name)+'</p>';}).join('')
-          +os.arbeidsomfangExtra.filter(function(i){return i.text;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.text)+'</p>';}).join('')
-        )
-        +sec('ikkemedregnet','Ikke medregnet i tilbudet',
-          '<p>Følgende arbeider er ikke inkludert dersom annet ikke er spesifisert:</p>'
-          +(os.ikkemedregnet.elektriker?'<p style="padding-left:16px">- Elektrikerarbeider</p>':'')
-          +(os.ikkemedregnet.rorlegger?'<p style="padding-left:16px">- Rørleggerarbeider</p>':'')
-          +(os.ikkemedregnet.maling?'<p style="padding-left:16px">- Maling og sparkling</p>':'')
-          +(os.ikkemedregnet.byggesoknad?'<p style="padding-left:16px">- Byggesøknad og prosjektering</p>':'')
-          +(os.ikkemedregnet.avfall?'<p style="padding-left:16px">- Avfallshåndtering</p>':'')
-          +(os.ikkemedregnet.stillas?'<p style="padding-left:16px">- Stillas</p>':'')
-          +os.ikkemedregnet.custom.filter(function(t){return t;}).map(function(t){return '<p style="padding-left:16px">- '+esc(t)+'</p>';}).join('')
-          +'<p style="padding-left:16px">- Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</p>'
-        )
-        +sec('prisogbetaling','Pris og betaling',
-          '<p>Arbeidet utføres '+(os.prisType==='fastpris'?'til avtalt fastpris':os.prisType==='begge'?'etter medgått tid og fastpris':'etter medgått tid og materialer')+'. Betalingsfrist er 10 dager netto. Ved større arbeider kan det faktureres delbetaling underveis.</p>'
-          +'<p>Timepris tømrer: kr '+Math.round(p.work.timeRate||850)+' eks. mva pr time</p>'
-          +'<p>Påslag på materiell: '+(p.settings.materialMarkup||15)+'%</p>'
-          +'<p>Arbeid utover beskrevet omfang regnes som tilleggsarbeid og utføres etter avtale med kunde.</p>'
-        )
-        +sec('fremdrift','Fremdrift',
-          '<p>Planlagt oppstart: '+esc(p.startPref||'Etter avtale')+'</p>'
-          +(os.estDays?'<p>Beregnet tid: <strong>'+esc(os.estDays)+'</strong> arbeidsdager.</p>':'')
-          +'<p>Oppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.</p>')
-        +sec('forbehold','Forbehold','<p>Tilbudet er basert på dagens priser på materialer og lønn. Det tas forbehold om prisendringer fra leverandører eller uforutsette forhold utenfor entreprenørens kontroll. Riggposten omfatter transport/frakt av materialer, materialhåndtering, tildekking av konstruksjonen i byggetiden, organisering/koordinering, rigging av utstyr og verktøy, vernerunder, HMS-tiltak og retur, etc.</p>'
-          +'<p>Tilbudet er gyldig i <b>'+esc(validity)+'</b> dager fra tilbudsdato, dersom annet ikke er avtalt.</p>')
+        +sectionsHtml
         +os.freeSections.map(function(fs){
           return fs.title||fs.text?'<div class="sec"><h3>'+esc(fs.title||'')+'</h3><p>'+nl2br(fs.text)+'</p></div>':'';
         }).join('');

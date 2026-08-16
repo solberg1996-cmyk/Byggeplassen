@@ -932,14 +932,6 @@
     }
     .offer-line-remove:hover{background:var(--red-soft);color:var(--red);border-color:rgba(224,72,72,.2)}
 
-    .offer-info-pill{
-      margin-top:12px;padding:10px 14px;
-      background:var(--bg-warm);
-      border-left:3px solid var(--accent);
-      border-radius:0 var(--radius-xs) var(--radius-xs) 0;
-      font-size:12.5px;color:var(--muted-strong);line-height:1.55;
-    }
-
     .offer-add-line{
       margin-top:14px;background:transparent;
       border:1.5px dashed var(--line-strong);
