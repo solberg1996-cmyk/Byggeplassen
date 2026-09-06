@@ -1372,22 +1372,22 @@
         const rowBg=m.groupColor?(m.groupColor+'18'):(m.cost===0?'var(--yellow-soft)':'var(--bg-warm)');
         const rowBorder=m.groupColor?(m.groupColor+'40'):(m.cost===0?'rgba(196,162,58,.2)':'var(--line)');
         return `
-        <div style="display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;background:${rowBg};border:1px solid ${rowBorder};border-radius:12px;margin-bottom:5px${m.groupColor?';border-left:3px solid '+m.groupColor:''}">
-          <div>
+        <div class="calc-mat-modal-row" style="background:${rowBg};border:1px solid ${rowBorder}${m.groupColor?';border-left:3px solid '+m.groupColor:''}">
+          <div class="cmr-name">
             <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn..." style="font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;width:100%" onchange="window._cpm[${i}].name=this.value" />
             ${m.groupName?`<div style="font-size:10px;color:${m.groupColor||'var(--muted)'};margin-top:1px">${escapeHtml(m.groupName)}</div>`:''}
             ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">${escapeHtml(m.itemNo)}</div>`:''}
           </div>
-          <input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" />
-          <input value="${escapeHtml(m.unit||'stk')}" title="Enhet" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].unit=this.value" />
-          <input type="number" value="${m.cost||0}" title="Innpris" style="padding:6px;font-size:13px;text-align:right;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].cost=Number(this.value);rerenderCalcModal()" />
-          <select title="Svinn %" class="calc-modal-select" onchange="window._cpm[${i}].waste=Number(this.value);rerenderCalcModal()">
+          <div class="cmr-qty" data-label="Antall"><input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" /></div>
+          <div class="cmr-unit" data-label="Enhet"><input value="${escapeHtml(m.unit||'stk')}" title="Enhet" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].unit=this.value" /></div>
+          <div class="cmr-cost" data-label="Innpris"><input type="number" value="${m.cost||0}" title="Innpris" style="padding:6px;font-size:13px;text-align:right;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].cost=Number(this.value);rerenderCalcModal()" /></div>
+          <div class="cmr-waste" data-label="Svinn%"><select title="Svinn %" class="calc-modal-select" onchange="window._cpm[${i}].waste=Number(this.value);rerenderCalcModal()">
             ${pctOpts.map(v=>`<option value="${v}" ${(m.waste||0)==v?'selected':''}>${v}%</option>`).join('')}
-          </select>
-          <select title="Påslag %" class="calc-modal-select" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
+          </select></div>
+          <div class="cmr-markup" data-label="Påslag%"><select title="Påslag %" class="calc-modal-select" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
             ${pctOpts.map(v=>`<option value="${v}" ${(m.markup||20)==v?'selected':''}>${v}%</option>`).join('')}
-          </select>
-          <button style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
+          </select></div>
+          <button class="cmr-del" style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
         </div>`;
       }).join('')
         : '<div class="empty">Ingen materialer enda.</div>';
@@ -1625,6 +1625,14 @@
       if(e.key==='Escape') closeOfferFullPreview();
     }
 
+    // Filnavn/tittel for et tilbud — adressen er det mest gjenkjennelige
+    // når du skal finne igjen PDF-en i nedlastinger senere, så den brukes
+    // fremfor prosjektnavnet når den finnes.
+    function offerFileTitle(p){
+      var base=(p.address||p.name||'tilbud').trim();
+      return base.replace(/[^\wæøåÆØÅ0-9 -]/g,'').trim()||'tilbud';
+    }
+
     // Full preview lives as an overlay in the app itself and prints via the
     // main page (same pattern as handleliste). Printing from popup/blob
     // windows renders blank PDFs in Safari and can reload the app tab.
@@ -1660,7 +1668,7 @@
       overlay.id='offerFullOverlay';
       overlay.innerHTML=
         '<div class="offer-print-toolbar">'
-          +'<button onclick="window.print()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer">Skriv ut / Lagre som PDF</button>'
+          +'<button onclick="printOfferOverlay()" style="background:'+color+';color:#fff;border:none;border-radius:6px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer">Skriv ut / Lagre som PDF</button>'
           +'<button onclick="closeOfferFullPreview()" style="background:#fff;color:#333;border:1px solid #ccc;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer">Lukk</button>'
         +'</div>'
         +'<div class="offer-print-hint">Huk av «Skriv ut bakgrunner» i utskriftsdialogen for å få med fargene i PDF-en</div>'
@@ -1672,22 +1680,36 @@
       document.addEventListener('keydown',handleOfferOverlayKeydown);
     };
 
+    // Sidetittelen er det nettleseren foreslår som filnavn i "Lagre som
+    // PDF"-dialogen. Siden forhåndsvisningen nå er et innskudd i selve
+    // appsiden (ikke et eget vindu/dokument, se historikk over), settes
+    // tittelen midlertidig til adressen rett før utskrift og tilbakestilles
+    // når utskriftsdialogen lukkes.
+    window.printOfferOverlay=function(){
+      const p=getProject(currentProjectId);
+      const originalTitle=document.title;
+      if(p) document.title=offerFileTitle(p);
+      function restore(){ document.title=originalTitle; window.removeEventListener('afterprint',restore); }
+      window.addEventListener('afterprint',restore);
+      window.print();
+    };
+
     window.downloadOfferPDF=function(){
       const p=getProject(currentProjectId); if(!p) return;
       const doc=document.getElementById('offerPreviewDoc'); if(!doc) return;
       const co=state.company||{};
       const color=co.color||'#2e75b6';
       var css=getOfferCSS(color);
-      var html='<!DOCTYPE html><html lang="no"><head><meta charset="UTF-8"><title>Tilbud</title><style>'+css
+      var name=offerFileTitle(p);
+      var html='<!DOCTYPE html><html lang="no"><head><meta charset="UTF-8"><title>'+escapeHtml(name)+'</title><style>'+css
         +'body{padding:30px 40px}@media print{.no-print{display:none!important}}'
         +'</style></head><body>'
         +doc.innerHTML+'</body></html>';
       var blob=new Blob([html],{type:'text/html'});
       var url=URL.createObjectURL(blob);
-      var name=(p.name||'prosjekt').replace(/[^\wæøåÆØÅ0-9-]/g,'_');
       var a=document.createElement('a');
       a.href=url;
-      a.download='Tilbud_'+name+'.html';
+      a.download=name+'.html';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -2045,33 +2067,33 @@
                 const p=getProject(currentProjectId);
                 const calcMarkup=(p?.settings?.materialMarkup)||20;
                 return `<tr data-mat-id="${m.matId}">
-                  <td>
+                  <td class="cmt-name">
                     <input type="text" class="calcMatName mat-name-input" data-mat-id="${m.matId}" value="${escapeHtml(m.name||'')}" placeholder="Sok materiale..." onclick="openPriceSearchForCalc('${m.matId}')" readonly />
                   </td>
-                  <td style="text-align:center">
+                  <td class="cmt-qty" data-label="Netto">
                     <input type="number" class="calcMatQty mat-num-input" data-mat-id="${m.matId}" value="${(m.qty||0).toFixed(1)}" step="0.1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
-                  <td style="text-align:center">
+                  <td class="cmt-unit" data-label="Enhet">
                     <select class="calcMatUnit mat-unit-select" data-mat-id="${m.matId}" onchange="recalcCalcMaterials()">
                       ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===(m.unit||'stk')?'selected':'')+'> '+u+'</option>').join('')}
                     </select>
                   </td>
-                  <td style="text-align:center;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${m.matId}">
+                  <td class="cmt-brutto calcMatBrutto" data-label="Brutto" data-mat-id="${m.matId}">
                     ${(m.waste>0?Math.ceil((m.qty||0)*(1+m.waste/100)*10)/10:(m.qty||0)).toFixed(1)}
                   </td>
-                  <td style="text-align:right">
+                  <td class="cmt-cost" data-label="Pris">
                     <input type="number" class="calcMatCost mat-num-input" data-mat-id="${m.matId}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
-                  <td style="text-align:center">
-                    <input type="number" class="calcMatWaste mat-num-input" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100" style="width:50px" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  <td class="cmt-waste" data-label="Svinn%">
+                    <input type="number" class="calcMatWaste mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
-                  <td style="text-align:center">
-                    <input type="number" class="calcMatMarkup mat-num-input" data-mat-id="${m.matId}" value="${m.markup||calcMarkup}" step="1" min="0" style="width:50px" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                  <td class="cmt-markup" data-label="Påslag%">
+                    <input type="number" class="calcMatMarkup mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.markup||calcMarkup}" step="1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
-                  <td class="mat-total">
+                  <td class="mat-total cmt-total" data-label="Total">
                     <span class="calcMatRowTotal" data-mat-id="${m.matId}">${currency(calcMatRowTotal(m))}</span>
                   </td>
-                  <td style="text-align:center">
+                  <td class="cmt-del">
                     <button class="mat-delete" onclick="deleteCalcMaterial('${m.matId}')">&#10005;</button>
                   </td>
                 </tr>`
@@ -2952,25 +2974,33 @@ window.updateCalcSendButtonUI=function(){
 
 window._isMobile=function(){ return window.innerWidth<=900; };
 
+// bottomNav(tab) — 5-delt hovednavigasjon (Hjem/Kalkyle/Dokumentasjon/
+// Makker/Mer, se index.html #bottomBar). "Hjem" og "Kalkyle" er midlertidige
+// bruer til dagens Oversikt-visning til egne skjermer bygges (senere steg i
+// mobil-redesignet) — ruting er lagt til nå, kontrollert ved siden av det
+// gamle, uten å fjerne noe eksisterende ennå.
 window.bottomNav=function(tab){
   // Oppdater active-state
   document.querySelectorAll('.bottom-bar-tab').forEach(function(btn){
     btn.classList.toggle('active', btn.dataset.tab===tab);
   });
+
+  if(tab==='mer'){
+    openMerSheet();
+    return;
+  }
   closeMerSheet();
 
-  if(tab==='oversikt'){
+  if(tab==='hjem'){
     sidebarNav('kalkyle');
     window.scrollTo({top:0,behavior:'smooth'});
-  } else if(tab==='prosjekter'){
+  } else if(tab==='kalkyle'){
     sidebarNav('kalkyle');
     var el=document.getElementById('projectList');
     if(el) el.scrollIntoView({behavior:'smooth'});
-  } else if(tab==='kunder'){
-    sidebarNav('kalkyle');
-    var el=document.getElementById('customerList');
-    if(el) el.scrollIntoView({behavior:'smooth'});
-  } else if(tab==='kalkulator'){
+  } else if(tab==='dokumentasjon'){
+    sidebarNav('dokumentasjon');
+  } else if(tab==='makker'){
     sidebarNav('makker');
   }
 };
