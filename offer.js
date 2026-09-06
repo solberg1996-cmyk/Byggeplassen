@@ -322,28 +322,6 @@
       renderOfferPreview();
     };
 
-    window.downloadOfferPDF=function(){
-      const p=getProject(currentProjectId); if(!p) return;
-      const doc=document.getElementById('offerPreviewDoc'); if(!doc) return;
-      const co=state.company||{};
-      const color=co.color||'#2e75b6';
-      var css=getOfferCSS(color);
-      var html='<!DOCTYPE html><html lang="no"><head><meta charset="UTF-8"><title>Tilbud</title><style>'+css
-        +'body{padding:30px 40px}@media print{.no-print{display:none!important}}'
-        +'</style></head><body>'
-        +doc.innerHTML+'</body></html>';
-      var blob=new Blob([html],{type:'text/html'});
-      var url=URL.createObjectURL(blob);
-      var name=(p.name||'prosjekt').replace(/[^\wæøåÆØÅ0-9-]/g,'_');
-      var a=document.createElement('a');
-      a.href=url;
-      a.download='Tilbud_'+name+'.html';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(function(){URL.revokeObjectURL(url);},30000);
-    };
-
     window.sendOfferNow=function(){
       const p=getProject(currentProjectId); if(!p) return;
       const cust=getCustomer(p.customerId);

@@ -62,6 +62,7 @@
       document.querySelector('.app').style.display='none';
       document.getElementById('makkView').style.display='none';
       document.getElementById('befaringView').style.display='none';
+      document.getElementById('docsView').style.display='none';
       // Update active state
       document.querySelectorAll('.sidebar-item[data-view]').forEach(function(btn){
         btn.classList.toggle('active',btn.dataset.view===view);
@@ -76,6 +77,9 @@
         renderMakkerView();
       } else if(view==='befaring'){
         document.getElementById('befaringView').style.display='flex';
+      } else if(view==='dokumentasjon'){
+        document.getElementById('docsView').style.display='block';
+        openDocsView();
       }
     };
 

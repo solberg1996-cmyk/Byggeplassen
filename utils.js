@@ -91,7 +91,7 @@
         state.projects.forEach(pr=>{ if(pr.extras && pr.extras.subcontractor>0 && !pr.extras.subcontractors){ pr.extras.subcontractors=[{id:uid(),trade:'Underentreprenør',amount:pr.extras.subcontractor}]; } pr.extras.subcontractors=pr.extras.subcontractors||[]; });
         }
       }catch(e){}
-      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',manualPriceCatalog:[],favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},laborRates:{},calcRecipes:{},materialPackages:[],offerTemplate:defaultOfferTemplate(),seenUpdateVersion:''};
+      return {customers:[],projects:[],settings:{...defaultSettings},priceCatalog:[],priceFileName:'',manualPriceCatalog:[],favoriteCatalogIds:[],recentCatalogIds:[],userTemplates:[],calcRates:{},laborRates:{},calcRecipes:{},materialPackages:[],offerTemplate:defaultOfferTemplate(),seenUpdateVersion:'',company:{...defaultCompany}};
     }
 
     let state = loadState();

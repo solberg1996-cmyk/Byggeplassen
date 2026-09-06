@@ -90,6 +90,10 @@
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       line-height:1.55;
+      /* Uten dette drar iOS Safaris elastiske "rubber-band"-sprett forbi
+         listeslutt canvaset lenger enn den faktisk faste bunnmenyen følger
+         med — da glipper man et par frames der man ser gjennom den. */
+      overscroll-behavior-y:contain;
     }
 
     /* Subtle grain texture on body */
@@ -259,7 +263,8 @@
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
       display:flex;align-items:flex-end;justify-content:center;
-      padding:16px;z-index:50;
+      padding:16px;z-index:1000; /* over alle topp-nivå-visninger (z-index:50), som ellers
+        vinner stacking-uavgjort mot #modalHost fordi de kommer senere i DOM-en */
     }
     .modal{
       width:100%;max-width:680px;
@@ -623,7 +628,20 @@
     .calc-mat-table .mat-name-input{width:100%;min-width:140px;cursor:pointer}
     .calc-mat-table .mat-num-input{width:58px;text-align:right}
     .calc-mat-table .mat-unit-select{width:62px}
+    /* Kolonne-justering — flyttet hit fra inline stiler i app.js sin
+       rad-mal, slik at mobil-overrideet lenger ned kan omdefinere layouten
+       uten å måtte kjempe mot inline-stiler (som alltid vinner over klasser). */
+    .calc-mat-table .cmt-qty,.calc-mat-table .cmt-unit,.calc-mat-table .cmt-waste,.calc-mat-table .cmt-markup{text-align:center}
+    .calc-mat-table .cmt-brutto{text-align:center;color:var(--muted);font-size:11px}
+    .calc-mat-table .cmt-cost{text-align:right}
+    .calc-mat-table .cmt-del{text-align:center}
+    .calc-mat-table .mat-num-input--narrow{width:50px}
     .calc-modal-select{width:100%;font-size:13px;border-radius:var(--radius-xs)}
+    /* Materialrad i "Tilpass post"-modalen. Desktop: én rad, 7 faste kolonner
+       (uendret fra før). Mobil-override lenger ned bryter dette om til et
+       stablet 2-kolonners kort — den faste rad-bredden (368px+) overflower
+       enhver telefonskjerm. */
+    .calc-mat-modal-row{display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;border-radius:12px;margin-bottom:5px}
     .calc-mat-table .mat-total{font-family:var(--font-display);font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;min-width:70px}
     .calc-mat-table .mat-delete{padding:5px 8px;font-size:10px;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,.1);border-radius:6px;cursor:pointer;transition:background var(--dur-fast) var(--ease)}
     .calc-mat-table .mat-delete:hover{background:rgba(220,38,38,.1)}
@@ -1154,9 +1172,44 @@
       .op-row-factors{grid-template-columns:1fr 1fr}
       .calc-stat-grid,.calc-totals-grid{grid-template-columns:1fr}
       .calc-price-grid{grid-template-columns:1fr}
-      .calc-mat-table{font-size:11px}
-      .calc-mat-table .mat-num-input{width:48px}
-      .calc-mat-table .mat-unit-select{width:52px}
+      /* Materialtabellen i Kalkulasjon-fanen — 9 faste kolonner (navn, netto,
+         enhet, brutto, pris, svinn%, paslag%, total, slett) klemmes til
+         uleselighet på mobil (tall og prosent kuttes midt i teksten). Bryter
+         om til ett stablet kort per material, samme mønster som
+         "Tilpass post"-modalens .calc-mat-modal-row. Kolonne-plassering
+         styres med nth-child siden radene genereres i fast rekkefølge. */
+      .calc-mat-table{font-size:13px;border:none}
+      .calc-mat-table thead{display:none}
+      .calc-mat-table tbody{display:block}
+      .calc-mat-table tr{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+        padding:12px;
+        margin-bottom:10px;
+        border:1.5px solid var(--line);
+        border-radius:var(--radius-sm);
+        background:var(--card);
+      }
+      .calc-mat-table tbody tr:last-child{margin-bottom:0}
+      .calc-mat-table td{padding:0;border-bottom:none;vertical-align:top}
+      .calc-mat-table td.cmt-name{grid-column:1/-1}
+      .calc-mat-table td.cmt-brutto{grid-column:1/-1;text-align:left;padding:0 2px}
+      .calc-mat-table td.cmt-brutto::before{content:attr(data-label) ": "}
+      .calc-mat-table td.cmt-del{grid-column:1/-1;display:flex;justify-content:flex-end}
+      .calc-mat-table td.cmt-qty,.calc-mat-table td.cmt-unit,
+      .calc-mat-table td.cmt-cost,.calc-mat-table td.cmt-waste,
+      .calc-mat-table td.cmt-markup,.calc-mat-table td.cmt-total{text-align:left}
+      .calc-mat-table [data-label]:not(.cmt-brutto)::before{
+        content:attr(data-label);
+        display:block;font-size:10px;font-weight:700;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;
+      }
+      .calc-mat-table .mat-name-input{min-width:0;font-size:14px}
+      .calc-mat-table input,.calc-mat-table select{width:100%;min-height:44px;font-size:14px}
+      .calc-mat-table .mat-num-input,.calc-mat-table .mat-num-input--narrow,.calc-mat-table .mat-unit-select{width:100%;text-align:left}
+      .calc-mat-table .mat-total{text-align:right;font-size:16px}
+      .calc-mat-table .mat-delete{min-height:36px;padding:8px 14px;font-size:12px}
       .indirect-panel .row-3{grid-template-columns:1fr 1fr}
       .offer-total-grid,.offer-detail-grid,.offer-bottom-stats{grid-template-columns:1fr}
       .home-inner{padding:28px 20px}
@@ -1247,13 +1300,35 @@
     .mc-header{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px;gap:12px;border-bottom:1px solid var(--line)}
     .mc-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.02em}
     .mc-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-    .mc-close{
+    .mc-header-actions{display:flex;gap:8px;flex-shrink:0}
+    .mc-close,.mc-minimize{
       width:36px;height:36px;display:flex;align-items:center;justify-content:center;
       border:none;background:var(--bg-warm);border-radius:var(--radius-xs);
       font-size:20px;color:var(--muted);cursor:pointer;flex-shrink:0;
       transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
     }
-    .mc-close:hover{background:var(--line);color:var(--text)}
+    .mc-close:hover,.mc-minimize:hover{background:var(--line);color:var(--text)}
+
+    /* Minimert-pill — flytende "gjenåpne"-knapp, vises i stedet for at
+       kalkulatoren lukkes helt. DOM-en til modalen (utfylte felt + resultat)
+       røres ikke mens den er minimert, se minimizeMatCalc()/restoreMatCalc(). */
+    .mc-minimized-pill{
+      position:fixed;right:20px;bottom:24px;z-index:150;
+      display:flex;align-items:center;gap:10px;
+      padding:10px 18px 10px 14px;border:1.5px solid var(--line);border-radius:999px;
+      background:var(--card);box-shadow:var(--shadow-xl);
+      cursor:pointer;text-align:left;
+      animation:mcPillIn .18s var(--ease) both;
+    }
+    .mc-minimized-pill:hover{border-color:var(--accent);background:var(--card-hover)}
+    .mc-minimized-icon{font-size:20px;line-height:1}
+    .mc-minimized-text{display:flex;flex-direction:column;gap:1px}
+    .mc-minimized-label{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text)}
+    .mc-minimized-hint{font-size:11px;color:var(--muted)}
+    @keyframes mcPillIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media (max-width:900px){
+      .mc-minimized-pill{right:12px;bottom:calc(56px + env(safe-area-inset-bottom,0px) + 12px)}
+    }
 
     /* Sidebar + content layout */
     .mc-layout{display:flex;flex:1;overflow:hidden;min-height:0}
@@ -1278,6 +1353,15 @@
     .mc-body{padding:20px 24px 24px;overflow-y:auto;flex:1;min-width:0}
     .mc-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;padding:10px 14px;background:var(--bg-warm);border-radius:var(--radius-xs);border-left:3px solid var(--accent)}
     .mc-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-bottom:20px}
+    /* "Flere valg" — en .tab-section satt inn som ett av feltene i mc-fields-
+       gridet må spenne begge kolonner, og feltene inni den får sitt eget
+       2-kolonners undergrid (samme mønster som selve mc-fields). */
+    .mc-fields > .tab-section{grid-column:1/-1;padding:12px 0 0}
+    .mc-fields > .tab-section .tab-section-heading{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .mc-fields > .tab-section .tab-section-body{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:12px}
+    @media (max-width:600px){
+      .mc-fields > .tab-section .tab-section-body{grid-template-columns:1fr}
+    }
     .mc-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
     .mc-field input[type="number"],.mc-field select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;font-weight:600;background:var(--bg-warm);color:var(--text);transition:border-color var(--dur-normal) var(--ease),background var(--dur-normal) var(--ease)}
     .mc-field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237D99AA' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px}
@@ -1295,6 +1379,20 @@
     .mc-result-item{padding:10px 14px;background:var(--card);border-radius:var(--radius-xs);border:1px solid var(--line)}
     .mc-result-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
     .mc-result-value{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+    /* Kompakt hovedresultat (f.eks. Kledning): store, fremtredende "hva må jeg
+       kjøpe"-linjer øverst, sekundær info under, alle mellomregninger skjult
+       bak «Vis beregningsdetaljer». Egen løsning via customRender, ikke en
+       generell mekanisme i mc-result-grid. */
+    .mc-result-primary-group{margin-bottom:2px}
+    .mc-result-primary{font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--text);line-height:1.35}
+    .mc-result-secondary{font-size:13px;font-weight:600;color:var(--muted);margin-top:4px}
+    .mc-result-details{margin-top:16px}
+    .mc-result-details .tab-section{padding:0}
+    .mc-result-details .tab-section-heading{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+    .mc-result-details .tab-section-body{margin-top:12px}
+    @media (max-width:600px){
+      .mc-result-primary{font-size:19px}
+    }
     .mc-result-unit{font-size:12px;font-weight:600;color:var(--muted)}
 
     @media (max-width:600px){
@@ -1302,27 +1400,46 @@
       .mc-header{padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top, 0px))}
       .mc-title{font-size:16px}
       .mc-subtitle{display:none}
-      .mc-close{width:44px;height:44px;font-size:24px;border-radius:var(--radius-sm)}
-      /* Sidebar becomes horizontal scroll strip on mobile */
+      .mc-close,.mc-minimize{width:44px;height:44px;font-size:24px;border-radius:var(--radius-sm)}
+      /* Kategoriene lå tidligere som ÉN sammenhengende horisontal skrollestripe
+         der gruppe-etikett og knapper fløt i samme rad — så ut som løpende
+         tekst. Nå er hver kategori sin egen tydelige gruppe: etiketten står
+         over, og knappene bryter til ny linje (chips) i stedet for å skrolle
+         sidelengs. Hele nav-området får egen vertikal skroll med maks-høyde
+         slik at "Felt"-delen under fortsatt får plass. */
       .mc-layout{flex-direction:column}
       .mc-nav{
         width:100%;border-right:none;border-bottom:1px solid var(--line);
-        padding:8px 12px;
-        display:flex;gap:12px;overflow-x:auto;
-        -webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
+        padding:12px 16px;
+        display:block;max-height:34vh;overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
       }
-      .mc-nav::-webkit-scrollbar{display:none}
-      .mc-nav-group{margin-bottom:0;display:flex;align-items:center;gap:4px;flex-shrink:0}
-      .mc-nav-label{font-size:9px;padding:0 4px;margin-bottom:0;white-space:nowrap;writing-mode:horizontal-tb}
-      .mc-nav-item{padding:8px 14px;font-size:14px;min-height:44px;white-space:nowrap;border-radius:var(--radius-sm);flex-shrink:0}
+      .mc-nav-group{margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px}
+      .mc-nav-group:last-child{margin-bottom:0}
+      .mc-nav-label{font-size:11px;padding:0;margin-bottom:0;display:block;flex-basis:100%}
+      .mc-nav-item{width:auto;padding:9px 14px;font-size:14px;min-height:44px;white-space:nowrap;border-radius:var(--radius-sm);flex-shrink:0;border:1.5px solid var(--line);background:var(--card)}
+      .mc-nav-item-active{border-color:var(--accent)}
       .mc-body{padding:16px 16px 32px;padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px));-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
       .mc-desc{font-size:12px;margin-bottom:14px;padding:8px 12px}
-      .mc-fields{grid-template-columns:1fr;gap:10px;margin-bottom:12px}
-      .mc-field label{font-size:12px;margin-bottom:6px}
-      .mc-field input[type="number"],.mc-field select{min-height:48px;font-size:16px;padding:12px 14px;border-radius:var(--radius-sm);border-width:2px}
+      /* Feltene var en lang, ensformig vegg av identiske grå bokser —
+         "Areal → Bordbredde → Kledningstype → Bordlengde → Svinn" så alle
+         like viktige ut. Samler dem i ett kort med synlig ramme (skiller
+         skjemaet fra siden), og gjør etikettene mer diskrete slik at selve
+         verdiene blir det øyet fester seg på. */
+      .mc-fields{
+        grid-template-columns:1fr;gap:12px;margin-bottom:14px;
+        background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+        padding:14px;
+      }
+      .mc-field label{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.02em}
+      .mc-field input[type="number"],.mc-field select{min-height:48px;font-size:16px;padding:12px 14px;border-radius:var(--radius-sm);border-width:1.5px;background:var(--bg-warm)}
       .mc-field select{padding-right:40px;background-position:right 14px center}
       .mc-checkbox{font-size:15px;min-height:48px;gap:10px;padding:12px 14px}
       .mc-checkbox input[type="checkbox"]{width:22px;height:22px;min-width:22px}
+      /* Tomt resultat skal se ut som en ventende status, ikke enda en boks
+         i muren — liten og rolig til den faktisk har noe å vise. */
+      .mc-result-empty{padding:14px;border-width:1px}
+      .mc-result-placeholder{font-size:12px}
       .mc-result-filled{padding:14px}
       .mc-result-title{font-size:12px;margin-bottom:10px}
       .mc-result-grid{grid-template-columns:1fr;gap:6px}
@@ -1476,24 +1593,102 @@
       input[type="number"],input[type="text"],select{font-size:16px}
       .tab-btn{min-height:44px}
 
-      /* Makker/befaring views — fjern sidebar offset */
-      #makkView,#befaringView{left:0!important;bottom:calc(56px + env(safe-area-inset-bottom,0px))!important}
+      /* Makker/befaring/dokumentasjon views — fjern sidebar offset */
+      #makkView,#befaringView,#docsView{left:0!important;bottom:calc(56px + env(safe-area-inset-bottom,0px))!important}
+      #docsView>div{padding:20px 16px calc(80px + env(safe-area-inset-bottom,0px))!important}
+      #docsProjectListBody .card,#docsProjectDetailBody .card{transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
+      #docsProjectListBody .card:active{background:var(--card-hover);transform:scale(.99)}
 
       /* Skjul inline tab-bar i prosjektvisning (erstattes av project-bottom-bar) */
       #projectView .tab-bar{display:none}
 
-      /* Kompakte oversiktslister */
-      .ov-list .item{padding:10px 14px}
+      /* Oversiktslister (prosjekter/kunder) — på desktop står infoblokk og
+         handlinger (Åpne/Rediger/Slett) side om side i én rad. På smal
+         mobilskjerm klemte det statusvelgeren så hardt at teksten ble
+         kuttet midt i ordet ("Pågår" → "På"), og knappene havnet i en trang
+         stabel til høyre i stedet for å være tydelig trykkbare. Stables i
+         stedet: info øverst i full bredde, handlinger som en fullbredde
+         knapperad under — hver rad blir et tydelig, lett-å-treffe kort. */
+      .ov-list{gap:8px}
+      .ov-list .item{
+        flex-direction:column;
+        align-items:stretch;
+        gap:10px;
+        padding:14px 16px;
+        transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease);
+      }
+      .ov-list .item:active{background:var(--card-hover);transform:scale(.99)}
+      .ov-list .item h4{font-size:15px}
+      .ov-list .item .inline-actions{width:100%}
+      .ov-list .item .inline-actions .ov-btn{flex:1;min-height:44px}
+      .ov-item-meta{flex-wrap:wrap;row-gap:8px}
+      /* Selects arver width:100% globalt (se input/select/textarea-regelen),
+         som her fikk statusvelgeren til å sluke hele radbredden og dytte
+         prisen ned på egen linje. Størrelses den heller etter innhold. */
+      .ov-status-select{width:auto;flex:0 0 auto;min-width:0}
+
+      /* Prosjekt-info-pillene (status/oppstart/kunde) øverst i prosjektvisning
+         — "Kunde: <langt navn>" kunne bli en kjempelang pille som visuelt
+         dominerte raden. Trunkeres i stedet med ellipsis innenfor halve
+         kortbredden, slik pillene blir jevne igjen. */
+      #projectTopPills{gap:6px}
+      #projectTopPills .pill{
+        max-width:calc(50% - 3px);
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        display:inline-block;
+      }
 
       /* Prosjekt-bottom-tab med ikon+tekst */
       .project-bottom-tab{flex-direction:column;gap:2px;font-size:10px}
       .project-bottom-tab svg{width:18px;height:18px}
+
+      /* Dokumentasjon-galleri — større, mer trykkvennlig kort. Tommel opp i
+         størrelse (lettere å kjenne igjen bildet på en solfylt byggeplass),
+         luftigere padding, og "Slett" som en tydelig 44px-knapp i stedet
+         for en liten pille man må bomtreffe. */
+      .pf-card{gap:12px;padding:12px;margin-bottom:10px;border-radius:var(--radius-sm)}
+      .pf-thumb{width:72px;height:72px;border-radius:10px}
+      .pf-name{font-size:14px}
+      .pf-cat-select,.pf-comment-input{font-size:14px;padding:9px 10px;min-height:44px}
+      .pf-delete-btn{padding:8px 14px;font-size:12px;min-height:36px}
+      .pf-retry-actions{flex-direction:column;width:100%}
+      .pf-retry-actions .btn{width:100%}
+
+      /* Kategori-filterpiller (Alle/Før arbeid/Under arbeid/...) — la dem
+         beholde naturlig bredde og rulle vannrett i stedet for å bli en
+         "vegg" av knapper som bryter usymmetrisk. */
+      #pfCategoryFilter{
+        scroll-snap-type:x proximity;
+        -webkit-overflow-scrolling:touch;
+        margin:0 -16px 12px;padding-left:16px;padding-right:16px;
+      }
+      #pfCategoryFilter .btn{scroll-snap-align:start;flex-shrink:0}
 
       /* Tilbuds-2-kolonne → 1 kolonne */
       .offer-cols{grid-template-columns:1fr!important}
 
       /* Topbar actions wrapping */
       .topbar .actions{flex-wrap:nowrap}
+
+      /* Materialrad i "Tilpass post" — fra én overflowing 7-kolonners rad
+         til et stablet 2-kolonners kort. Navnet får full bredde øverst,
+         resten pares opp under. Mikro-etiketter (data-label) vises kun her,
+         siden feltene på desktop allerede er selvforklarende via kolonne-
+         overskriftene "Ant. • Enhet • Innpris • Svinn% • Påslag%" over lista. */
+      .calc-mat-modal-row{
+        grid-template-columns:1fr 1fr;
+        grid-template-areas:"name name" "qty unit" "cost waste" "markup del";
+        gap:8px;
+      }
+      .calc-mat-modal-row .cmr-name{grid-area:name}
+      .calc-mat-modal-row .cmr-qty{grid-area:qty}
+      .calc-mat-modal-row .cmr-unit{grid-area:unit}
+      .calc-mat-modal-row .cmr-cost{grid-area:cost}
+      .calc-mat-modal-row .cmr-waste{grid-area:waste}
+      .calc-mat-modal-row .cmr-markup{grid-area:markup}
+      .calc-mat-modal-row .cmr-del{grid-area:del;justify-self:end;align-self:center;width:auto;padding:6px 14px}
+      .calc-mat-modal-row [data-label]{display:flex;flex-direction:column;gap:2px}
+      .calc-mat-modal-row [data-label]::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
     }
 
     /* ══════════════════════════════════════════════════════
@@ -1918,6 +2113,34 @@
     }
 
     /* ══════════════════════════════════════════════════════
+       DOKUMENTASJON — bildegalleri (projectFiles.js pfRenderQueue)
+       Verdiene her er en 1:1-videreføring av de gamle inline-stilene i
+       projectFiles.js — flyttet til klasser slik at mobil-overrideet
+       lenger ned kan endre layouten uten å måtte kjempe mot inline-stiler
+       (som alltid vinner over klasseregler). Desktop skal se helt likt ut.
+       ══════════════════════════════════════════════════════ */
+    .pf-card{margin-bottom:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+    .pf-card--status{align-items:center}
+    .pf-thumb{
+      width:56px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0;
+      background:var(--bg-warm);display:flex;align-items:center;justify-content:center;
+      font-size:11px;text-align:center;color:var(--muted);cursor:pointer;
+    }
+    .pf-thumb img{width:100%;height:100%;object-fit:cover}
+    .pf-thumb-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;padding:2px}
+    .pf-thumb--status{font-size:20px;cursor:default}
+    .pf-body{flex:1;min-width:0}
+    .pf-name{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .pf-name--plain{margin-bottom:0}
+    .pf-name span{cursor:pointer;text-decoration:underline}
+    .pf-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+    .pf-cat-select{font-size:12px;padding:4px 6px}
+    .pf-comment-input{flex:1;min-width:120px;font-size:12px;padding:4px 6px}
+    .pf-footer{display:flex;justify-content:space-between;align-items:center}
+    .pf-delete-btn{padding:3px 8px;font-size:11px}
+    .pf-retry-actions{display:flex;gap:6px}
+
+    /* ══════════════════════════════════════════════════════
        RESPONSIVE ADDITIONS
        ══════════════════════════════════════════════════════ */
     @media (max-width:900px){
@@ -1947,6 +2170,10 @@
       .ov-ring-value{font-size:13px}
       .ov-stat--feature{flex-direction:row;align-items:center}
       .ov-stat--feature .ov-stat-ring{order:-1}
+      /* Desktopregelen over setter width:100% for kolonne-layout — nullstill
+         den her, ellers tar ikon+etikett hele radbredden og dytter ringen/
+         hint-teksten utenfor skjermen. */
+      .ov-stat--feature .ov-stat-top{width:auto}
       .ov-header-actions{flex-direction:column;align-items:stretch}
       .ov-panel{padding:18px}
       .ov-list{max-height:320px}
@@ -1964,6 +2191,11 @@
       z-index:900;
       padding-bottom:env(safe-area-inset-bottom,0px);
       height:calc(56px + env(safe-area-inset-bottom,0px));
+      /* Uten egen compositing-layer flimrer/blir position:fixed midlertidig
+         gjennomsiktig på iOS Safari under momentum-scroll (kjent WebKit-bug). */
+      transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
+      will-change:transform;
+      backface-visibility:hidden;-webkit-backface-visibility:hidden;
     }
     .bottom-bar-tab{
       flex:1;display:flex;flex-direction:column;
@@ -2031,6 +2263,9 @@
       z-index:900;
       padding-bottom:env(safe-area-inset-bottom,0px);
       height:calc(52px + env(safe-area-inset-bottom,0px));
+      transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
+      will-change:transform;
+      backface-visibility:hidden;-webkit-backface-visibility:hidden;
     }
     @media (min-width:901px){.project-bottom-bar{display:none!important}}
     .project-bottom-tab{
