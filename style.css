@@ -1289,12 +1289,14 @@
     @media (max-width:640px){.cp-layout{grid-template-columns:1fr}.cp-wheel-wrap{margin:0 auto}}
 
     /* ── Material Calculator Modal ─────────────────────── */
-    .mc-backdrop{position:fixed;inset:0;background:rgba(28,25,23,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:100}
+    /* Ligger over .modal-backdrop (z-index:1000) slik at kalkulatoren kan åpnes
+       oppå «Tilpass post» for å hente et materialbehov uten å lukke posten. */
+    .mc-backdrop{position:fixed;inset:0;background:rgba(28,25,23,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:1100}
     .mc-panel{
       position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
       width:calc(100% - 32px);max-width:820px;max-height:calc(100vh - 48px);
       background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-      box-shadow:var(--shadow-xl);z-index:101;
+      box-shadow:var(--shadow-xl);z-index:1101;
       display:flex;flex-direction:column;overflow:hidden;
     }
     .mc-header{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px;gap:12px;border-bottom:1px solid var(--line)}
@@ -1313,7 +1315,7 @@
        kalkulatoren lukkes helt. DOM-en til modalen (utfylte felt + resultat)
        røres ikke mens den er minimert, se minimizeMatCalc()/restoreMatCalc(). */
     .mc-minimized-pill{
-      position:fixed;right:20px;bottom:24px;z-index:150;
+      position:fixed;right:20px;bottom:24px;z-index:1150;
       display:flex;align-items:center;gap:10px;
       padding:10px 18px 10px 14px;border:1.5px solid var(--line);border-radius:999px;
       background:var(--card);box-shadow:var(--shadow-xl);
