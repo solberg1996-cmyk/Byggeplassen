@@ -387,6 +387,19 @@
       showMatAutocomplete(matId,document.querySelector('.calcMatName[data-mat-id="'+matId+'"]')?.value||'');
     };
 
+    // Stjerne-toggle på prissøk-treffene i «Tilpass post» — favoritten lagres
+    // på produktnavnet, samme nøkkel som «★ Favoritter»-dropdownen leser.
+    window.toggleCalcModalFavorite=function(itemId){
+      const item=getCatalogItem(itemId); if(!item) return;
+      const name=item.productName||item.name;
+      if(isCalcFavorite(name)){
+        removeCalcFavorite(name);
+      } else {
+        addCalcFavorite(name,item.unit||'stk',item.userPrice||0,item.itemNo||'');
+      }
+      rerenderCalcModal();
+    };
+
     window.toggleFavDropdown=function(dropdownId){
       const dd=document.getElementById(dropdownId);
       if(!dd) return;
@@ -1395,14 +1408,21 @@
       const searchResults=window._cpmSearch ? searchPriceCatalog(window._cpmSearch) : [];
       const searchHtml = window._cpmSearch ? (
         searchResults.length
-          ? searchResults.map(item=>`
+          ? searchResults.map(item=>{
+            const favName=item.productName||item.name;
+            const fav=isCalcFavorite(favName);
+            return `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
               <div>
-                <div style="font-weight:700;font-size:13px">${escapeHtml(item.productName||item.name)}</div>
+                <div style="font-weight:700;font-size:13px">${escapeHtml(favName)}</div>
                 <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
               </div>
-              <button class="btn small primary" onclick="addFromCatalogToCalcModal('${escapeHtml(item.id)}')">+ Legg til</button>
-            </div>`).join('')
+              <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                <button onclick="toggleCalcModalFavorite('${escapeHtml(item.id)}')" title="${fav?'Fjern favoritt':'Lagre som favoritt'}" aria-label="${fav?'Fjern favoritt':'Lagre som favoritt'}" style="border:none;background:none;cursor:pointer;font-size:18px;line-height:1;padding:6px;color:${fav?'var(--accent)':'var(--muted)'}">${fav?'★':'☆'}</button>
+                <button class="btn small primary" onclick="addFromCatalogToCalcModal('${escapeHtml(item.id)}')">+ Legg til</button>
+              </div>
+            </div>`;
+          }).join('')
           : '<div class="empty" style="padding:10px">Ingen treff.</div>'
       ) : '';
 
