@@ -1428,7 +1428,10 @@
       const html=`
         <div class="section-head">
           <div class="section-title"> Tilpass post</div>
-          <button class="btn small secondary" onclick="closeModal()">Lukk</button>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn small soft" onclick="openMatCalc()">🧮 Materialkalkulator</button>
+            <button class="btn small secondary" onclick="closeModal()">Lukk</button>
+          </div>
         </div>
         ${laborGrps?`
         <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Arbeid per gruppe</div>
