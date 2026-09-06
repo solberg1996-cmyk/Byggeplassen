@@ -566,7 +566,10 @@
         <div class="mc-title">Materialkalkulator</div>
         <div class="mc-subtitle">Raskt hjelpeverktøy for materialberegninger</div>
       </div>
-      <button class="mc-close" onclick="closeMatCalc()" aria-label="Lukk">&times;</button>
+      <div class="mc-header-actions">
+        <button class="mc-minimize" onclick="minimizeMatCalc()" aria-label="Minimer (behold utfylte verdier)">&minus;</button>
+        <button class="mc-close" onclick="closeMatCalc()" aria-label="Lukk">&times;</button>
+      </div>
     </div>
     <div class="mc-layout">
       <nav id="matCalcNav" class="mc-nav"></nav>
@@ -574,6 +577,17 @@
     </div>
   </div>
 </div>
+
+<!-- Minimert Materialkalkulator — vises når kalkulatoren er minimert i stedet
+     for lukket, slik at utfylte felt og resultat ligger urørt i DOM-en til
+     brukeren åpner den igjen (f.eks. for å hente resultatet inn i et tilbud). -->
+<button id="matCalcMinimizedPill" class="mc-minimized-pill hidden" onclick="restoreMatCalc()" aria-label="Åpne materialkalkulator igjen">
+  <span class="mc-minimized-icon">🧮</span>
+  <span class="mc-minimized-text">
+    <span class="mc-minimized-label" id="matCalcMinimizedLabel">Materialkalkulator</span>
+    <span class="mc-minimized-hint">Fortsett der du slapp</span>
+  </span>
+</button>
 
 </body>
 </html>

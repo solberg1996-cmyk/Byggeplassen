@@ -2026,18 +2026,60 @@ var _matCalcCategories = [
   { id: 'verifikasjon', label: 'Verifikasjon', items: ['festemidler'] }
 ];
 
+// Skilles fra lukking: minimering skjuler kun modal-panelet, men rører aldri
+// DOM-en inni det (ingen renderMatCalcNav()/renderMatCalcBody()-kall), slik at
+// utfylte feltverdier og beregnet resultat ligger urørt til brukeren åpner
+// kalkulatoren igjen — f.eks. for å hente et resultat inn i et tilbud og så
+// fortsette der man slapp. Lukking (X) er fortsatt et reelt "start på nytt".
+var _matCalcMinimized = false;
+
 function openMatCalc() {
   var el = $('#matCalcModal');
-  if (el) {
-    el.classList.remove('hidden');
-    renderMatCalcNav();
-    renderMatCalcBody();
+  if (!el) return;
+  if (_matCalcMinimized) {
+    restoreMatCalc();
+    return;
   }
+  el.classList.remove('hidden');
+  renderMatCalcNav();
+  renderMatCalcBody();
 }
 
 function closeMatCalc() {
   var el = $('#matCalcModal');
   if (el) el.classList.add('hidden');
+  _matCalcMinimized = false;
+  hideMatCalcMinimizedPill();
+}
+
+function minimizeMatCalc() {
+  var el = $('#matCalcModal');
+  if (el) el.classList.add('hidden');
+  _matCalcMinimized = true;
+  showMatCalcMinimizedPill();
+}
+
+function restoreMatCalc() {
+  var el = $('#matCalcModal');
+  if (el) el.classList.remove('hidden');
+  _matCalcMinimized = false;
+  hideMatCalcMinimizedPill();
+}
+
+function showMatCalcMinimizedPill() {
+  var pill = $('#matCalcMinimizedPill');
+  if (!pill) return;
+  var label = $('#matCalcMinimizedLabel');
+  if (label) {
+    var def = matCalcDefs[_matCalcCurrent];
+    label.textContent = def ? def.label : 'Materialkalkulator';
+  }
+  pill.classList.remove('hidden');
+}
+
+function hideMatCalcMinimizedPill() {
+  var pill = $('#matCalcMinimizedPill');
+  if (pill) pill.classList.add('hidden');
 }
 
 function switchMatCalc(id) {
