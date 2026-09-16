@@ -1567,6 +1567,15 @@
       // Tilbudsredigeringen lever på prosjektet så den lagres/synkes og ikke
       // lekker mellom prosjekter. _offerState peker rett inn i prosjektet.
       if(!p.offerState) p.offerState=defaultOfferState();
+      else{
+        // Migrering: eldre prosjekters offerState kan mangle felter som er
+        // lagt til siden den ble lagret (f.eks. sectionTitles) — fyll inn
+        // manglende topp-nivå-felter fra default i stedet for å krasje.
+        var osDefaults=defaultOfferState();
+        Object.keys(osDefaults).forEach(function(key){
+          if(p.offerState[key]===undefined) p.offerState[key]=osDefaults[key];
+        });
+      }
       // Migrering: eldre prosjekter mangler skjultefeil-avkrysningen (var
       // tidligere alltid med, uten avhukingsmulighet) — behold "med" som default.
       if(p.offerState.ikkemedregnet.skjultefeil===undefined) p.offerState.ikkemedregnet.skjultefeil=true;
