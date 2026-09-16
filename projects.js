@@ -48,14 +48,22 @@
       const tabBar=`<div class="tab-bar">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}<button class="tab-btn" onclick="openHandleliste()" style="margin-left:auto;font-size:11px;opacity:0.8">Handleliste</button></div>`;
 
       let panel='';
-      if(currentTab==='info')      panel=renderTabInfo(p);
-      if(currentTab==='materials') panel=renderTabMaterials(p);
-       if(currentTab==='offer')     panel=renderTabOffer(p);
-      if(currentTab==='preview'){
-        $('#stepsContainer').innerHTML=tabBar+'<div class="tab-panel" style="padding:0">'+renderTabPreview(p)+'</div>';
-        bindProjectEvents();
-        initOfferPreviewTab(p);
-        return;
+      try{
+        if(currentTab==='info')      panel=renderTabInfo(p);
+        if(currentTab==='materials') panel=renderTabMaterials(p);
+        if(currentTab==='offer')     panel=renderTabOffer(p);
+        if(currentTab==='preview'){
+          $('#stepsContainer').innerHTML=tabBar+'<div class="tab-panel" style="padding:0">'+renderTabPreview(p)+'</div>';
+          bindProjectEvents();
+          initOfferPreviewTab(p);
+          return;
+        }
+      }catch(err){
+        // Eldre prosjekter kan ha datastrukturer som ikke matcher det gjeldende
+        // rendering-koden forventer — vis feilen i stedet for en blank fane,
+        // så den faktiske årsaken kan spores og rettes.
+        console.error('Feil ved rendering av fane "'+currentTab+'" (prosjekt '+p.id+')',err);
+        panel=`<div class="empty" style="color:var(--red)">Klarte ikke å vise denne fanen på grunn av en feil i prosjektdataene.<br>Feilmelding: ${escapeHtml(err.message)}</div>`;
       }
 
       $('#stepsContainer').innerHTML=tabBar+`<div class="tab-panel">${panel}</div>`;
