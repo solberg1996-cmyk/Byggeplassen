@@ -1398,7 +1398,7 @@
             ${pctOpts.map(v=>`<option value="${v}" ${(m.waste||0)==v?'selected':''}>${v}%</option>`).join('')}
           </select></div>
           <div class="cmr-markup" data-label="Påslag%"><select title="Påslag %" class="calc-modal-select" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
-            ${pctOpts.map(v=>`<option value="${v}" ${(m.markup||20)==v?'selected':''}>${v}%</option>`).join('')}
+            ${pctOpts.map(v=>`<option value="${v}" ${(m.markup!=null?m.markup:20)==v?'selected':''}>${v}%</option>`).join('')}
           </select></div>
           <button class="cmr-del" style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
         </div>`;
@@ -2120,7 +2120,7 @@
                     <input type="number" class="calcMatWaste mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
                   <td class="cmt-markup" data-label="Påslag%">
-                    <input type="number" class="calcMatMarkup mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.markup||calcMarkup}" step="1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
+                    <input type="number" class="calcMatMarkup mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.markup!=null?m.markup:calcMarkup}" step="1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
                   </td>
                   <td class="mat-total cmt-total" data-label="Total">
                     <span class="calcMatRowTotal" data-mat-id="${m.matId}">${currency(calcMatRowTotal(m))}</span>
@@ -2416,7 +2416,7 @@
       let matCost=0, matSaleEx=0;
       mats.forEach(m=>{
         const qty=Number(m.qty)||1, cost=Number(m.cost)||0;
-        const waste=Number(m.waste)||0, markup=Number(m.markup)||20;
+        const waste=Number(m.waste)||0, markup=m.markup!=null?Number(m.markup):20;
         const withWaste=qty*cost*(1+waste/100);
         matCost+=withWaste;
         matSaleEx+=withWaste*(1+markup/100);
