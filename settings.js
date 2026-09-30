@@ -402,13 +402,13 @@
     // første init, se applyOfferTemplateDefaults i app.js). Å endre malen her
     // påvirker aldri prosjekter som allerede finnes.
     var OFFER_TEMPLATE_LABELS={
-      innledning:{hint:'Setningsmal — {{beskrivelse}} erstattes med prosjektets korte beskrivelse (skrives inn per tilbud).'},
+      innledning:{hint:'Setningsmal — {{beskrivelse}} erstattes med prosjektets korte beskrivelse (skrives inn per prisoverslag).'},
       grunnlag:{hint:'Ren tekst, ingen plassholdere.'},
-      arbeidsomfang:{structured:true,hint:'Generert fra tilbudsposter/avkrysninger — kun tittel og rekkefølge kan endres her.'},
+      arbeidsomfang:{structured:true,hint:'Generert fra poster/avkrysninger — kun tittel og rekkefølge kan endres her.'},
       ikkemedregnet:{structured:true,hint:'Generert fra avkrysninger — kun tittel og rekkefølge kan endres her.'},
       prisogbetaling:{hint:'{{betalingsform}}, {{timepris}} og {{material_paslag}} fylles inn automatisk.'},
       fremdrift:{hint:'{{oppstart}} fylles inn automatisk fra prosjektets planlagte oppstart.'},
-      forbehold:{hint:'{{gyldighet}} fylles inn automatisk fra tilbudets gyldighet.'}
+      forbehold:{hint:'{{gyldighet}} fylles inn automatisk fra prisoverslagets gyldighet.'}
     };
 
     function getOfferTemplate(){
@@ -469,10 +469,10 @@
       }).join('');
 
       host.innerHTML=
-        '<div class="footer-note" style="margin-bottom:10px">Standarden for NYE tilbud. Klikk en seksjon for å redigere teksten. Endringer her påvirker ikke prosjekter du allerede har laget.</div>'
+        '<div class="footer-note" style="margin-bottom:10px">Standarden for NYE prisoverslag. Klikk en seksjon for å redigere teksten. Endringer her påvirker ikke prosjekter du allerede har laget.</div>'
         +sectionsHtml
         +'<div class="section-head" style="margin-top:10px"><div class="section-title" style="font-size:13px">Egne faste seksjoner</div></div>'
-        +'<div class="footer-note" style="margin-bottom:8px">Legges til på slutten av alle nye tilbud (som «Egne seksjoner» i tilbudsfanen).</div>'
+        +'<div class="footer-note" style="margin-bottom:8px">Legges til på slutten av alle nye prisoverslag (som «Egne seksjoner» i Forhåndsvisning).</div>'
         +customHtml
         +'<div class="toolbar" style="margin-top:4px;margin-bottom:14px">'
           +'<button class="btn small soft" onclick="offerTplCustomAdd()">+ Legg til seksjon</button>'
@@ -492,7 +492,7 @@
       var tpl=getOfferTemplate();
       var def=defaultOfferTemplate();
       host.innerHTML=
-        '<div class="footer-note" style="margin-bottom:10px">Åpnes i e-postprogrammet ditt når du trykker «Send tilbud». {{prosjekt}}, {{firma}} og {{kunde}} erstattes automatisk.</div>'
+        '<div class="footer-note" style="margin-bottom:10px">Åpnes i e-postprogrammet ditt når du trykker «Send prisoverslag». {{prosjekt}}, {{firma}} og {{kunde}} erstattes automatisk.</div>'
         +'<label style="font-size:11px;color:var(--muted);margin-bottom:2px;display:block">Emne</label>'
         +'<input value="'+escapeAttr(tpl.emailSubject!=null?tpl.emailSubject:def.emailSubject)+'" onchange="emailTplUpd(\'emailSubject\',this.value)" />'
         +'<label style="font-size:11px;color:var(--muted);margin:10px 0 2px;display:block">Tekst</label>'
@@ -557,7 +557,7 @@
     };
 
     window.offerTplReset=function(){
-      if(!confirm('Tilbakestille tilbudsmalen til standardversjonen? Dette påvirker ikke prosjekter du allerede har laget.')) return;
+      if(!confirm('Tilbakestille malen for prisoverslag til standardversjonen? Dette påvirker ikke prosjekter du allerede har laget.')) return;
       state.offerTemplate=defaultOfferTemplate();
       saveState(); renderOfferTemplateManager();
     };

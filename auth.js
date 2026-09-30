@@ -129,6 +129,7 @@
           state.offerTemplate=p.offerTemplate||defaultOfferTemplate();
           state.seenUpdateVersion=p.seenUpdateVersion||'';
           state.company=Object.assign({},defaultCompany,p.company||{});
+          migrateOfferTerminology(state);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
       } catch(e){ console.log('Cloud load:', e); }

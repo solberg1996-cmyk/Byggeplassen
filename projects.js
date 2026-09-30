@@ -38,8 +38,8 @@
       const tabs=[
         {id:'info',      label:'Info',           short:'Info'},
         {id:'materials', label:'Kalkulasjon',    short:'Kalkyle'},
-        {id:'offer',     label:'Tilbud',         short:'Tilbud'},
-        {id:'preview',   label:'Tilbudsvisning', short:'Visning'},
+        {id:'offer',     label:'Prisoverslag',    short:'Overslag'},
+        {id:'preview',   label:'Forhåndsvisning', short:'Visning'},
       ];
       const tabBar=`<nav class="tab-bar" aria-label="Prosjektfaner">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" ${currentTab===t.id?'aria-current="page"':''} onclick="switchTab('${t.id}')"><span class="tab-label-long">${t.label}</span><span class="tab-label-short">${t.short}</span></button>`).join('')}</nav>`;
 
@@ -71,7 +71,7 @@
       if(id==='offer'){
         const p=getProject(state.currentProjectId);
         if(p&&p.materials&&p.materials.length>0){
-          alert('Du kan ikke gå til tilbud ennå. Du har fortsatt materialer i materiallisten. Flytt dem til tilbudsposter først.');
+          alert('Du kan ikke gå til prisoverslaget ennå. Du har fortsatt materialer i materiallisten. Flytt dem til poster først.');
           return;
         }
       }
@@ -108,7 +108,7 @@
       }
       const ohInput=document.getElementById('offerTotalHours');
       if(ohInput) ohInput.placeholder=(c.totalHours||0)+'';
-      const summaryModeNote=$('#summaryModeNote'); if(summaryModeNote) summaryModeNote.textContent=(p.offerPosts&&p.offerPosts.length)?'Viser sum av tilbudsposter':(p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva');
+      const summaryModeNote=$('#summaryModeNote'); if(summaryModeNote) summaryModeNote.textContent=(p.offerPosts&&p.offerPosts.length)?'Viser sum av poster':(p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva');
     }
 
     function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
@@ -162,7 +162,7 @@
               <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
             </div>
             <div class="row" style="margin-top:12px">
-              <div><label>Gyldighet tilbud (dager)</label><input id="oValidity" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /></div>
+              <div><label>Gyldighet (dager)</label><input id="oValidity" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /></div>
             </div>
             <div class="footer-note" style="margin-top:8px">Timepris og satser brukes i alle kalkyler for dette prosjektet.</div>
           </div>
@@ -372,7 +372,7 @@
       }
       // Send to offer button
       html+='<div style="margin-top:8px;display:flex;gap:6px">'
-        +'<button class="btn small primary" style="flex:1;background:var(--accent)" onclick="sendOperationToOffer(\''+opId+'\')">Send til tilbud</button>'
+        +'<button class="btn small primary" style="flex:1;background:var(--accent)" onclick="sendOperationToOffer(\''+opId+'\')">Send til prisoverslag</button>'
         +'</div>';
       return html;
     }
@@ -436,7 +436,7 @@
       op.sentToOffer=true;
 
       // Ask user if they want to delete from active operations
-      var shouldRemove=confirm('Operasjonen sendt til tilbud!\n\n'+snapshotMats.length+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne operasjonen fra aktiv kalkulasjon?');
+      var shouldRemove=confirm('Operasjonen sendt til prisoverslag!\n\n'+snapshotMats.length+' materiallinjer lagt til som post.\n\nØnsker du å fjerne operasjonen fra aktiv kalkulasjon?');
       if(shouldRemove){
         p.operations=p.operations.filter(function(o){return o.id!==opId;});
       }
@@ -490,7 +490,7 @@
         +'</div>'
         +'<div style="margin-top:12px;display:flex;gap:8px">'
           +'<button class="btn small primary" onclick="applyCalcProjectHours()">Bruk '+r.totalTimer+'t som prosjekttimer</button>'
-          +'<button class="btn small soft" onclick="sendCalcProjectToOffer()">Send til tilbud</button>'
+          +'<button class="btn small soft" onclick="sendCalcProjectToOffer()">Send til prisoverslag</button>'
         +'</div>'
       +'</div>';
     }
@@ -567,16 +567,16 @@
       var result=window.calcProject(p);
       showModal(
         '<div class="section-head">'
-        +'<div class="section-title">Send kalkulasjon til tilbud</div>'
+        +'<div class="section-title">Send kalkulasjon til prisoverslag</div>'
         +'<button class="btn small secondary" onclick="closeModal()">Lukk</button>'
         +'</div>'
-        +'<label>Navn pa tilbudspost</label>'
+        +'<label>Navn på posten</label>'
         +'<input id="calcEnginePostName" value="'+escapeAttr(p.name||'Kalkulasjon')+'" />'
         +'<div style="margin-top:12px;padding:12px;background:#f5f8ff;border-radius:14px;font-size:13px;color:var(--muted)">'
         +result.operasjoner.length+' operasjoner | '+result.totalTimer+' timer | '+currency(result.laborSaleEx)+' arbeid'
         +'</div>'
         +'<div class="toolbar" style="margin-top:14px">'
-        +'<button class="btn primary" onclick="doSendCalcEngine()">Legg til i tilbud</button>'
+        +'<button class="btn primary" onclick="doSendCalcEngine()">Legg til i prisoverslag</button>'
         +'<button class="btn secondary" onclick="closeModal()">Avbryt</button>'
         +'</div>'
       );
@@ -668,7 +668,7 @@
             <button class="btn small secondary" onclick="toggleRateSettings()">Mine erfaringstimer</button>
           </div>
           <div class="calc-info-tip">
-            <span>Velg jobbtype, fyll inn mal, fa materialer og pris automatisk, deretter send til tilbud.</span>
+            <span>Velg jobbtype, fyll inn mal, fa materialer og pris automatisk, deretter send til prisoverslag.</span>
           </div>
           <div id="calcWidget">
             <div class="calc-job-grid">
@@ -1127,7 +1127,7 @@
       return '<div class="card" style="margin-bottom:14px;background:#fffbf0;border:1px solid #fde68a;border-radius:16px">'
         +'<div class="section-head"><div class="section-title">Foreslåtte materialer fra operasjoner</div></div>'
         +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">'
-        +'Basert på '+opCount+' operasjon'+(opCount>1?'er':'')+' som ikke er sendt til tilbud ennå.'
+        +'Basert på '+opCount+' operasjon'+(opCount>1?'er':'')+' som ikke er sendt til prisoverslag ennå.'
         +'</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
           +'<div style="padding:10px;background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:10px">'
@@ -1154,7 +1154,7 @@
       if(!changeOrders.approvedCount&&!changeOrders.pendingCount) return '';
       return `
           <div class="offer-bottom-stats" style="margin-top:10px">
-            <div class="offer-bottom-stat"><strong>Opprinnelig tilbud</strong><div>${currency(offerSaleEx)}</div></div>
+            <div class="offer-bottom-stat"><strong>Opprinnelig prisoverslag</strong><div>${currency(offerSaleEx)}</div></div>
             <div class="offer-bottom-stat"><strong>Godkjente tillegg (${changeOrders.approvedCount})</strong><div>+ ${currency(changeOrders.approved)}</div></div>
             <div class="offer-bottom-stat"><strong>Ny kontraktssum eks. mva</strong><div>${currency(offerSaleEx+changeOrders.approved)}</div></div>
           </div>
@@ -1172,7 +1172,7 @@
       const offerMargin=offerSaleEx?(offerProfit/offerSaleEx*100):0;
       return `
         <div class="section-head">
-          <div class="section-title">Tilbudsposter</div>
+          <div class="section-title">Poster</div>
           <div class="toolbar">
             <button class="btn small secondary" onclick="addOfferPost()">+ Legg til post</button>
           </div>
@@ -1180,7 +1180,7 @@
         ${renderSuggestedMaterialsForOffer(p)}
         <div class="card" style="margin-top:8px;background:#fafcff">${renderOfferPosts(p)}</div>
         ${renderChangeOrders(p)}
-        ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px"> Merk: Materialer i materiallisten er ikke med i tilbudssummen. Legg dem inn i tilbudsposter for å få dem med.</div>`:''}
+        ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px"> Merk: Materialer i materiallisten er ikke med i summen. Legg dem inn i poster for å få dem med.</div>`:''}
         <div class="card" style="margin-top:14px;background:#fafcff">
           <div class="section-head"><div class="section-title">Oppsummering</div></div>
 
@@ -1246,7 +1246,7 @@
           <div class="offer-bottom-stats">
             <div class="offer-bottom-stat"><strong>Faste poster</strong><div>${currency(ps.fixed)}</div></div>
             <div class="offer-bottom-stat"><strong>Valgte opsjoner</strong><div>${currency(ps.options)}</div></div>
-            <div class="offer-bottom-stat"><strong>Tilbudssum poster</strong><div>${currency(ps.total)}</div></div>
+            <div class="offer-bottom-stat"><strong>Sum poster</strong><div>${currency(ps.total)}</div></div>
           </div>
         </div>`;
     }

@@ -81,10 +81,10 @@
       const age=f.isSentAtKnown
         ? `Sendt ${sentDate} · ${f.daysSinceSent} dager uten svar`
         : `Sendt-dato mangler · sist endret for ${f.daysSinceSent} dager siden`;
-      const mailBody=`Hei${cust&&cust.name?' '+cust.name:''},\n\nJeg følger opp tilbudet på ${p.name||'prosjektet'}${f.isSentAtKnown?' som ble sendt '+sentDate:''}. Har du fått sett på det, eller er det noe du lurer på?\n`;
+      const mailBody=`Hei${cust&&cust.name?' '+cust.name:''},\n\nJeg følger opp prisoverslaget på ${p.name||'prosjektet'}${f.isSentAtKnown?' som ble sendt '+sentDate:''}. Har du fått sett på det, eller er det noe du lurer på?\n`;
       const contact=[
         cust&&cust.phone?`<a class="ov-btn ov-btn--ghost" href="tel:${escapeAttr(cust.phone.replace(/\s/g,''))}">Ring</a>`:'',
-        cust&&cust.email?`<a class="ov-btn ov-btn--ghost" href="mailto:${escapeAttr(cust.email)}?subject=${encodeURIComponent('Oppfølging av tilbud – '+(p.name||''))}&body=${encodeURIComponent(mailBody)}">E-post</a>`:''
+        cust&&cust.email?`<a class="ov-btn ov-btn--ghost" href="mailto:${escapeAttr(cust.email)}?subject=${encodeURIComponent('Oppfølging av prisoverslag – '+(p.name||''))}&body=${encodeURIComponent(mailBody)}">E-post</a>`:''
       ].join('');
       const statusOpts=['Sendt','Vunnet','Tapt'].map(s=>`<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('');
       return `<div class="item ov-followup-item">
@@ -119,7 +119,7 @@
       const url=URL.createObjectURL(new Blob([buildFollowUpIcs(p,start)],{type:'text/calendar;charset=utf-8'}));
       const dateLabel=start.toLocaleDateString('nb-NO',{weekday:'long',day:'numeric',month:'long'});
       // iOS åpner kalenderfilen i en visning med «Legg til»; andre steder lastes den ned.
-      const linkAttrs=isAppleTouchDevice()?'target="_blank" rel="noopener"':`download="Følg opp ${escapeAttr(p.name||'tilbud')}.ics"`;
+      const linkAttrs=isAppleTouchDevice()?'target="_blank" rel="noopener"':`download="Følg opp ${escapeAttr(p.name||'prisoverslag')}.ics"`;
       showModal(`
         <div class="section-head"><div class="section-title">Utsatt til ${escapeHtml(dateLabel)}</div></div>
         <p style="margin:0 0 14px;color:var(--muted)">Vil du også få varsel i kalenderen (og på telefonen via iCloud) kl. ${String(FOLLOW_UP_REMINDER_HOUR).padStart(2,'0')}:00 den dagen?</p>
@@ -133,13 +133,13 @@
       const cust=getCustomer(p.customerId);
       const end=new Date(start.getTime()+FOLLOW_UP_EVENT_MINUTES*60*1000);
       const details=[
-        'Tilbudet står fortsatt som sendt uten svar.',
+        'Prisoverslaget står fortsatt som sendt uten svar.',
         cust&&cust.name?'Kunde: '+cust.name:'',
         cust&&cust.phone?'Telefon: '+cust.phone:'',
         cust&&cust.email?'E-post: '+cust.email:'',
         p.address?'Adresse: '+p.address:''
       ].filter(Boolean).join('\n');
-      const summary='Følg opp tilbud: '+(p.name||'prosjekt');
+      const summary='Følg opp prisoverslag: '+(p.name||'prosjekt');
       return [
         'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Byggeplassen//Tilbudsoppfolging//NO','CALSCALE:GREGORIAN','METHOD:PUBLISH',
         'BEGIN:VEVENT',

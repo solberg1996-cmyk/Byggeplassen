@@ -34,7 +34,7 @@ No build tools, package manager, linter, or test framework. This is a static van
 ## Domain Knowledge
 
 - "Kalkyle" = estimate/calculation for construction projects
-- "Tilbud" = offer/quote sent to customer
+- "Prisoverslag" = the estimate document sent to the customer (called "tilbud" before 2026-09; code still uses `offer*` names). Use "prisoverslag" in all user-facing text
 - "Tømmermannskledning" = timber cladding
 - "Svill" = sill plate, "Stender" = stud, "Bjelkelag" = joist system
 
