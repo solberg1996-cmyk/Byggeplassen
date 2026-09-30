@@ -1439,7 +1439,7 @@
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
             <button onclick="adjustLaborGroupHours(${gi},1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
-            <div id="laborGroupHours_${gi}" style="font-size:28px;font-weight:800;color:${g.groupColor};min-width:70px;text-align:center">${g.hours||0}</div>
+            <input id="laborGroupHours_${gi}" type="number" min="0" step="any" inputmode="decimal" value="${g.hours||0}" title="Skriv inn timer" aria-label="Timer ${escapeAttr(g.groupName)}" oninput="setLaborGroupHours(${gi},this.value)" onfocus="this.select()" style="font-size:28px;font-weight:800;color:${g.groupColor};width:110px;padding:2px 4px;margin:0;text-align:center;border:1px solid transparent;border-radius:8px;background:transparent" />
             <button onclick="adjustLaborGroupHours(${gi},-1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
           </div>
           <div style="font-size:12px;color:var(--muted)">timer</div>
@@ -1468,7 +1468,7 @@
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
             <button onclick="adjustModalHours(1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
-            <div id="postHoursDisplay" style="font-size:28px;font-weight:800;color:#a96800;min-width:70px;text-align:center">${currentHours||calcHours||0}</div>
+            <input id="postHoursDisplay" type="number" min="0" step="any" inputmode="decimal" value="${window._pendingPostHours!=null?window._pendingPostHours:(currentHours||calcHours||0)}" title="Skriv inn timer" aria-label="Timer for denne posten" oninput="setModalHours(this.value)" onfocus="this.select()" style="font-size:28px;font-weight:800;color:#a96800;width:110px;padding:2px 4px;margin:0;text-align:center;border:1px solid transparent;border-radius:8px;background:transparent" />
             <button onclick="adjustModalHours(-1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
           </div>
           <div style="font-size:12px;color:var(--muted)">timer<br><span style="font-size:10px">Fra kalkulasjon: ${calcHours||0}t</span></div>
@@ -1622,8 +1622,9 @@
 
     window.mergeAllCustomPosts=function(){
       const p=getProject(currentProjectId); if(!p) return;
-      const total=_offerState.customPosts.reduce(function(s,cp){return s+cp.price;},0);
-      _offerState.customPosts=[{id:uid(),name:p.name||'Tilbudssum',price:total,sourceIds:[]}];
+      const total=_offerState.customPosts.reduce(function(s,cp){return s+getCustomPostPrice(p,cp);},0);
+      const sourceIds=_offerState.customPosts.reduce(function(ids,cp){return ids.concat(cp.sourceIds||[]);},[]);
+      _offerState.customPosts=[{id:uid(),name:p.name||'Tilbudssum',price:total,sourceIds:sourceIds}];
       renderCustomPostEditor();
       renderOfferPreview();
     };
@@ -2387,7 +2388,11 @@
       const newVal=Math.max(0, base+delta);
       window._pendingPostHours=newVal;
       const el=document.getElementById('postHoursDisplay');
-      if(el) el.textContent=newVal+'t';
+      if(el) el.value=newVal;
+    };
+
+    window.setModalHours=function(value){
+      window._pendingPostHours=Math.max(0, Number(value)||0);
     };
 
     window.adjustLaborGroupHours=function(groupIdx,delta){
@@ -2398,13 +2403,25 @@
       var g=post.laborGroups[groupIdx];
       g.hours=Math.max(0,(g.hours||0)+delta);
       var el=document.getElementById('laborGroupHours_'+groupIdx);
-      if(el) el.textContent=g.hours;
-      var totalEl=document.getElementById('laborGroupTotalHours');
-      if(totalEl){
-        var sum=post.laborGroups.reduce(function(s,lg){return s+(lg.hours||0);},0);
-        totalEl.textContent=sum+'t';
-      }
+      if(el) el.value=g.hours;
+      updateLaborGroupTotal(post);
     };
+
+    window.setLaborGroupHours=function(groupIdx,value){
+      const p=getProject(currentProjectId); if(!p) return;
+      const postId=window._cpmPostId;
+      const post=postId&&p.offerPosts&&p.offerPosts.find(x=>x.id===postId);
+      if(!post||!post.laborGroups||!post.laborGroups[groupIdx]) return;
+      post.laborGroups[groupIdx].hours=Math.max(0, Number(value)||0);
+      updateLaborGroupTotal(post);
+    };
+
+    function updateLaborGroupTotal(post){
+      var totalEl=document.getElementById('laborGroupTotalHours');
+      if(!totalEl) return;
+      var sum=post.laborGroups.reduce(function(s,lg){return s+(lg.hours||0);},0);
+      totalEl.textContent=sum+'t';
+    }
 
         window.saveCalcPostMaterials=function(){
       const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
@@ -2463,8 +2480,8 @@
         margin
       };
       post.hours=hoursTotal; // sync post.hours with snapshot
-      // Update post price to match new total
-      post.price=Math.round(p.settings.vatMode==='inc'?saleEx*1.25:saleEx);
+      // post.price lagres alltid eks. mva — displayVatValue legger på mva ved visning
+      post.price=Math.round(saleEx);
 
       window._cpmSearch='';
       closeModal();
@@ -2635,7 +2652,7 @@
           </div>
           <div style="text-align:right;flex-shrink:0" onclick="toggleOfferPost('${post.id}')">
             <div style="font-size:17px;font-weight:800;color:${post.type==='option'&&!post.enabled?'var(--muted)':'#0a84ff'}">${currency(displayVatValue(p,post.price||0))}</div>
-            <div style="font-size:10px;color:var(--muted)">${vatLbl}</div>
+            <div style="font-size:10px;color:var(--muted)">${isPostInTotal(post)?vatLbl:'ikke med i total'}</div>
           </div>
           <div style="color:var(--muted);font-size:13px;margin-left:2px;cursor:pointer" onclick="toggleOfferPost('${post.id}')">${isOpen?'▲':'▼'}</div>
         </div>`;
@@ -2784,7 +2801,7 @@
       persistAndRenderProject();
     };
 
-        function updatePost(id,key,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post[key]=key==='price'?parseVatInput(p,val):val; persistAndUpdate(); }
+        function updatePost(id,key,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post[key]=key==='price'?parseVatInput(p,val):val; if(key!=='type'){ persistAndUpdate(); return; } if(val==='option') post.enabled=false; persistAndRenderProject(); }
 
     window.updatePostHours=function(id,val){
       const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
@@ -2796,7 +2813,32 @@
       post.price=Math.round(hrs*timeRate+matSaleEx);
       saveState(); updateSummary();
     };
-    function togglePost(id,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post.enabled=!!val; persistAndUpdate(); }
+    // Alle posttyper kan få timer via «Tilpass post», og prises da som
+    // timer × timepris + materialer. Poster uten timer har manuell pris og
+    // røres ikke.
+    function recalcOfferPostsLabor(p){
+      const timeRate=Number(p.work.timeRate)||850;
+      (p.offerPosts||[]).forEach(post=>{
+        if(!post) return;
+        const sc=post.snapshotCompute||{};
+        const hasGroups=post.laborGroups&&post.laborGroups.length;
+        if(hasGroups){
+          post.laborGroups.forEach(g=>{ g.laborSaleEx=Math.round((g.hours||0)*timeRate); });
+        }
+        const hours=hasGroups
+          ? post.laborGroups.reduce((s,g)=>s+(g.hours||0),0)
+          : (Number(post.hours)||sc.hoursTotal||0);
+        if(!hours) return;
+        const laborSaleEx=hours*timeRate;
+        const saleEx=laborSaleEx+(sc.matSaleEx||0);
+        const costPrice=sc.costPrice!=null?sc.costPrice:(sc.laborCost||0)+(sc.matCost||0);
+        const profit=saleEx-costPrice;
+        post.snapshotCompute={...sc, hoursTotal:hours, laborSaleEx, saleEx, saleInc:saleEx*1.25, costPrice, profit, margin:saleEx?(profit/saleEx*100):0};
+        post.price=Math.round(saleEx);
+      });
+    }
+
+    function togglePost(id,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post.enabled=!!val; persistAndRenderProject(); }
     function removePost(id){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; p.offerPosts=p.offerPosts.filter(x=>x.id!==id); persistAndRenderProject(); }
     function movePost(id,dir){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const idx=p.offerPosts.findIndex(x=>x.id===id); if(idx<0) return; const ni=idx+dir; if(ni<0||ni>=p.offerPosts.length) return; [p.offerPosts[idx],p.offerPosts[ni]]=[p.offerPosts[ni],p.offerPosts[idx]]; persistAndRenderProject(); }
 
@@ -2889,10 +2931,10 @@
       bindVal('#fAddress',v=>p.address=v); bindVal('#fType',v=>p.type=v); bindVal('#fStart',v=>p.startPref=v);
       bindVal('#fStatus',v=>p.status=v); bindVal('#fDescription',v=>p.description=v); bindVal('#fNote',v=>p.note=v);
       const beb=$('#fBebodd'); if(beb) beb.addEventListener('change',()=>{ p.bebodd=beb.checked; persistAndUpdate(); });
-      const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
+      const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; recalcOfferPostsLabor(p); const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
       const sI=$('#sInternalCost'); if(sI) sI.addEventListener('input',()=>{ p.settings.internalCost=Number(sI.value)||0; p.work.internalCost=p.settings.internalCost; const l=$('#wInternalCost'); if(l&&document.activeElement!==l) l.value=p.work.internalCost; persistAndUpdate(); });
       bindNum('#wActualHours',v=>p.work.actualHours=v);
-      bindNumVat('#wTimeRate',v=>p.work.timeRate=v); bindNum('#wInternalCost',v=>p.work.internalCost=v);
+      bindNumVat('#wTimeRate',v=>{ p.work.timeRate=v; recalcOfferPostsLabor(p); }); bindNum('#wInternalCost',v=>p.work.internalCost=v);
       bindNumVat('#eRental',v=>p.extras.rental=v);
       bindNumVat('#eWaste',v=>p.extras.waste=v); bindNumVat('#eScaffolding',v=>p.extras.scaffolding=v); bindNumVat('#eDrawings',v=>p.extras.drawings=v);
       // subcontractors handled via onclick

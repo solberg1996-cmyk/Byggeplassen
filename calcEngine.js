@@ -374,7 +374,7 @@ function compute(project){
 
   let snapMatCost=0, snapMatSaleEx=0, snapHours=0, snapLaborSaleEx=0, snapLaborCost=0;
   offerPosts.forEach(post=>{
-    if(post && post.snapshotCompute){
+    if(post && post.snapshotCompute && isPostInTotal(post)){
       snapMatCost+=post.snapshotCompute.matCost||0;
       snapMatSaleEx+=post.snapshotCompute.matSaleEx||0;
       const postHours=Number(post.hours)||post.snapshotCompute.hoursTotal||0;
@@ -421,18 +421,34 @@ function compute(project){
 }
 
 
+// Opsjoner vises i tilbudet, men regnes kun med når kunden har valgt dem.
+function isPostInTotal(post){
+  return post.type!=='option' || !!post.enabled;
+}
+
 // ── TILBUDSPOST-SUMMERING (tidl. computeOfferPostsTotal() i app.js) ──
 
 function computeOfferPostsTotal(p){
   if(!p || !p.offerPosts || !p.offerPosts.length) return {fixed:0,options:0,total:0,hours:0};
   let fixed=0,options=0,hours=0;
   p.offerPosts.forEach(post=>{
-    if(!post) return;
+    if(!post || !isPostInTotal(post)) return;
     hours+=Number(post.snapshotCompute?.hoursTotal)||0;
     const price=Number(post.price)||0;
-    if(post.type==='option'){if(post.enabled)options+=price;}else fixed+=price;
+    if(post.type==='option') options+=price; else fixed+=price;
   });
   return {fixed,options,total:fixed+options,hours};
+}
+
+// Egendefinerte tilbudsposter peker på ekte poster via sourceIds, så prisen
+// følger postene (f.eks. ved endret timepris). cp.price er kun fallback for
+// poster uten kobling.
+function getCustomPostPrice(p, cp, isTotalOnly){
+  const ids=cp.sourceIds||[];
+  if(!ids.length) return Number(cp.price)||0;
+  return (p.offerPosts||[])
+    .filter(post=>post&&ids.includes(post.id)&&(!isTotalOnly||isPostInTotal(post)))
+    .reduce((s,post)=>s+(Number(post.price)||0),0);
 }
 
 
@@ -908,6 +924,8 @@ window.calcOperationHours = calcOperationHours;
 window.calcProject = calcProject;
 window.compute = compute;
 window.computeOfferPostsTotal = computeOfferPostsTotal;
+window.getCustomPostPrice = getCustomPostPrice;
+window.isPostInTotal = isPostInTotal;
 window.blankOperation = blankOperation;
 window.generateWarnings = generateWarnings;
 window.findCatalogPrice = findCatalogPrice;

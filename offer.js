@@ -427,9 +427,9 @@
         if(eEx>0){priceRows+='<tr><td class="dc"><b>Rigg og Drift</b></td><td class="ac">'+fmt(eEx)+'</td></tr>';totalEx+=eEx;}
       } else {
         if(os.postMode==='custom'){
-          os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(cp.price)+'</td></tr>';totalEx+=cp.price;});
+          os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(getCustomPostPrice(p,cp))+'</td></tr>';totalEx+=getCustomPostPrice(p,cp,true);});
         } else if(p.offerPosts&&p.offerPosts.length){
-          p.offerPosts.filter(function(post){return post.type!=='option'||post.enabled;}).forEach(function(post){
+          p.offerPosts.forEach(function(post){
             // Calc posts: show "Tømrerarbeid + Materialer" instead of timer info
             var desc='';
             if(post.type==='calc'){
@@ -441,9 +441,10 @@
             } else if(post.description) {
               desc=post.description;
             }
-            var optBadge=post.type==='option'?'<span style="font-size:9pt;color:#a96800;font-weight:600;margin-left:6px">(Opsjon)</span>':'';
+            var isIncluded=isPostInTotal(post);
+            var optBadge=post.type==='option'?'<span style="font-size:9pt;color:#a96800;font-weight:600;margin-left:6px">'+(isIncluded?'(Opsjon)':'(Opsjon – ikke med i totalsum)')+'</span>':'';
             priceRows+='<tr><td class="dc"><b>'+esc(post.name||'')+optBadge+'</b>'+(desc?'<br><span style="font-size:10pt;color:#555">'+esc(desc)+'</span>':'')+'</td><td class="ac">'+fmt(post.price||0)+'</td></tr>';
-            totalEx+=Number(post.price)||0;
+            if(isIncluded) totalEx+=Number(post.price)||0;
           });
         } else {
           var lEx2=cv.totalLaborSaleEx,mEx2=cv.totalMatSaleEx;
