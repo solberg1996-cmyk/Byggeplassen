@@ -22,8 +22,6 @@
       const p=getProject(id); if(!p) return;
       $('#dashboardView').classList.add('hidden');
       $('#projectView').classList.remove('hidden');
-      window._currentProjectTab='materials';
-      if(window.showProjectBottomBar) window.showProjectBottomBar();
       renderProjectView();
     }
 
@@ -31,21 +29,19 @@
       const p=getProject(currentProjectId); if(!p) return;
       const cust=getCustomer(p.customerId);
       $('#projectTitle').textContent=p.name||'Prosjekt';
-      $('#projectSubtitle').textContent=`${cust?.name||'Ingen kunde valgt'} • ${p.type} • ${p.address||'Ingen adresse'}`;
+      $('#projectSubtitle').textContent=[cust?.name||'Ingen kunde valgt', p.type, p.address].filter(Boolean).join(' · ');
       $('#toggleEx').classList.toggle('active',p.settings.vatMode==='ex');
       $('#toggleInc').classList.toggle('active',p.settings.vatMode==='inc');
-      $('#projectTopPills').innerHTML=`
-        <span class="pill status-${p.status}">${p.status}</span>
-        <span class="pill">Oppstart: ${escapeHtml(p.startPref)}</span>
-        <span class="pill">Kunde: ${escapeHtml(cust?.name||'Ingen')}</span>`;
+      $('#projectTopPills').innerHTML=`<button class="pill status-${escapeAttr(p.status)} project-status-pill" onclick="goToProjectStatus()" aria-label="Status: ${escapeAttr(p.status)}. Endre status">${escapeHtml(p.status)}</button>`;
 
+      // Kort etikett brukes når vinduet er smalt (delt skjerm / mobil).
       const tabs=[
-        {id:'info',      label:'Info'},
-        {id:'materials', label:'Kalkulasjon'},
-        {id:'offer',     label:'Tilbud'},
-        {id:'preview',   label:'Tilbudsvisning'},
+        {id:'info',      label:'Info',           short:'Info'},
+        {id:'materials', label:'Kalkulasjon',    short:'Kalkyle'},
+        {id:'offer',     label:'Tilbud',         short:'Tilbud'},
+        {id:'preview',   label:'Tilbudsvisning', short:'Visning'},
       ];
-      const tabBar=`<div class="tab-bar">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}<button class="tab-btn" onclick="openHandleliste()" style="margin-left:auto;font-size:11px;opacity:0.8">Handleliste</button></div>`;
+      const tabBar=`<nav class="tab-bar" aria-label="Prosjektfaner">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" ${currentTab===t.id?'aria-current="page"':''} onclick="switchTab('${t.id}')"><span class="tab-label-long">${t.label}</span><span class="tab-label-short">${t.short}</span></button>`).join('')}</nav>`;
 
       let panel='';
       try{
@@ -68,6 +64,7 @@
 
       $('#stepsContainer').innerHTML=tabBar+`<div class="tab-panel">${panel}</div>`;
       bindProjectEvents(); updateSummary(); refreshOpSummary();
+      if(currentTab==='offer') loadOpenChangeOrderPhotos(p);
     }
 
     function switchTab(id){
@@ -114,7 +111,14 @@
       const summaryModeNote=$('#summaryModeNote'); if(summaryModeNote) summaryModeNote.textContent=(p.offerPosts&&p.offerPosts.length)?'Viser sum av tilbudsposter':(p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva');
     }
 
-    function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); if(window.hideProjectBottomBar) window.hideProjectBottomBar(); renderDashboard(); }
+    function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
+
+    window.goToProjectStatus=function(){
+      if(currentTab!=='info') switchTab('info');
+      const el=$('#fStatus'); if(!el) return;
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.focus({preventScroll:true});
+    };
 
     function renderTabInfo(p){
       const opts=['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
@@ -1144,6 +1148,19 @@
         +'</div>';
     }
 
+    // Vises kun når prosjektet har tillegg: opprinnelig tilbud + godkjente
+    // tillegg = ny kontraktssum. Ventende tillegg vises, men regnes ikke med.
+    function renderContractSum(offerSaleEx, changeOrders){
+      if(!changeOrders.approvedCount&&!changeOrders.pendingCount) return '';
+      return `
+          <div class="offer-bottom-stats" style="margin-top:10px">
+            <div class="offer-bottom-stat"><strong>Opprinnelig tilbud</strong><div>${currency(offerSaleEx)}</div></div>
+            <div class="offer-bottom-stat"><strong>Godkjente tillegg (${changeOrders.approvedCount})</strong><div>+ ${currency(changeOrders.approved)}</div></div>
+            <div class="offer-bottom-stat"><strong>Ny kontraktssum eks. mva</strong><div>${currency(offerSaleEx+changeOrders.approved)}</div></div>
+          </div>
+          ${changeOrders.pendingCount?`<div class="footer-note" style="margin-top:6px">Ikke godkjent ennå: ${changeOrders.pendingCount} tillegg på ${currency(changeOrders.pending)} eks. mva (ikke med i kontraktssummen).</div>`:''}`;
+    }
+
     function renderTabOffer(p){
       const c=window.compute(p), ps=window.computeOfferPostsTotal(p);
       // Exclude raw p.materials from offer sums — only offer posts count
@@ -1162,6 +1179,7 @@
         </div>
         ${renderSuggestedMaterialsForOffer(p)}
         <div class="card" style="margin-top:8px;background:#fafcff">${renderOfferPosts(p)}</div>
+        ${renderChangeOrders(p)}
         ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px"> Merk: Materialer i materiallisten er ikke med i tilbudssummen. Legg dem inn i tilbudsposter for å få dem med.</div>`:''}
         <div class="card" style="margin-top:14px;background:#fafcff">
           <div class="section-head"><div class="section-title">Oppsummering</div></div>
@@ -1224,6 +1242,7 @@
               <div class="footer-text" id="summaryModeNote">${p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva'}</div>
             </div>
           </div>
+          ${renderContractSum(offerSaleEx, window.computeChangeOrdersTotal(p))}
           <div class="offer-bottom-stats">
             <div class="offer-bottom-stat"><strong>Faste poster</strong><div>${currency(ps.fixed)}</div></div>
             <div class="offer-bottom-stat"><strong>Valgte opsjoner</strong><div>${currency(ps.options)}</div></div>

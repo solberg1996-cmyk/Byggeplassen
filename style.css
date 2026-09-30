@@ -112,6 +112,54 @@
     .title{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text)}
     .subtitle{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.5}
 
+    /* ── Prosjekthode ────────────────────────────────────── */
+    .project-header{margin:0 0 16px}
+    .project-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .project-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .project-back{
+      appearance:none;border:none;background:none;cursor:pointer;
+      display:inline-flex;align-items:center;min-height:44px;padding:0 4px;margin-left:-4px;
+      font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--muted-strong);
+      border-radius:var(--radius-xs);
+    }
+    .project-back:hover{color:var(--text)}
+    .project-title{margin:0}
+    .project-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:6px}
+    .project-meta-text{color:var(--muted);font-size:13px;line-height:1.4;min-width:0}
+    .project-status-pill{cursor:pointer;min-height:0}
+    #projectTopPills:empty{display:none}
+
+    /* ── Bilder på tillegg (endringsmelding) ──────────────── */
+    .co-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+    .co-photo{
+      position:relative;aspect-ratio:1;border-radius:var(--radius-xs);overflow:hidden;
+      background:var(--bg-warm);border:1px solid var(--line);padding:0;
+    }
+    .co-photo img{width:100%;height:100%;object-fit:cover;display:block}
+    .co-photo-placeholder{
+      width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font-size:11px;color:var(--muted);text-align:center;padding:4px;
+    }
+    /* 44px trykkflate, men liten synlig knapp i hjørnet */
+    .co-photo-remove{
+      position:absolute;top:0;right:0;width:44px;height:44px;padding:4px;
+      display:flex;align-items:flex-start;justify-content:flex-end;
+      border:none;background:none;cursor:pointer;
+    }
+    .co-photo-remove-icon{
+      width:26px;height:26px;border-radius:50%;
+      background:rgba(22,39,54,.7);color:#fff;font-size:16px;line-height:26px;text-align:center;
+    }
+    .co-photo--pick{cursor:pointer}
+    .co-photo--pick.is-selected{outline:3px solid var(--accent);outline-offset:-3px}
+    .co-photo-check{
+      position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;
+      background:var(--accent);color:var(--text);font-weight:800;font-size:14px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .co-photos-empty{grid-column:1/-1;font-size:13px;color:var(--muted);padding:6px 0}
+    .co-photos--picker{margin-top:12px;max-height:60vh;overflow-y:auto}
+
     /* ── Buttons ─────────────────────────────────────────── */
     .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
@@ -326,6 +374,19 @@
       overflow-x:auto;
     }
     .tab-bar::-webkit-scrollbar{display:none}
+    #projectView .tab-bar{
+      position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:40;
+      margin-bottom:16px;
+      /* Første skygge fyller luften over fanene med sidebakgrunnen, så
+         innhold som scrolles forbi ikke skimtes over dem. */
+      box-shadow:0 -8px 0 0 var(--bg),var(--shadow-sm);
+    }
+    .tab-label-short{display:none}
+    @media (max-width:640px){
+      .tab-label-long{display:none}
+      .tab-label-short{display:inline}
+      .tab-btn{min-width:0;padding:10px 6px}
+    }
     .tab-btn{
       flex:1;min-width:80px;
       border:none;background:transparent;
@@ -1591,7 +1652,10 @@
       .card{padding:16px}
       .title{font-size:22px}
       .topbar{gap:10px;margin-bottom:16px}
-      input,select,textarea,button{min-height:44px}
+      /* Avkrysningsbokser/brytere unntas — de strekkes ellers til 44px høye
+         klumper. Trykkflaten legges i stedet på etiketten rundt dem. */
+      input:not([type=checkbox]):not([type=radio]),select,textarea,button{min-height:44px}
+      .offer-toggle{min-height:44px}
       input[type="number"],input[type="text"],select{font-size:16px}
       .tab-btn{min-height:44px}
 
@@ -1601,8 +1665,6 @@
       #docsProjectListBody .card,#docsProjectDetailBody .card{transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
       #docsProjectListBody .card:active{background:var(--card-hover);transform:scale(.99)}
 
-      /* Skjul inline tab-bar i prosjektvisning (erstattes av project-bottom-bar) */
-      #projectView .tab-bar{display:none}
 
       /* Oversiktslister (prosjekter/kunder) — på desktop står infoblokk og
          handlinger (Åpne/Rediger/Slett) side om side i én rad. På smal
@@ -1629,20 +1691,6 @@
          prisen ned på egen linje. Størrelses den heller etter innhold. */
       .ov-status-select{width:auto;flex:0 0 auto;min-width:0}
 
-      /* Prosjekt-info-pillene (status/oppstart/kunde) øverst i prosjektvisning
-         — "Kunde: <langt navn>" kunne bli en kjempelang pille som visuelt
-         dominerte raden. Trunkeres i stedet med ellipsis innenfor halve
-         kortbredden, slik pillene blir jevne igjen. */
-      #projectTopPills{gap:6px}
-      #projectTopPills .pill{
-        max-width:calc(50% - 3px);
-        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-        display:inline-block;
-      }
-
-      /* Prosjekt-bottom-tab med ikon+tekst */
-      .project-bottom-tab{flex-direction:column;gap:2px;font-size:10px}
-      .project-bottom-tab svg{width:18px;height:18px}
 
       /* Dokumentasjon-galleri — større, mer trykkvennlig kort. Tommel opp i
          størrelse (lettere å kjenne igjen bildet på en solfylt byggeplass),
@@ -1940,6 +1988,21 @@
     .ov-panel-head{
       margin-bottom:20px;
     }
+    /* Følg opp: tilbud uten svar — markert med aksentkant så det fanger blikket */
+    .ov-followup{margin-bottom:20px;border-left:4px solid var(--accent)}
+    .ov-followup[hidden]{display:none}
+    .ov-followup .ov-list{max-height:none}
+    .ov-followup-info{flex:1;min-width:0}
+    .ov-followup-name{
+      appearance:none;border:none;background:none;padding:0;cursor:pointer;
+      font:inherit;color:var(--text);text-align:left;min-height:0!important;
+    }
+    .ov-followup-name:hover{text-decoration:underline}
+    .ov-followup-age{font-size:12px!important;color:var(--muted-strong)!important;margin-top:2px!important}
+    .ov-followup-item .inline-actions{flex-wrap:wrap;align-items:center}
+    .ov-followup-item .ov-btn{white-space:nowrap}
+    .ov-followup-item .ov-status-select{width:auto;flex:0 0 auto}
+    .ov-followup-item a.ov-btn{text-decoration:none}
     .ov-panel-title-row{
       display:flex;align-items:baseline;justify-content:space-between;
       margin-bottom:14px;
@@ -2214,8 +2277,12 @@
     .bottom-bar-tab.active{color:var(--accent-hover)}
     .bottom-bar-tab:active{transform:scale(.92)}
 
-    @media (max-width:900px){.bottom-bar{display:flex}}
-    @media (min-width:901px){.bottom-bar{display:none!important}}
+    /* Vises kun innlogget, på smal skjerm og utenfor prosjekter — inne i et
+       prosjekt navigeres det med fanene øverst (samme plass i alle bredder). */
+    @media (max-width:900px){body.is-signed-in:not(.in-project) .bottom-bar{display:flex}}
+    @media (max-width:900px){
+      body.in-project .app{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
+    }
 
     /* ── Mer-sheet (bottom sheet) ────────────────────────── */
     .mer-sheet-backdrop{
@@ -2255,47 +2322,15 @@
     .mer-sheet-item--info,.mer-sheet-sync{color:var(--green);cursor:default}
     .mer-sheet-item svg{width:20px;height:20px;flex-shrink:0}
 
-    /* ── Prosjekt kontekstuell bunnmeny ──────────────────── */
-    .project-bottom-bar{
-      position:fixed;bottom:0;left:0;right:0;
-      display:none;justify-content:space-around;
-      background:var(--card);
-      border-top:1px solid var(--line);
-      box-shadow:0 -1px 8px rgba(22,39,54,.06);
-      z-index:900;
-      padding-bottom:env(safe-area-inset-bottom,0px);
-      height:calc(52px + env(safe-area-inset-bottom,0px));
-      transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
-      will-change:transform;
-      backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    }
-    @media (min-width:901px){.project-bottom-bar{display:none!important}}
-    .project-bottom-tab{
-      flex:1;display:flex;align-items:center;justify-content:center;
-      border:none;background:transparent;
-      color:var(--muted);font-size:12px;font-weight:600;
-      font-family:var(--font-display);
-      cursor:pointer;min-height:44px;
-      transition:color var(--dur-fast) var(--ease);
-      -webkit-tap-highlight-color:transparent;
-      border-top:2px solid transparent;
-    }
-    .project-bottom-tab.active{color:var(--text);border-top-color:var(--accent)}
-
     /* ── Tre-prikk overflow-meny ─────────────────────────── */
     .topbar-overflow-wrap{position:relative}
     .topbar-overflow{
       width:44px;height:44px;
-      display:none;align-items:center;justify-content:center;
+      display:inline-flex;align-items:center;justify-content:center;
       border:1px solid var(--line);background:var(--card);
       border-radius:var(--radius-xs);cursor:pointer;
       font-size:20px;color:var(--muted-strong);
       -webkit-tap-highlight-color:transparent;
-    }
-    @media (max-width:900px){
-      .topbar-overflow{display:inline-flex}
-      .topbar .actions>#saveProjectBtn,
-      .topbar .actions>#deleteProjectBtn{display:none}
     }
     .topbar-dropdown{
       position:absolute;top:100%;right:0;

@@ -17,6 +17,8 @@ No build tools, package manager, linter, or test framework. This is a static van
 - `calcEngine.js` — calculation logic for construction estimates
 - `app.js` — main app initialization and templates
 - `calc.js`, `offer.js`, `customers.js`, `projects.js` — feature modules
+- `changeOrders.js` — endringsmeldinger/tillegg (lagres som `offerPosts` med `type:'tillegg'`, holdes utenfor tilbudstotalen)
+- `sw.js` + `manifest.json` — Hjem-skjerm-app og bruk uten nett. Nye skript i `index.html` må også legges i `APP_SHELL` i `sw.js`
 - `productionData.js` — production/material data
 - `settings.js` — app settings UI
 - `utils.js` — shared utilities

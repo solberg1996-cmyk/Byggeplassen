@@ -1228,7 +1228,7 @@
       $('#saveProjBtn').onclick=()=>{
         p.name=$('#mPN').value.trim(); p.customerId=$('#mPC').value; p.address=$('#mPA').value.trim();
         if(!p.address&&p.customerId){const cu=getCustomer(p.customerId);if(cu)p.address=cu.address||'';}
-        p.type=$('#mPT').value; p.startPref=$('#mPS').value; p.status=$('#mPSt').value; p.description=$('#mPD').value.trim();
+        p.type=$('#mPT').value; p.startPref=$('#mPS').value; setProjectStatus(p,$('#mPSt').value,Date.now()); p.description=$('#mPD').value.trim();
         if(!p.name){alert('Skriv inn prosjektnavn.');return;}
         p.updatedAt=Date.now(); state.projects.unshift(p); saveState(); closeModal(); renderDashboard(); openProject(p.id);
       };
@@ -1584,13 +1584,13 @@
       _offerState.texts.innledning = _offerState.texts.innledning || (p.description||'');
       // Init arbeidsomfang from offer posts
       if(!_offerState.arbeidsomfangPosts.length && p.offerPosts&&p.offerPosts.length){
-        _offerState.arbeidsomfangPosts = p.offerPosts.map(function(post){
+        _offerState.arbeidsomfangPosts = p.offerPosts.filter(function(post){return !isChangeOrder(post);}).map(function(post){
           return {id:post.id, name:post.name, checked:true};
         });
       }
       // Init customPosts for postervisning
       if(!_offerState.customPosts.length && p.offerPosts&&p.offerPosts.length){
-        _offerState.customPosts = p.offerPosts.map(function(post){
+        _offerState.customPosts = p.offerPosts.filter(function(post){return !isChangeOrder(post);}).map(function(post){
           return {id:uid(), name:post.name, price:post.price||0, sourceIds:[post.id]};
         });
       }
@@ -1669,8 +1669,9 @@
     // Full preview lives as an overlay in the app itself and prints via the
     // main page (same pattern as handleliste). Printing from popup/blob
     // windows renders blank PDFs in Safari and can reload the app tab.
-    window.openOfferFullPreview=function(){
-      const doc=document.getElementById('offerPreviewDoc'); if(!doc) return;
+    window.openOfferFullPreview=function(docHtml, fileTitle){
+      const doc=document.getElementById('offerPreviewDoc');
+      if(docHtml==null&&!doc) return;
       const co=state.company||{};
       const color=co.color||'#2e75b6';
       closeOfferFullPreview();
@@ -1705,7 +1706,8 @@
           +'<button onclick="closeOfferFullPreview()" style="background:#fff;color:#333;border:1px solid #ccc;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer">Lukk</button>'
         +'</div>'
         +'<div class="offer-print-hint">Huk av «Skriv ut bakgrunner» i utskriftsdialogen for å få med fargene i PDF-en</div>'
-        +'<div class="offer-print-page">'+doc.innerHTML+'</div>';
+        +'<div class="offer-print-page">'+(docHtml!=null?docHtml:doc.innerHTML)+'</div>';
+      if(fileTitle) overlay.dataset.fileTitle=fileTitle;
       overlay.addEventListener('click',function(e){
         if(e.target===overlay) closeOfferFullPreview();
       });
@@ -1721,7 +1723,10 @@
     window.printOfferOverlay=function(){
       const p=getProject(currentProjectId);
       const originalTitle=document.title;
-      if(p) document.title=offerFileTitle(p);
+      const overlay=document.getElementById('offerFullOverlay');
+      const fileTitle=overlay&&overlay.dataset.fileTitle;
+      if(fileTitle) document.title=fileTitle;
+      else if(p) document.title=offerFileTitle(p);
       function restore(){ document.title=originalTitle; window.removeEventListener('afterprint',restore); }
       window.addEventListener('afterprint',restore);
       window.print();
@@ -2504,7 +2509,7 @@
       if(newStatus==='Ferdig'){
         openProjectCompleteModal(p);
       } else {
-        p.status=newStatus;
+        setProjectStatus(p,newStatus,Date.now());
         p.updatedAt=Date.now();
         saveState(); renderDashboard();
       }
@@ -2628,14 +2633,15 @@
 
         function renderOfferPosts(p){
       if(!p.offerPosts) p.offerPosts=[];
-      if(!p.offerPosts.length) return `<div class="empty">Ingen tilbudsposter lagt til enda.</div>`;
+      const offerPosts=p.offerPosts.filter(post=>!isChangeOrder(post));
+      if(!offerPosts.length) return `<div class="empty">Ingen tilbudsposter lagt til enda.</div>`;
       const vatLbl='eks. mva';
       const selCount=Object.keys(window._mergeSelected||{}).filter(function(id){return window._mergeSelected[id];}).length;
-      const mergeBar=p.offerPosts.length>=2?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:10px">
+      const mergeBar=offerPosts.length>=2?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:10px">
         <span style="font-size:12px;color:var(--muted);flex:1">Velg poster å slå sammen (${selCount} valgt)</span>
         <button class="btn small primary" onclick="doMergeSelected()" ${selCount<2?'disabled style="opacity:0.5"':''}>Slå sammen</button>
       </div>`:'';
-      return mergeBar+p.offerPosts.map(post=>{
+      return mergeBar+offerPosts.map(post=>{
         const isOpen=post._open===true; // default closed
         const typeLabel=post.type==='calc'?'Kalkulasjon':post.type==='option'?'Opsjon':'Fast';
         const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
@@ -2819,7 +2825,7 @@
     function recalcOfferPostsLabor(p){
       const timeRate=Number(p.work.timeRate)||850;
       (p.offerPosts||[]).forEach(post=>{
-        if(!post) return;
+        if(!post || isApprovedChangeOrder(post)) return;
         const sc=post.snapshotCompute||{};
         const hasGroups=post.laborGroups&&post.laborGroups.length;
         if(hasGroups){
@@ -2838,9 +2844,15 @@
       });
     }
 
+    // Et godkjent tillegg er en avtalt pris med kunden og skal ikke endres
+    // av en senere endring i timeprisen.
+    function isApprovedChangeOrder(post){
+      return isChangeOrder(post)&&(post.changeOrder||{}).status===ChangeOrderStatus.Approved;
+    }
+
     function togglePost(id,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post.enabled=!!val; persistAndRenderProject(); }
     function removePost(id){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; p.offerPosts=p.offerPosts.filter(x=>x.id!==id); persistAndRenderProject(); }
-    function movePost(id,dir){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const idx=p.offerPosts.findIndex(x=>x.id===id); if(idx<0) return; const ni=idx+dir; if(ni<0||ni>=p.offerPosts.length) return; [p.offerPosts[idx],p.offerPosts[ni]]=[p.offerPosts[ni],p.offerPosts[idx]]; persistAndRenderProject(); }
+    function movePost(id,dir){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const idx=p.offerPosts.findIndex(x=>x.id===id); if(idx<0) return; const isCo=isChangeOrder(p.offerPosts[idx]); let ni=idx+dir; while(ni>=0&&ni<p.offerPosts.length&&isChangeOrder(p.offerPosts[ni])!==isCo) ni+=dir; if(ni<0||ni>=p.offerPosts.length) return; [p.offerPosts[idx],p.offerPosts[ni]]=[p.offerPosts[ni],p.offerPosts[idx]]; persistAndRenderProject(); }
 
     var MERGE_GROUP_COLORS=['#4a90d9','#e67e22','#27ae60','#8e44ad','#c0392b','#16a085','#d4ac0d','#2c3e50'];
     window._mergeSelected={};
@@ -2929,7 +2941,7 @@
       bindVal('#fName',v=>p.name=v);
       bindVal('#fCustomer',v=>{ p.customerId=v; const cu=getCustomer(v); p.address=cu?(cu.address||''):''; const el=$('#fAddress'); if(el) el.value=p.address; });
       bindVal('#fAddress',v=>p.address=v); bindVal('#fType',v=>p.type=v); bindVal('#fStart',v=>p.startPref=v);
-      bindVal('#fStatus',v=>p.status=v); bindVal('#fDescription',v=>p.description=v); bindVal('#fNote',v=>p.note=v);
+      bindVal('#fStatus',v=>setProjectStatus(p,v,Date.now())); bindVal('#fDescription',v=>p.description=v); bindVal('#fNote',v=>p.note=v);
       const beb=$('#fBebodd'); if(beb) beb.addEventListener('change',()=>{ p.bebodd=beb.checked; persistAndUpdate(); });
       const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; recalcOfferPostsLabor(p); const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
       const sI=$('#sInternalCost'); if(sI) sI.addEventListener('input',()=>{ p.settings.internalCost=Number(sI.value)||0; p.work.internalCost=p.settings.internalCost; const l=$('#wInternalCost'); if(l&&document.activeElement!==l) l.value=p.work.internalCost; persistAndUpdate(); });
@@ -2990,8 +3002,8 @@
       if(t.id==='newCustomerBtn'||t.id==='newCustomerBtn2') openCustomerModal();
       if(t.id==='newProjectBtn'||t.id==='newProjectBtn2') openProjectModal();
       if(t.id==='backToDashboard') openDashboard();
-      if(t.id==='saveProjectBtn'){ persistAndRenderProject(); alert('Prosjekt lagret.'); }
-      if(t.id==='deleteProjectBtn') deleteCurrentProject();
+      if(t.id==='saveProjectBtn'){ closeProjectOverflow(); persistAndRenderProject(); alert('Prosjekt lagret.'); }
+      if(t.id==='deleteProjectBtn'){ closeProjectOverflow(); deleteCurrentProject(); }
       if(t.id==='settingsBtn'||t.closest('#settingsBtn')) openSettings();
       if(t.id==='saveSettingsBtn') saveSettings();
       if(t.id==='backToOverviewBtn'){
@@ -3110,32 +3122,29 @@ window.closeMerSheet=function(){
 
 // ── MOBIL: Prosjekt-kontekstmeny + overflow ─────────────────────────────────
 
-window.showProjectBottomBar=function(){
-  if(!window._isMobile||!window._isMobile()) return;
-  var main=document.getElementById('bottomBar');
-  var proj=document.getElementById('projectBottomBar');
-  if(main) main.style.display='none';
-  if(proj) proj.style.display='flex';
-  // Synk aktiv tab
-  document.querySelectorAll('.project-bottom-tab').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.ptab===(window._currentProjectTab||'materials'));
-  });
-};
+// body.in-project styrer navigasjonen via CSS: inne i et prosjekt brukes
+// fanene øverst, ellers hovedmenyen (sidemeny/bunnmeny etter bredde). Klassen
+// følger synligheten til prosjektvisningen automatisk, så den er riktig uansett
+// hvilken kode som bytter visning — og CSS tilpasser seg når vinduet endrer
+// bredde (delt skjerm på iPad).
+(function(){
+  var projectView=document.getElementById('projectView');
+  var app=document.querySelector('.app');
+  if(!projectView||!app) return;
+  function syncInProject(){
+    var isVisible=!projectView.classList.contains('hidden')&&app.style.display!=='none';
+    document.body.classList.toggle('in-project',isVisible);
+  }
+  var observer=new MutationObserver(syncInProject);
+  observer.observe(projectView,{attributes:true,attributeFilter:['class']});
+  observer.observe(app,{attributes:true,attributeFilter:['style']});
+  syncInProject();
+})();
 
-window.hideProjectBottomBar=function(){
-  var main=document.getElementById('bottomBar');
-  var proj=document.getElementById('projectBottomBar');
-  if(proj) proj.style.display='none';
-  if(main&&window._isMobile&&window._isMobile()&&document.getElementById('bottomBar')) main.style.display='flex';
-};
-
-window.switchProjectTab=function(tabId){
-  window._currentProjectTab=tabId;
-  document.querySelectorAll('.project-bottom-tab').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.ptab===tabId);
-  });
-  if(typeof switchTab==='function') switchTab(tabId);
-};
+function closeProjectOverflow(){
+  var menu=document.getElementById('projectOverflowMenu');
+  if(menu) menu.style.display='none';
+}
 
 window.toggleProjectOverflow=function(){
   var menu=document.getElementById('projectOverflowMenu');

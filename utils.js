@@ -43,6 +43,9 @@
     };
 
     const STORAGE_KEY = 'kalkyleapp_round6';
+    // Satt når lokale endringer ikke er bekreftet lagret i skyen (f.eks. uten
+    // dekning på byggeplassen). Lokal versjon vinner da over skyversjonen.
+    const PENDING_SYNC_KEY = 'kalkyleapp_pendingSync';
     const defaultSettings = { timeRate:850, internalCost:450, materialMarkup:20, vatMode:'ex' };
     const defaultCompany = { name:'', address:'', zip:'', city:'', phone:'', email:'', website:'', orgNr:'', vatRegistered:true, logo:'', color:'#2e75b6', extraInfo:'' };
     // Bump denne når det er en oppdatering brukerne bør varsles om (se maybeShowChangelog i app.js)
@@ -125,6 +128,7 @@
 
     function saveState(){
       localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      localStorage.setItem(PENDING_SYNC_KEY,'1');
       if(_syncTimeout) clearTimeout(_syncTimeout);
       _syncTimeout=setTimeout(saveToCloud, 2000);
       const el=document.getElementById('syncIndicator');
