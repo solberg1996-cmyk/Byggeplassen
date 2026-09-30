@@ -51,6 +51,54 @@
     // Bump denne når det er en oppdatering brukerne bør varsles om (se maybeShowChangelog i app.js)
     const APP_UPDATE_VERSION = '2026-08-16-tilbud';
 
+    // ── BETEGNELSE: PRISOVERSLAG ──────────────────────────────
+    // Dokumentet heter «prisoverslag». Maler og prosjekttekster lagret før
+    // endringen sa «tilbud» — de konverteres én gang ved innlasting og merkes
+    // med terminology, så tekst brukeren skriver senere aldri røres.
+    const OFFER_TERMINOLOGY = 'prisoverslag';
+    // Sammensatte ord må byttes som hele fraser (ordgrensen under fanger dem ikke).
+    const TERMINOLOGY_PHRASES = [['fra tilbudsdato','fra datoen det er gitt'],['Tilbudssum','Totalsum']];
+    // «tilbud» og «prisoverslag» bøyes likt (et/-et/-ene/-ets), så endelsen beholdes.
+    const TERMINOLOGY_WORD = /(^|[^A-Za-zÆØÅæøå])(tilbud|Tilbud|TILBUD)(ets|et|enes|ene|ETS|ET|ENES|ENE)?(?![A-Za-zÆØÅæøå])/g;
+
+    function toPrisoverslagTerms(text){
+      if(typeof text!=='string') return text;
+      let out=text;
+      TERMINOLOGY_PHRASES.forEach(([from,to])=>{ out=out.split(from).join(to); });
+      return out.replace(TERMINOLOGY_WORD,(match,before,word,ending)=>{
+        const base=word==='TILBUD'?'PRISOVERSLAG':word==='Tilbud'?'Prisoverslag':'prisoverslag';
+        return before+base+(ending||'');
+      });
+    }
+
+    function convertTextFields(obj,keys){
+      if(!obj) return;
+      keys.forEach(key=>{ if(typeof obj[key]==='string') obj[key]=toPrisoverslagTerms(obj[key]); });
+    }
+
+    function migrateOfferTerminology(s){
+      const tpl=s.offerTemplate;
+      if(tpl&&tpl.terminology!==OFFER_TERMINOLOGY){
+        Object.values(tpl.sections||{}).forEach(sec=>convertTextFields(sec,['title','text']));
+        (tpl.customSections||[]).forEach(cs=>convertTextFields(cs,['title','text']));
+        convertTextFields(tpl,['emailSubject','emailBody']);
+        tpl.terminology=OFFER_TERMINOLOGY;
+      }
+      (s.projects||[]).forEach(p=>{
+        const os=p.offerState;
+        if(!os||os.terminology===OFFER_TERMINOLOGY) return;
+        convertTextFields(os.sectionTitles,Object.keys(os.sectionTitles||{}));
+        convertTextFields(os.texts,Object.keys(os.texts||{}));
+        convertTextFields(os,['innledningTemplate']);
+        (os.freeSections||[]).forEach(fs=>convertTextFields(fs,['title','text']));
+        (os.arbeidsomfangExtra||[]).forEach(x=>convertTextFields(x,['text']));
+        (os.customPosts||[]).forEach(cp=>convertTextFields(cp,['name']));
+        if(os.ikkemedregnet&&Array.isArray(os.ikkemedregnet.custom)) os.ikkemedregnet.custom=os.ikkemedregnet.custom.map(toPrisoverslagTerms);
+        os.terminology=OFFER_TERMINOLOGY;
+      });
+      return s;
+    }
+
     // ── TILBUDSMAL ────────────────────────────────────────────
     // Startpunkt for nye prosjekters offerState (se offer.js). Eksisterende
     // prosjekter påvirkes ikke når malen endres — de har allerede sin egen
@@ -60,19 +108,20 @@
       return {
         sectionOrder: OFFER_SECTION_ORDER_DEFAULT.slice(),
         sections: {
-          innledning: {title:'Innledning', text:'Tilbudet gjelder tømrerarbeider i forbindelse med {{beskrivelse}}. Arbeidet utføres iht. befaring og avtalt omfang.', enabled:true},
-          grunnlag: {title:'Grunnlag for tilbudet', text:'Tilbudet er basert på befaring, mottatte tegninger/skisser og normale arbeidsforhold. Dersom forutsetningene endres eller det avdekkes forhold som ikke var synlige ved befaring, kan dette medføre endringer i pris og fremdrift.', enabled:true},
+          innledning: {title:'Innledning', text:'Prisoverslaget gjelder tømrerarbeider i forbindelse med {{beskrivelse}}. Arbeidet utføres iht. befaring og avtalt omfang.', enabled:true},
+          grunnlag: {title:'Grunnlag for prisoverslaget', text:'Prisoverslaget er basert på befaring, mottatte tegninger/skisser og normale arbeidsforhold. Dersom forutsetningene endres eller det avdekkes forhold som ikke var synlige ved befaring, kan dette medføre endringer i pris og fremdrift.', enabled:true},
           arbeidsomfang: {title:'Arbeidsomfang', enabled:true},
-          ikkemedregnet: {title:'Ikke medregnet i tilbudet', enabled:true},
+          ikkemedregnet: {title:'Ikke medregnet i prisoverslaget', enabled:true},
           prisogbetaling: {title:'Pris og betaling', text:'Arbeidet utføres {{betalingsform}}. Betalingsfrist er 10 dager netto. Ved større arbeider kan det faktureres delbetaling underveis.\n\nTimepris tømrer: kr {{timepris}} eks. mva pr time\nPåslag på materiell: {{material_paslag}}%\nArbeid utover beskrevet omfang regnes som tilleggsarbeid og utføres etter avtale med kunde.', enabled:true},
           fremdrift: {title:'Fremdrift', text:'Planlagt oppstart: {{oppstart}}\nOppstart og ferdigstillelse er estimert og kan påvirkes av værforhold, leveranser og uforutsette forhold.', enabled:true},
-          forbehold: {title:'Forbehold', text:'Tilbudet er basert på dagens priser på materialer og lønn. Det tas forbehold om prisendringer fra leverandører eller uforutsette forhold utenfor entreprenørens kontroll. Riggposten omfatter transport/frakt av materialer, materialhåndtering, tildekking av konstruksjonen i byggetiden, organisering/koordinering, rigging av utstyr og verktøy, vernerunder, HMS-tiltak og retur, etc.\n\nTilbudet er gyldig i {{gyldighet}} dager fra tilbudsdato, dersom annet ikke er avtalt.', enabled:true},
+          forbehold: {title:'Forbehold', text:'Prisoverslaget er basert på dagens priser på materialer og lønn. Det tas forbehold om prisendringer fra leverandører eller uforutsette forhold utenfor entreprenørens kontroll. Riggposten omfatter transport/frakt av materialer, materialhåndtering, tildekking av konstruksjonen i byggetiden, organisering/koordinering, rigging av utstyr og verktøy, vernerunder, HMS-tiltak og retur, etc.\n\nPrisoverslaget er gyldig i {{gyldighet}} dager fra datoen det er gitt, dersom annet ikke er avtalt.', enabled:true},
         },
         customSections: [], // [{id, title, text}] — sås inn i freeSections på nye prosjekter
-        // E-post som åpnes når «Send tilbud» trykkes. {{prosjekt}}, {{firma}}
+        terminology: OFFER_TERMINOLOGY,
+        // E-post som åpnes når «Send prisoverslag» trykkes. {{prosjekt}}, {{firma}}
         // og {{kunde}} erstattes ved sending.
-        emailSubject: 'Tilbud - {{prosjekt}} - {{firma}}',
-        emailBody: 'Hei,\n\nVedlagt finner du tilbud på {{prosjekt}}.\n\nGi gjerne tilbakemelding dersom du har spørsmål.\n\nMvh\n{{firma}}'
+        emailSubject: 'Prisoverslag - {{prosjekt}} - {{firma}}',
+        emailBody: 'Hei,\n\nVedlagt finner du prisoverslag på {{prosjekt}}.\n\nGi gjerne tilbakemelding dersom du har spørsmål.\n\nMvh\n{{firma}}'
       };
     }
 
@@ -81,7 +130,7 @@
         const raw=localStorage.getItem(STORAGE_KEY);
         if(raw){
           const p=JSON.parse(raw);
-          return {customers:p.customers||[], projects:p.projects||[], settings:{...defaultSettings,...(p.settings||{})},
+          return migrateOfferTerminology({customers:p.customers||[], projects:p.projects||[], settings:{...defaultSettings,...(p.settings||{})},
             priceCatalog:p.priceCatalog||[], priceFileName:p.priceFileName||'',
             manualPriceCatalog:p.manualPriceCatalog||[],
             favoriteCatalogIds:p.favoriteCatalogIds||[], recentCatalogIds:p.recentCatalogIds||[],
@@ -89,7 +138,7 @@
             materialPackages:p.materialPackages||[],
             offerTemplate:p.offerTemplate||defaultOfferTemplate(),
             seenUpdateVersion:p.seenUpdateVersion||'',
-            company:{...defaultCompany,...(p.company||{})}};
+            company:{...defaultCompany,...(p.company||{})}});
         // migrate old subcontractor field
         state.projects.forEach(pr=>{ if(pr.extras && pr.extras.subcontractor>0 && !pr.extras.subcontractors){ pr.extras.subcontractors=[{id:uid(),trade:'Underentreprenør',amount:pr.extras.subcontractor}]; } pr.extras.subcontractors=pr.extras.subcontractors||[]; });
         }
@@ -145,14 +194,14 @@
       reader.onload=e=>{
         try{
           const p=JSON.parse(e.target.result);
-          state={customers:p.customers||[],projects:p.projects||[],settings:{...defaultSettings,...(p.settings||{})},
+          state=migrateOfferTerminology({customers:p.customers||[],projects:p.projects||[],settings:{...defaultSettings,...(p.settings||{})},
             priceCatalog:p.priceCatalog||[],priceFileName:p.priceFileName||'',
             favoriteCatalogIds:p.favoriteCatalogIds||[],recentCatalogIds:p.recentCatalogIds||[],
             userTemplates:p.userTemplates||[],calcRates:p.calcRates||{},laborRates:p.laborRates||{},calcRecipes:p.calcRecipes||{},
             materialPackages:p.materialPackages||[],
             offerTemplate:p.offerTemplate||defaultOfferTemplate(),
             seenUpdateVersion:p.seenUpdateVersion||'',
-            company:{...defaultCompany,...(p.company||{})}};
+            company:{...defaultCompany,...(p.company||{})}});
           saveState(); renderDashboard(); alert('Data importert.');
         }catch(err){ alert('Kunne ikke lese filen.'); }
       };

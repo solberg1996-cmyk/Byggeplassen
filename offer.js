@@ -28,7 +28,8 @@
         estDays: '',
         rigChecked: true,        // Rigg og Drift post checkbox
         extraPostsChecked: {},   // {postId: true/false} for auto-generated extra posts
-        templateApplied: false   // sikrer at firmamalen kun sås inn én gang
+        templateApplied: false,  // sikrer at firmamalen kun sås inn én gang
+        terminology: OFFER_TERMINOLOGY // nye prosjekter har allerede prisoverslag-tekster
       };
     }
     // Faste valg under «Ikke medregnet» — samme liste brukes i redigering og
@@ -51,7 +52,7 @@
       {key:'skjultefeil',label:'Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon'},
       {key:'rate',label:'Utbedring av råteskader i eksisterende konstruksjon'},
       {key:'miljosanering',label:'Miljøsanering (asbest, PCB o.l.)'},
-      {key:'prisokning',label:'Prisøkning på materialer fra leverandør etter at tilbudet er gitt'},
+      {key:'prisokning',label:'Prisøkning på materialer fra leverandør etter at prisoverslaget er gitt'},
     ];
 
     // Peker til aktivt prosjekts offerState (settes i initOfferPreviewTab) —
@@ -65,13 +66,13 @@
       return '<div class="offer-editor">'
         +'<div class="offer-editor-toolbar">'
           +'<div>'
-            +'<div class="toolbar-eyebrow">Tilbud</div>'
-            +'<div class="toolbar-title">Tilbudsvisning</div>'
+            +'<div class="toolbar-eyebrow">Prisoverslag</div>'
+            +'<div class="toolbar-title">Forhåndsvisning</div>'
           +'</div>'
           +'<div class="toolbar-spacer"></div>'
           +'<div class="toolbar-actions">'
             +'<button class="btn secondary" onclick="currentProjectId=\''+pid+'\';downloadOfferPDF()">Last ned HTML</button>'
-            +'<button class="btn primary" onclick="currentProjectId=\''+pid+'\';sendOfferNow()">Send tilbud</button>'
+            +'<button class="btn primary" onclick="currentProjectId=\''+pid+'\';sendOfferNow()">Send prisoverslag</button>'
           +'</div>'
         +'</div>'
         +'<div class="offer-editor-body">'
@@ -131,7 +132,7 @@
       const os=_offerState;
 
       function visToggle(key){
-        return '<label class="offer-toggle" title="Vis i tilbudet">'
+        return '<label class="offer-toggle" title="Vis i prisoverslaget">'
           +'<input type="checkbox" '+(os.sections[key]?'checked':'')
           +' onchange="_offerState.sections.'+key+'=this.checked;renderOfferPreview()" />'
           +'Vis</label>';
@@ -148,7 +149,7 @@
       }
       const imSelected=IKKE_MEDREGNET_ITEMS.filter(function(item){return os.ikkemedregnet[item.key];});
       const imOthers=IKKE_MEDREGNET_ITEMS.filter(function(item){return !os.ikkemedregnet[item.key];});
-      const imChecks=(imSelected.length?'<div class="offer-check-group-label">Med i tilbudet</div>'+imSelected.map(imCheckRow).join(''):'')
+      const imChecks=(imSelected.length?'<div class="offer-check-group-label">Med i prisoverslaget</div>'+imSelected.map(imCheckRow).join(''):'')
         +(imOthers.length?'<div class="offer-check-group-label">Andre valg</div>'+imOthers.map(imCheckRow).join(''):'');
       const imCustom=os.ikkemedregnet.custom.map(function(t,i){
         return '<div class="offer-line-row">'
@@ -212,7 +213,7 @@
         +'<section class="offer-zone">'
           +'<div class="offer-zone-head">'
             +'<h2>Innhold</h2>'
-            +'<div class="zone-hint">Hva tilbudet sier til kunden</div>'
+            +'<div class="zone-hint">Hva prisoverslaget sier til kunden</div>'
           +'</div>'
 
           // Innledning
@@ -221,7 +222,7 @@
               +'<div class="offer-card-title">Innledning</div>'
               +visToggle('innledning')
             +'</div>'
-            +'<div class="offer-card-hint">Tilbudet gjelder tømrerarbeider i forbindelse med…</div>'
+            +'<div class="offer-card-hint">Prisoverslaget gjelder tømrerarbeider i forbindelse med…</div>'
             +'<textarea class="offer-textarea" placeholder="Beskriv jobben..."'
             +' oninput="_offerState.texts.innledning=this.value;renderOfferPreview()">'
             +escapeHtml(os.texts.innledning||p.description||'')+'</textarea>'
@@ -235,7 +236,7 @@
             +'</div>'
             +'<div class="offer-card-hint">Huk av hva som er inkludert:</div>'
             +'<div class="offer-card-list">'
-            +(aoRows||'<div class="offer-card-hint" style="font-style:italic;margin:0">Ingen tilbudsposter funnet — legg til manuelt under</div>')
+            +(aoRows||'<div class="offer-card-hint" style="font-style:italic;margin:0">Ingen poster funnet — legg til manuelt under</div>')
             +'</div>'
             +aoExtra
             +'<button class="offer-add-line" onclick="_offerState.arbeidsomfangExtra.push({id:Math.random().toString(36).slice(2),text:\'\'});renderOfferEditorPane();renderOfferPreview()">+ Legg til linje</button>'
@@ -258,7 +259,7 @@
               +'<div class="offer-card-title">Egne seksjoner</div>'
               +'<button class="offer-add-line" style="margin-top:0" onclick="addFreeSection()">+ Legg til</button>'
             +'</div>'
-            +'<div class="offer-card-hint">Frie tekst-seksjoner du kan legge til i tilbudet.</div>'
+            +'<div class="offer-card-hint">Frie tekst-seksjoner du kan legge til i prisoverslaget.</div>'
             +'<div class="offer-freesection-list" id="freeSectionList">'
             +os.freeSections.map(function(fs,i){
               return '<div class="offer-freesection">'
@@ -279,7 +280,7 @@
         +'<section class="offer-zone">'
           +'<div class="offer-zone-head">'
             +'<h2>Pris og oppgjør</h2>'
-            +'<div class="zone-hint">Hvordan tilbudet regnes og presenteres</div>'
+            +'<div class="zone-hint">Hvordan prisoverslaget regnes og presenteres</div>'
           +'</div>'
 
           // Pris og betaling
@@ -300,7 +301,7 @@
             +'<div class="offer-card-head"><div class="offer-card-title">Beregnet tid</div></div>'
             +'<div class="offer-days-total">Totalt beregnet: <strong>'+beregnetTimer+'t</strong> → ca. '+beregnetDager+' arbeidsdager á 8t</div>'
             +'<div class="offer-days-row">'
-              +'<label>Arbeidsdager i tilbudet'
+              +'<label>Arbeidsdager i prisoverslaget'
                 +'<input type="number" class="offer-input numeric" placeholder="'+beregnetDager+'" value="'+escapeAttr(os.estDays||'')+'"'
                 +' oninput="_offerState.estDays=this.value;renderOfferPreview()" /></label>'
               +'<div class="days-unit">arbeidsdager</div>'
@@ -313,7 +314,7 @@
 
           // Postervisning
           +'<div class="offer-card">'
-            +'<div class="offer-card-head"><div class="offer-card-title">Postervisning i tilbud</div></div>'
+            +'<div class="offer-card-head"><div class="offer-card-title">Postervisning</div></div>'
             +'<div class="offer-card-hint">Hvordan postene vises i pristabellen.</div>'
             +'<div class="offer-postmode-list">'
               +'<label class="offer-check"><input type="radio" name="offerPostMode" value="all" '+(os.postMode==='all'?'checked':'')+' onchange="setOfferPostMode(this.value)" /><span>Vis alle poster enkeltvis</span></label>'
@@ -525,7 +526,7 @@
 
       function structuredSectionBody(key){
         if(key==='arbeidsomfang'){
-          return '<p>Følgende arbeid er inkludert i tilbudet:</p>'
+          return '<p>Følgende arbeid er inkludert i prisoverslaget:</p>'
             +os.arbeidsomfangPosts.filter(function(i){return i.checked;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.name)+'</p>';}).join('')
             +os.arbeidsomfangExtra.filter(function(i){return i.text;}).map(function(i){return '<p style="padding-left:16px">- '+esc(i.text)+'</p>';}).join('');
         }
@@ -569,7 +570,7 @@
       // .hdr osv. appens egne klasser (f.eks. prosjekttittelen).
       var html='<style>'+scopeOfferCSS(css,'#offerPreviewDoc')+'</style>'
         +buildOfferLetterheadHtml(p)
-        +'<div class="title">TILBUD</div>'
+        +'<div class="title">PRISOVERSLAG</div>'
         +'<table class="mt"><thead><tr class="hr"><th class="dc">BESKRIVELSE</th><th class="ac">SUM eks mva</th></tr></thead><tbody>'
         +priceRows
         +'<tr class="mva-row"><td class="dc">MVA 25%</td><td class="ac">'+fmt(mva)+'</td></tr>'

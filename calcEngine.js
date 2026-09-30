@@ -589,12 +589,12 @@ function generateWarnings(project, computeResult) {
   );
   var utenPris = allMats.filter(function(m) { return m && (!m.cost || m.cost === 0); });
   if (utenPris.length > 0) {
-    w.push({ severity: 'warning', text: utenPris.length + ' materiale(r) mangler pris — tilbudet kan bli for lavt.' });
+    w.push({ severity: 'warning', text: utenPris.length + ' materiale(r) mangler pris — prisoverslaget kan bli for lavt.' });
   }
 
   var totalHours = c.totalHours || 0;
   if (totalHours === 0 && offerPosts.length > 0) {
-    w.push({ severity: 'danger', text: 'Tilbud uten timer — har du lagt inn arbeidstid?' });
+    w.push({ severity: 'danger', text: 'Prisoverslag uten timer — har du lagt inn arbeidstid?' });
   }
 
   if (!(indirect.avstandKm > 0) && ops.length > 0) {
@@ -602,11 +602,11 @@ function generateWarnings(project, computeResult) {
   }
 
   if (indirect.avstandKm > 60) {
-    w.push({ severity: 'warning', text: 'Lang reisevei (' + ind.avstandKm + ' km) — vurder om kjoring dekkes i tilbudet.' });
+    w.push({ severity: 'warning', text: 'Lang reisevei (' + ind.avstandKm + ' km) — vurder om kjoring dekkes i prisoverslaget.' });
   }
 
   if (!offerPosts.length && materials.length > 0) {
-    w.push({ severity: 'info', text: 'Materialer finnes, men ingen tilbudsposter — husk a sende til tilbud.' });
+    w.push({ severity: 'info', text: 'Materialer finnes, men ingen poster — husk å sende til prisoverslag.' });
   }
 
 
@@ -795,7 +795,7 @@ function buildProjectEstimate(project, priceCatalog) {
     });
     offerPostMats.push({
       operationId: post.id,
-      navn: post.name || 'Tilbudspost',
+      navn: post.name || 'Post',
       type: 'offerPost',
       estimate: { materialer: postMats }
     });

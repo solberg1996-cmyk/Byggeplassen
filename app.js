@@ -1503,7 +1503,7 @@
           <div style="font-size:22px;font-weight:800;color:var(--blue)">${currency(matTotal())}</div>
         </div>
         <div class="toolbar" style="margin-top:14px">
-          <button class="btn primary" onclick="saveCalcPostMaterials()">Lagre og oppdater tilbud</button>
+          <button class="btn primary" onclick="saveCalcPostMaterials()">Lagre og oppdater prisoverslag</button>
           <button class="btn secondary" onclick="closeModal()">Avbryt</button>
         </div>`;
 
@@ -1624,7 +1624,7 @@
       const p=getProject(currentProjectId); if(!p) return;
       const total=_offerState.customPosts.reduce(function(s,cp){return s+getCustomPostPrice(p,cp);},0);
       const sourceIds=_offerState.customPosts.reduce(function(ids,cp){return ids.concat(cp.sourceIds||[]);},[]);
-      _offerState.customPosts=[{id:uid(),name:p.name||'Tilbudssum',price:total,sourceIds:sourceIds}];
+      _offerState.customPosts=[{id:uid(),name:p.name||'Totalsum',price:total,sourceIds:sourceIds}];
       renderCustomPostEditor();
       renderOfferPreview();
     };
@@ -1662,8 +1662,8 @@
     // når du skal finne igjen PDF-en i nedlastinger senere, så den brukes
     // fremfor prosjektnavnet når den finnes.
     function offerFileTitle(p){
-      var base=(p.address||p.name||'tilbud').trim();
-      return base.replace(/[^\wæøåÆØÅ0-9 -]/g,'').trim()||'tilbud';
+      var base=(p.address||p.name||'prisoverslag').trim();
+      return base.replace(/[^\wæøåÆØÅ0-9 -]/g,'').trim()||'prisoverslag';
     }
 
     // Full preview lives as an overlay in the app itself and prints via the
@@ -2181,14 +2181,14 @@
 
           <div class="calc-actions">
             ${window._lastCalcResult?.sentToOffer
-              ?`<button class="btn success" disabled style="cursor:not-allowed">Sendt til tilbud</button>
+              ?`<button class="btn success" disabled style="cursor:not-allowed">Sendt til prisoverslag</button>
                 <button class="btn secondary" onclick="doAddCalcToMaterials()">Legg i materialliste</button>`
-              :`<button class="btn primary" style="background:var(--blue)" onclick="doSendCalcToOffer()">Send til tilbud</button>
+              :`<button class="btn primary" style="background:var(--blue)" onclick="doSendCalcToOffer()">Send til prisoverslag</button>
                 <button class="btn secondary" onclick="doAddCalcToMaterials()">Legg i materialliste</button>`
             }
           </div>
           ${window._lastCalcResult?.sentToOffer
-            ?`<div class="calc-sent-msg">Denne kalkulasjonen er sendt til tilbud. Endre inputfelt for a kunne sende en ny kalkulasjon.</div>`
+            ?`<div class="calc-sent-msg">Denne kalkulasjonen er sendt til prisoverslag. Endre inputfelt for a kunne sende en ny kalkulasjon.</div>`
             :''
           }
         </div>`;
@@ -2199,7 +2199,7 @@
       const result=window._lastCalcResult; if(!result) return;
       // Safety check: prevent double submission
       if(result.sentToOffer){
-        alert('Denne kalkulasjonen er allerede sendt til tilbud. Endre inputfelt for å sende en ny kalkulasjon.');
+        alert('Denne kalkulasjonen er allerede sendt til prisoverslag. Endre inputfelt for å sende en ny kalkulasjon.');
         return;
       }
 
@@ -2222,7 +2222,7 @@
 
       // Create offer post from calculation — let user edit name
       const defaultName=window.calcDefs[result.type]?.label||result.type||'Kalkulasjon';
-      const calcName=prompt('Navn på posten i tilbudet:',defaultName);
+      const calcName=prompt('Navn på posten i prisoverslaget:',defaultName);
       if(calcName===null) return;
       const totalPrice=result.totalMatCost||0;
       const calcHours=result.directTimer||0;
@@ -2255,7 +2255,7 @@
 
       // Confirm to user and ask if they want to clear old materials
       const matCount=snapshotMats.length;
-      const msg=' Kalkulasjon sendt til tilbud!\n\n'+matCount+' materiallinjer lagt til som tilbudspost.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
+      const msg=' Kalkulasjon sendt til prisoverslag!\n\n'+matCount+' materiallinjer lagt til som post.\n\nØnsker du å fjerne gamle materialer fra materiallisten?';
       const shouldClear=confirm(msg);
       if(shouldClear){
         p.materials=[];
@@ -2530,7 +2530,7 @@
           <div><label>Faktisk materialkostnad (kr)</label><input id="fcActualMatCost" type="number" placeholder="Estimert: ${Math.round(c.totalMatCost||c.matCost)}" value="${p.actualMatCost||''}" /></div>
         </div>
         <div class="row">
-          <div><label>Faktisk totalpris til kunde (kr)</label><input id="fcActualTotal" type="number" placeholder="Tilbudssum: ${Math.round(c.totalSaleEx||c.saleEx)}" value="${p.actualTotal||''}" /></div>
+          <div><label>Faktisk totalpris til kunde (kr)</label><input id="fcActualTotal" type="number" placeholder="Prisoverslag: ${Math.round(c.totalSaleEx||c.saleEx)}" value="${p.actualTotal||''}" /></div>
           <div><label>Antall reklamasjoner / avvik</label><input id="fcIssues" type="number" placeholder="0" value="${p.completionData?.issues||0}" /></div>
         </div>
         <label>Notater / læring fra dette prosjektet</label>
@@ -2634,7 +2634,7 @@
         function renderOfferPosts(p){
       if(!p.offerPosts) p.offerPosts=[];
       const offerPosts=p.offerPosts.filter(post=>!isChangeOrder(post));
-      if(!offerPosts.length) return `<div class="empty">Ingen tilbudsposter lagt til enda.</div>`;
+      if(!offerPosts.length) return `<div class="empty">Ingen poster lagt til ennå.</div>`;
       const vatLbl='eks. mva';
       const selCount=Object.keys(window._mergeSelected||{}).filter(function(id){return window._mergeSelected[id];}).length;
       const mergeBar=offerPosts.length>=2?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:10px">
@@ -2722,7 +2722,7 @@
         }
         var matCount=projectEst.materialer.length;
         var totalPrice=projectEst.totalMaterialCost||0;
-        if(!confirm('Legge til '+matCount+' materiallinjer som en tilbudspost?\n\nTotal: '+currency(totalPrice)+' (eks. mva)')){
+        if(!confirm('Legge til '+matCount+' materiallinjer som en post?\n\nTotal: '+currency(totalPrice)+' (eks. mva)')){
           return;
         }
 
@@ -2793,7 +2793,7 @@
         }
         var summary=addedPosts.map(function(ap){return ap.count+' linjer '+ap.type;}).join(', ');
         var totalAdded=addedPosts.reduce(function(s,ap){return s+ap.price;},0);
-        alert('Lagt til '+addedPosts.length+' tilbudsposter:\n'+summary+'\n\nTotalt: '+currency(totalAdded)+' (eks. mva)');
+        alert('Lagt til '+addedPosts.length+' poster:\n'+summary+'\n\nTotalt: '+currency(totalAdded)+' (eks. mva)');
       }
 
       persistAndRenderProject();
