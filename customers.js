@@ -1,11 +1,10 @@
     function renderDashboard(){
       $('#metricCustomers').textContent=state.customers.length;
       $('#metricProjects').textContent=state.projects.length;
-      const sent=state.projects.filter(p=>p.status==='Sendt').length;
-      const won=state.projects.filter(p=>['Vunnet','Pågår','Ferdig'].includes(p.status)).length;
-      $('#metricSent').textContent=sent;
-      const winPct=sent?Math.round((won/sent)*100):0;
+      $('#metricSent').textContent=state.projects.filter(p=>p.status==='Sendt').length;
+      const winPct=computeWinRate(state.projects);
       $('#metricWinRate').textContent=winPct+'%';
+      renderFollowUps();
 
       /* Update win-rate ring — circumference = 2*pi*34 = ~213.6 */
       const ring=$('#winRateRing');
@@ -65,6 +64,48 @@
       });
       saveState();
     }
+
+    function renderFollowUps(){
+      const panel=$('#followUpPanel'); if(!panel) return;
+      const followUps=getOfferFollowUps(state.projects, Date.now());
+      panel.hidden=!followUps.length;
+      if(!followUps.length) return;
+      $('#followUpCount').textContent=followUps.length+' venter på svar';
+      $('#followUpList').innerHTML=followUps.map(renderFollowUpItem).join('');
+    }
+
+    function renderFollowUpItem(f){
+      const p=f.project, cust=getCustomer(p.customerId);
+      const id=escapeAttr(p.id);
+      const sentDate=new Date(f.sentAt).toLocaleDateString('nb-NO');
+      const age=f.isSentAtKnown
+        ? `Sendt ${sentDate} · ${f.daysSinceSent} dager uten svar`
+        : `Sendt-dato mangler · sist endret for ${f.daysSinceSent} dager siden`;
+      const mailBody=`Hei${cust&&cust.name?' '+cust.name:''},\n\nJeg følger opp tilbudet på ${p.name||'prosjektet'}${f.isSentAtKnown?' som ble sendt '+sentDate:''}. Har du fått sett på det, eller er det noe du lurer på?\n`;
+      const contact=[
+        cust&&cust.phone?`<a class="ov-btn ov-btn--ghost" href="tel:${escapeAttr(cust.phone.replace(/\s/g,''))}">Ring</a>`:'',
+        cust&&cust.email?`<a class="ov-btn ov-btn--ghost" href="mailto:${escapeAttr(cust.email)}?subject=${encodeURIComponent('Oppfølging av tilbud – '+(p.name||''))}&body=${encodeURIComponent(mailBody)}">E-post</a>`:''
+      ].join('');
+      const statusOpts=['Sendt','Vunnet','Tapt'].map(s=>`<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('');
+      return `<div class="item ov-followup-item">
+          <div class="ov-followup-info">
+            <h4><button class="ov-followup-name" onclick="openProject('${id}')">${escapeHtml(p.name||'Uten navn')}</button></h4>
+            <p>${escapeHtml(cust?.name||'Ingen kunde')} · ${currency(compute(p).totalSaleEx||compute(p).saleEx)}</p>
+            <p class="ov-followup-age">${age}</p>
+          </div>
+          <div class="inline-actions">
+            ${contact}
+            <button class="ov-btn ov-btn--ghost" title="Påminn om ${FOLLOW_UP_AFTER_DAYS} dager" aria-label="Påminn om ${FOLLOW_UP_AFTER_DAYS} dager" onclick="snoozeFollowUp('${id}')">Påminn senere</button>
+            <select class="ov-status-select status-Sendt" aria-label="Endre status for ${escapeAttr(p.name||'')}" onchange="quickChangeStatus('${id}',this.value)">${statusOpts}</select>
+          </div>
+        </div>`;
+    }
+
+    window.snoozeFollowUp=function(projectId){
+      const p=getProject(projectId); if(!p) return;
+      p.followUpSnoozedUntil=Date.now()+FOLLOW_UP_AFTER_DAYS*DAY_MS;
+      saveState(); renderDashboard();
+    };
 
     function openCustomerModal(existing){
       const c=existing||{id:uid(),name:'',phone:'',email:'',address:''};

@@ -21,6 +21,7 @@ var PROJECT_FILE_CATEGORIES=[
   {key:'skjult_arbeid',label:'Skjult arbeid'},
   {key:'ferdig_arbeid',label:'Ferdig arbeid'},
   {key:'avvik_skade',label:'Avvik/skade'},
+  {key:'endring',label:'Endring/tillegg'},
   {key:'materialer',label:'Materialer'},
   {key:'annet',label:'Annet'},
 ];
@@ -86,22 +87,8 @@ async function pfLoadGallery(p){
   pfRenderQueue();
   var fetched=[];
   try{
-    var res=await _sb.from('project_files')
-      .select('*')
-      .eq('user_id',_sbUser.id)
-      .eq('project_id',p.id)
-      .eq('file_type','image')
-      .is('deleted_at',null)
-      .order('created_at',{ascending:false});
-    if(res.error) throw res.error;
-    var rows=res.data||[];
-    var signedByPath={};
-    if(rows.length){
-      var signRes=await _sb.storage.from('project-files').createSignedUrls(
-        rows.map(function(r){return r.storage_path;}), PF_SIGNED_URL_TTL
-      );
-      (signRes.data||[]).forEach(function(s){ if(s&&s.signedUrl) signedByPath[s.path]=s.signedUrl; });
-    }
+    var rows=await listProjectImages(p);
+    var signedByPath=await signProjectFilePaths(rows.map(function(r){return r.storage_path;}));
     fetched=rows.map(function(row){
       return {
         clientId:row.id,
@@ -119,6 +106,57 @@ async function pfLoadGallery(p){
   _pfQueue=inFlight.concat(fetched);
   _pfGalleryLoading=false;
   pfRenderQueue();
+}
+
+// Aktive bilder for prosjektet, nyeste først.
+async function listProjectImages(p){
+  var res=await _sb.from('project_files')
+    .select('*')
+    .eq('user_id',_sbUser.id)
+    .eq('project_id',p.id)
+    .eq('file_type','image')
+    .is('deleted_at',null)
+    .order('created_at',{ascending:false});
+  if(res.error) throw res.error;
+  return res.data||[];
+}
+
+// Signerte (tidsbegrensede) visnings-URL-er, som {storage_path: url}.
+async function signProjectFilePaths(paths){
+  var signedByPath={};
+  if(!paths.length) return signedByPath;
+  var signRes=await _sb.storage.from('project-files').createSignedUrls(paths, PF_SIGNED_URL_TTL);
+  if(signRes.error) throw signRes.error;
+  (signRes.data||[]).forEach(function(s){ if(s&&s.signedUrl) signedByPath[s.path]=s.signedUrl; });
+  return signedByPath;
+}
+
+// Laster opp ett bilde til prosjektet og registrerer det i project_files.
+// Returnerer den nye raden; kaster ved feil (bruk pfHumanizeError til visning).
+async function uploadProjectImage(p,file,category){
+  if(file.size>MAX_IMAGE_BYTES) throw new Error('exceeded the maximum allowed size');
+  var ext=pfExt(file.name,file.type);
+  var fileId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():uid()+uid();
+  var storagePath=_sbUser.id+'/'+p.id+'/image/'+fileId+'.'+ext;
+
+  var upRes=await _sb.storage.from('project-files').upload(storagePath,file,{
+    contentType:file.type||'application/octet-stream',
+    upsert:false
+  });
+  if(upRes.error) throw upRes.error;
+
+  var insRes=await _sb.from('project_files').insert({
+    user_id:_sbUser.id,
+    project_id:p.id,
+    file_type:'image',
+    category:category||DEFAULT_FILE_CATEGORY,
+    storage_path:storagePath,
+    original_filename:file.name||'bilde',
+    mime_type:file.type||'application/octet-stream',
+    file_size:file.size
+  }).select().single();
+  if(insRes.error) throw insRes.error;
+  return insRes.data;
 }
 
 // pfHandleFileSelect(fileList, projectId) — tar imot prosjekt-id-en
@@ -153,32 +191,11 @@ function pfHandleFileSelect(fileList,projectId){
 
 async function pfUploadOne(entry,p){
   try{
-    var ext=pfExt(entry.file.name,entry.file.type);
-    var fileId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():uid()+uid();
-    var storagePath=_sbUser.id+'/'+p.id+'/image/'+fileId+'.'+ext;
+    var row=await uploadProjectImage(p,entry.file,DEFAULT_FILE_CATEGORY);
+    entry.row=row;
+    entry.storagePath=row.storage_path;
 
-    var upRes=await _sb.storage.from('project-files').upload(storagePath,entry.file,{
-      contentType:entry.file.type||'application/octet-stream',
-      upsert:false
-    });
-    if(upRes.error) throw upRes.error;
-
-    var insRes=await _sb.from('project_files').insert({
-      user_id:_sbUser.id,
-      project_id:p.id,
-      file_type:'image',
-      category:DEFAULT_FILE_CATEGORY,
-      storage_path:storagePath,
-      original_filename:entry.file.name||'bilde',
-      mime_type:entry.file.type||'application/octet-stream',
-      file_size:entry.file.size
-    }).select().single();
-    if(insRes.error) throw insRes.error;
-
-    entry.row=insRes.data;
-    entry.storagePath=storagePath;
-
-    var signRes=await _sb.storage.from('project-files').createSignedUrl(storagePath,3600);
+    var signRes=await _sb.storage.from('project-files').createSignedUrl(row.storage_path,PF_SIGNED_URL_TTL);
     entry.signedUrl=(signRes.data&&signRes.data.signedUrl)||'';
     entry.status='done';
   }catch(err){

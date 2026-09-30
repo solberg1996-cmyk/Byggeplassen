@@ -324,6 +324,7 @@
 
     window.sendOfferNow=function(){
       const p=getProject(currentProjectId); if(!p) return;
+      if(p.status==='Utkast'){ setProjectStatus(p,'Sendt',Date.now()); persistAndUpdate(); }
       const cust=getCustomer(p.customerId);
       const co=state.company||{};
       const toEmail=cust&&cust.email?cust.email:'';
@@ -394,6 +395,29 @@
     }
 
 
+    // Logo, firmainfo og kundeboks — felles for tilbud og endringsmelding.
+    function buildOfferLetterheadHtml(p){
+      const co=state.company||{};
+      const cust=getCustomer(p.customerId);
+      const esc=escapeHtml;
+      var logoSrc=co.logo||window._fallbackLogo||'';
+      var logoHtml=logoSrc?'<div style="width:350px;height:140px;display:flex;align-items:center"><img src="'+logoSrc+'" style="max-width:100%;max-height:100%;object-fit:contain"></div>':'';
+      var coBlock=
+        (co.name?'<strong style="display:block;margin-bottom:4px">'+esc(co.name)+'</strong>':'')
+        +(co.address?'<div>'+esc(co.address)+'</div>':'')
+        +((co.zip||co.city)?'<div>'+ (esc(co.zip||'')+' '+esc(co.city||'')).trim() +'</div>':'')
+        +(co.phone?'<div>Tlf: '+esc(co.phone)+'</div>':'')
+        +(co.email?'<div>'+esc(co.email)+'</div>':'')
+        +(co.orgNr?'<div>Org.nr: '+esc(co.orgNr)+'</div>':'');
+      var custBlock=(cust?'<b>'+esc(cust.name)+'</b>':'NAVN')+'<br>'
+        +(cust&&cust.phone?esc(cust.phone)+'<br>':'')
+        +(p.address?esc(p.address)+'<br>':'')
+        +(cust&&cust.email?esc(cust.email):'');
+      return '<div class="hdr">'+logoHtml+'<div class="co">'+coBlock+'</div></div>'
+        +'<hr class="divider">'
+        +'<div class="custbox">'+custBlock+'</div>';
+    }
+
     function renderOfferPreview(){
       const p=getProject(currentProjectId); if(!p) return;
       // Alle redigeringshandlere ender her — lagre prosjektet (debounced,
@@ -406,7 +430,6 @@
       const co=state.company||{};
       const color=co.color||'#2e75b6';
       const today=new Date().toLocaleDateString('nb-NO');
-      const cust=getCustomer(p.customerId);
       const os=_offerState;
       function fmt(n){return Math.round(n||0).toLocaleString('nb-NO')+' kr';}
       function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -429,7 +452,7 @@
         if(os.postMode==='custom'){
           os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(getCustomPostPrice(p,cp))+'</td></tr>';totalEx+=getCustomPostPrice(p,cp,true);});
         } else if(p.offerPosts&&p.offerPosts.length){
-          p.offerPosts.forEach(function(post){
+          p.offerPosts.filter(function(post){return !isChangeOrder(post);}).forEach(function(post){
             // Calc posts: show "Tømrerarbeid + Materialer" instead of timer info
             var desc='';
             if(post.type==='calc'){
@@ -462,20 +485,6 @@
       }
       var mva=Math.round(totalEx*0.25);
       var totalInc=Math.round(totalEx*1.25);
-
-      var logoSrc=co.logo||window._fallbackLogo||'';
-      var logoHtml=logoSrc?'<div style="width:350px;height:140px;display:flex;align-items:center"><img src="'+logoSrc+'" style="max-width:100%;max-height:100%;object-fit:contain"></div>':'';
-      var coBlock=
-  (co.name?'<strong style="display:block;margin-bottom:4px">'+esc(co.name)+'</strong>':'')
-  +(co.address?'<div>'+esc(co.address)+'</div>':'')
-  +((co.zip||co.city)?'<div>'+ (esc(co.zip||'')+' '+esc(co.city||'')).trim() +'</div>':'')
-  +(co.phone?'<div>Tlf: '+esc(co.phone)+'</div>':'')
-  +(co.email?'<div>'+esc(co.email)+'</div>':'')
-  +(co.orgNr?'<div>Org.nr: '+esc(co.orgNr)+'</div>':'');
-      var custBlock=(cust?'<b>'+esc(cust.name)+'</b>':'NAVN')+'<br>'
-        +(cust&&cust.phone?esc(cust.phone)+'<br>':'')
-        +(p.address?esc(p.address)+'<br>':'')
-        +(cust&&cust.email?esc(cust.email):'');
 
       var validity=p.offer&&p.offer.validity?p.offer.validity:'14';
 
@@ -541,10 +550,10 @@
 
       var css=getOfferCSS(color);
 
-      var html='<style>'+css+'</style>'
-        +'<div class="hdr">'+logoHtml+'<div class="co">'+coBlock+'</div></div>'
-        +'<hr class="divider">'
-        +'<div class="custbox">'+custBlock+'</div>'
+      // Scopet til forhåndsvisningen — ellers overstyrer dokumentets .title,
+      // .hdr osv. appens egne klasser (f.eks. prosjekttittelen).
+      var html='<style>'+scopeOfferCSS(css,'#offerPreviewDoc')+'</style>'
+        +buildOfferLetterheadHtml(p)
         +'<div class="title">TILBUD</div>'
         +'<table class="mt"><thead><tr class="hr"><th class="dc">BESKRIVELSE</th><th class="ac">SUM eks mva</th></tr></thead><tbody>'
         +priceRows

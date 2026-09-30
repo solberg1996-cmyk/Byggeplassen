@@ -5,7 +5,10 @@
 
     async function initAuth(){
       const {data:{session}} = await _sb.auth.getSession();
-      if(session){ _sbUser=session.user; await loadFromCloud(); showApp(); }
+      if(session){ _sbUser=session.user; await syncOnSignIn(); showApp(); }
+      // Uten dekning kan ikke innloggingen fornyes — jobb videre på lokale
+      // data, så synkes det når nettet er tilbake (se 'online' under).
+      else if(!navigator.onLine&&localStorage.getItem(STORAGE_KEY)){ showApp(); updateSyncIndicator(false); }
       else { document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
       _sb.auth.onAuthStateChange(async function(event,session){
         // Supabase re-fires SIGNED_IN whenever the tab/window regains focus,
@@ -15,17 +18,17 @@
         if(event==='SIGNED_IN'&&session){
           const isNewSignIn = !_sbUser || _sbUser.id!==session.user.id;
           _sbUser=session.user;
-          if(isNewSignIn){ await loadFromCloud(); showApp(); }
+          if(isNewSignIn){ await syncOnSignIn(); showApp(); }
         }
-        else if(event==='SIGNED_OUT'){ _sbUser=null; document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; var bb=document.getElementById('bottomBar'); if(bb) bb.style.display='none'; }
+        else if(event==='SIGNED_OUT'){ _sbUser=null; document.body.classList.remove('is-signed-in'); document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; }
       });
     }
 
     function showApp(){
       document.getElementById('loginView').style.display='none';
       document.getElementById('appSidebar').style.display='';
-      var bb=document.getElementById('bottomBar');
-      if(bb&&window._isMobile&&window._isMobile()) bb.style.display='flex';
+      // Bunnmenyen vises via CSS (kun innlogget, smal skjerm, utenfor prosjekt).
+      document.body.classList.add('is-signed-in');
       sidebarNav('kalkyle');
       maybeShowChangelog();
     }
@@ -131,25 +134,43 @@
       } catch(e){ console.log('Cloud load:', e); }
     }
 
+    // Lokale endringer som ikke nådde skyen (typisk uten dekning) skal ikke
+    // overskrives av en eldre skyversjon — send dem opp i stedet.
+    async function syncOnSignIn(){
+      if(localStorage.getItem(PENDING_SYNC_KEY)) await saveToCloud();
+      else await loadFromCloud();
+    }
+
     async function saveToCloud(){
       if(!_sbUser) return;
       try{
-        await _sb.from('user_data').upsert({user_id:_sbUser.id, data:state, updated_at:new Date().toISOString()},{onConflict:'user_id'});
+        // supabase-js kaster ikke ved nettverks-/serverfeil — feilen kommer i svaret.
+        const {error}=await _sb.from('user_data').upsert({user_id:_sbUser.id, data:state, updated_at:new Date().toISOString()},{onConflict:'user_id'});
+        if(error) throw error;
+        localStorage.removeItem(PENDING_SYNC_KEY);
         updateSyncIndicator(true);
       } catch(e){ console.log('Cloud save:', e); updateSyncIndicator(false); }
     }
 
-    // Vis/skjul bunnmeny ved resize
+    window.addEventListener('online',async function(){
+      if(!_sbUser){
+        const {data:{session}}=await _sb.auth.getSession();
+        if(!session) return;
+        _sbUser=session.user;
+      }
+      if(localStorage.getItem(PENDING_SYNC_KEY)) saveToCloud();
+    });
+    window.addEventListener('offline',function(){ updateSyncIndicator(false); });
+
+    // Mer-arket hører til bunnmenyen — lukk det når vinduet blir bredt nok til sidemeny.
     window.addEventListener('resize',function(){
-      var bb=document.getElementById('bottomBar');
-      if(!bb||!_sbUser) return;
-      bb.style.display=window._isMobile&&window._isMobile()?'flex':'none';
       if(!window._isMobile||!window._isMobile()) closeMerSheet();
     });
 
     function updateSyncIndicator(ok){
       const el=document.getElementById('syncIndicator');
       if(!el) return;
-      el.textContent=ok?'Synkronisert':'Synkfeil';
-      el.style.color=ok?'#34c759':'#ff3b30';
+      if(ok){ el.textContent='Synkronisert'; el.style.color='#34c759'; }
+      else if(!navigator.onLine){ el.textContent='Frakoblet – lagret på enheten'; el.style.color='#a96800'; }
+      else { el.textContent='Synkfeil'; el.style.color='#ff3b30'; }
     }

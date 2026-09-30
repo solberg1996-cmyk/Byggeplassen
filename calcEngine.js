@@ -421,9 +421,30 @@ function compute(project){
 }
 
 
+const CHANGE_ORDER_TYPE='tillegg';
+const ChangeOrderStatus={ Draft:'utkast', Sent:'sendt', Approved:'godkjent', Rejected:'avvist' };
+
+function isChangeOrder(post){
+  return !!post && post.type===CHANGE_ORDER_TYPE;
+}
+
 // Opsjoner vises i tilbudet, men regnes kun med når kunden har valgt dem.
+// Tillegg (endringsmeldinger) står utenfor det opprinnelige tilbudet og
+// summeres separat i computeChangeOrdersTotal.
 function isPostInTotal(post){
+  if(isChangeOrder(post)) return false;
   return post.type!=='option' || !!post.enabled;
+}
+
+function computeChangeOrdersTotal(p){
+  let approved=0, pending=0, approvedCount=0, pendingCount=0;
+  ((p&&p.offerPosts)||[]).filter(isChangeOrder).forEach(post=>{
+    const price=Number(post.price)||0;
+    const status=(post.changeOrder||{}).status;
+    if(status===ChangeOrderStatus.Approved){ approved+=price; approvedCount++; }
+    else if(status!==ChangeOrderStatus.Rejected){ pending+=price; pendingCount++; }
+  });
+  return {approved, pending, approvedCount, pendingCount};
 }
 
 // ── TILBUDSPOST-SUMMERING (tidl. computeOfferPostsTotal() i app.js) ──
@@ -449,6 +470,43 @@ function getCustomPostPrice(p, cp, isTotalOnly){
   return (p.offerPosts||[])
     .filter(post=>post&&ids.includes(post.id)&&(!isTotalOnly||isPostInTotal(post)))
     .reduce((s,post)=>s+(Number(post.price)||0),0);
+}
+
+
+// ── TILBUDSOPPFØLGING ────────────────────────────────────────
+
+const FOLLOW_UP_AFTER_DAYS=7;
+const DAY_MS=24*60*60*1000;
+const WON_STATUSES=['Vunnet','Pågår','Ferdig'];
+
+// Setter status og husker når tilbudet ble sendt — grunnlaget for oppfølging.
+function setProjectStatus(p, status, now){
+  if(status==='Sendt'&&p.status!=='Sendt'){
+    p.sentAt=now;
+    p.followUpSnoozedUntil=0;
+  }
+  p.status=status;
+}
+
+// Sendte tilbud uten svar i FOLLOW_UP_AFTER_DAYS dager, eldste først.
+// Eldre prosjekter uten sentAt bruker updatedAt som beste anslag.
+function getOfferFollowUps(projects, now){
+  return (projects||[])
+    .filter(p=>p.status==='Sendt'&&!((p.followUpSnoozedUntil||0)>now))
+    .map(p=>{
+      const sentAt=p.sentAt||p.updatedAt||now;
+      return {project:p, sentAt, isSentAtKnown:!!p.sentAt, daysSinceSent:Math.floor((now-sentAt)/DAY_MS)};
+    })
+    .filter(f=>f.daysSinceSent>=FOLLOW_UP_AFTER_DAYS)
+    .sort((a,b)=>a.sentAt-b.sentAt);
+}
+
+// Andel vunnet av avgjorte tilbud (vunnet + tapt). Tilbud som venter på svar
+// teller ikke, ellers ville raten falle hver gang et nytt tilbud sendes.
+function computeWinRate(projects){
+  const won=(projects||[]).filter(p=>WON_STATUSES.includes(p.status)).length;
+  const lost=(projects||[]).filter(p=>p.status==='Tapt').length;
+  return won+lost?Math.round(won/(won+lost)*100):0;
 }
 
 
@@ -926,6 +984,15 @@ window.compute = compute;
 window.computeOfferPostsTotal = computeOfferPostsTotal;
 window.getCustomPostPrice = getCustomPostPrice;
 window.isPostInTotal = isPostInTotal;
+window.isChangeOrder = isChangeOrder;
+window.setProjectStatus = setProjectStatus;
+window.getOfferFollowUps = getOfferFollowUps;
+window.computeWinRate = computeWinRate;
+window.FOLLOW_UP_AFTER_DAYS = FOLLOW_UP_AFTER_DAYS;
+window.DAY_MS = DAY_MS;
+window.computeChangeOrdersTotal = computeChangeOrdersTotal;
+window.CHANGE_ORDER_TYPE = CHANGE_ORDER_TYPE;
+window.ChangeOrderStatus = ChangeOrderStatus;
 window.blankOperation = blankOperation;
 window.generateWarnings = generateWarnings;
 window.findCatalogPrice = findCatalogPrice;
