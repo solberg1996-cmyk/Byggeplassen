@@ -928,6 +928,12 @@
     .offer-card-list{display:flex;flex-direction:column;gap:2px}
 
     /* Custom checkbox + radio */
+    .offer-check-group-label{
+      font-family:var(--font-display);font-size:10px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+      margin:14px 0 4px;
+    }
+    .offer-check-group-label:first-child{margin-top:0}
     .offer-check{
       display:flex;align-items:center;gap:10px;
       cursor:pointer;user-select:none;

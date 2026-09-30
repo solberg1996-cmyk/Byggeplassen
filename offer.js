@@ -20,7 +20,7 @@
         ikkemedregnet: {
           elektriker: true, rorlegger: true, maling: true,
           byggesoknad: true, avfall: true, stillas: true,
-          skjultefeil: true, custom: []
+          skjultefeil: true, prisokning: true, custom: []
         },
         // Pris og betaling type
         prisType: 'medgaatt',  // 'medgaatt' | 'fastpris' | 'begge'
@@ -31,6 +31,29 @@
         templateApplied: false   // sikrer at firmamalen kun sås inn én gang
       };
     }
+    // Faste valg under «Ikke medregnet» — samme liste brukes i redigering og
+    // i tilbudsdokumentet. Standardvalg for nye tilbud settes i defaultOfferState;
+    // eksisterende tilbud beholder sine valg.
+    const IKKE_MEDREGNET_ITEMS=[
+      {key:'elektriker',label:'Elektrikerarbeider'},
+      {key:'rorlegger',label:'Rørleggerarbeider'},
+      {key:'maling',label:'Maling og sparkling'},
+      {key:'murerflis',label:'Murer- og flisarbeid'},
+      {key:'graving',label:'Graving, grunnarbeid og drenering'},
+      {key:'byggesoknad',label:'Byggesøknad og prosjektering'},
+      {key:'gebyrer',label:'Kommunale gebyrer og saksbehandling'},
+      {key:'ansvarsrett',label:'Ansvarsrett og uavhengig kontroll'},
+      {key:'kjokken',label:'Kjøkken, garderobe og hvitevarer'},
+      {key:'avfall',label:'Avfallshåndtering'},
+      {key:'stillas',label:'Stillas'},
+      {key:'byggestrom',label:'Byggestrøm og vann (stilles til disposisjon av kunde)'},
+      {key:'vintertiltak',label:'Vintertiltak (oppvarming, tildekking, uttørking og snørydding)'},
+      {key:'skjultefeil',label:'Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon'},
+      {key:'rate',label:'Utbedring av råteskader i eksisterende konstruksjon'},
+      {key:'miljosanering',label:'Miljøsanering (asbest, PCB o.l.)'},
+      {key:'prisokning',label:'Prisøkning på materialer fra leverandør etter at tilbudet er gitt'},
+    ];
+
     // Peker til aktivt prosjekts offerState (settes i initOfferPreviewTab) —
     // redigeringer muterer prosjektet direkte og lagres via saveState.
     var _offerState = defaultOfferState();
@@ -115,21 +138,18 @@
       }
 
 
-      const imStd=[
-        {key:'elektriker',label:'Elektrikerarbeider'},
-        {key:'rorlegger',label:'Rørleggerarbeider'},
-        {key:'maling',label:'Maling og sparkling'},
-        {key:'byggesoknad',label:'Byggesøknad og prosjektering'},
-        {key:'avfall',label:'Avfallshåndtering'},
-        {key:'stillas',label:'Stillas'},
-        {key:'skjultefeil',label:'Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon'},
-      ];
-      const imChecks=imStd.map(function(item){
+      // Avkryssede øverst, resten under. Sorteres kun når fanen tegnes, så et
+      // punkt ikke hopper bort i det man trykker på det.
+      function imCheckRow(item){
         return '<label class="offer-check">'
           +'<input type="checkbox" '+(os.ikkemedregnet[item.key]?'checked':'')
           +' onchange="_offerState.ikkemedregnet.'+item.key+'=this.checked;renderOfferPreview()" />'
           +'<span>'+item.label+'</span></label>';
-      }).join('');
+      }
+      const imSelected=IKKE_MEDREGNET_ITEMS.filter(function(item){return os.ikkemedregnet[item.key];});
+      const imOthers=IKKE_MEDREGNET_ITEMS.filter(function(item){return !os.ikkemedregnet[item.key];});
+      const imChecks=(imSelected.length?'<div class="offer-check-group-label">Med i tilbudet</div>'+imSelected.map(imCheckRow).join(''):'')
+        +(imOthers.length?'<div class="offer-check-group-label">Andre valg</div>'+imOthers.map(imCheckRow).join(''):'');
       const imCustom=os.ikkemedregnet.custom.map(function(t,i){
         return '<div class="offer-line-row">'
           +'<input class="offer-input small" value="'+escapeAttr(t)+'" placeholder="Legg til punkt..."'
@@ -511,13 +531,8 @@
         }
         if(key==='ikkemedregnet'){
           return '<p>Følgende arbeider er ikke inkludert dersom annet ikke er spesifisert:</p>'
-            +(os.ikkemedregnet.elektriker?'<p style="padding-left:16px">- Elektrikerarbeider</p>':'')
-            +(os.ikkemedregnet.rorlegger?'<p style="padding-left:16px">- Rørleggerarbeider</p>':'')
-            +(os.ikkemedregnet.maling?'<p style="padding-left:16px">- Maling og sparkling</p>':'')
-            +(os.ikkemedregnet.byggesoknad?'<p style="padding-left:16px">- Byggesøknad og prosjektering</p>':'')
-            +(os.ikkemedregnet.avfall?'<p style="padding-left:16px">- Avfallshåndtering</p>':'')
-            +(os.ikkemedregnet.stillas?'<p style="padding-left:16px">- Stillas</p>':'')
-            +(os.ikkemedregnet.skjultefeil?'<p style="padding-left:16px">- Arbeid som følge av skjulte feil eller mangler i eksisterende konstruksjon</p>':'')
+            +IKKE_MEDREGNET_ITEMS.filter(function(item){return os.ikkemedregnet[item.key];})
+              .map(function(item){return '<p style="padding-left:16px">- '+esc(item.label)+'</p>';}).join('')
             +os.ikkemedregnet.custom.filter(function(t){return t;}).map(function(t){return '<p style="padding-left:16px">- '+esc(t)+'</p>';}).join('');
         }
         return '';

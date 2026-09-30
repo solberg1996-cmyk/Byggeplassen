@@ -101,11 +101,80 @@
         </div>`;
     }
 
+    const FOLLOW_UP_REMINDER_HOUR=8;
+    const FOLLOW_UP_EVENT_MINUTES=15;
+
     window.snoozeFollowUp=function(projectId){
       const p=getProject(projectId); if(!p) return;
       p.followUpSnoozedUntil=Date.now()+FOLLOW_UP_AFTER_DAYS*DAY_MS;
       saveState(); renderDashboard();
+      offerCalendarReminder(p);
     };
+
+    // Nettsider får ikke skrive til Påminnelser/Kalender direkte. En .ics-fil
+    // med varsel kan derimot legges i Kalender, og synkes til telefonen via iCloud.
+    function offerCalendarReminder(p){
+      const start=new Date(p.followUpSnoozedUntil);
+      start.setHours(FOLLOW_UP_REMINDER_HOUR,0,0,0);
+      const url=URL.createObjectURL(new Blob([buildFollowUpIcs(p,start)],{type:'text/calendar;charset=utf-8'}));
+      const dateLabel=start.toLocaleDateString('nb-NO',{weekday:'long',day:'numeric',month:'long'});
+      // iOS åpner kalenderfilen i en visning med «Legg til»; andre steder lastes den ned.
+      const linkAttrs=isAppleTouchDevice()?'target="_blank" rel="noopener"':`download="Følg opp ${escapeAttr(p.name||'tilbud')}.ics"`;
+      showModal(`
+        <div class="section-head"><div class="section-title">Utsatt til ${escapeHtml(dateLabel)}</div></div>
+        <p style="margin:0 0 14px;color:var(--muted)">Vil du også få varsel i kalenderen (og på telefonen via iCloud) kl. ${String(FOLLOW_UP_REMINDER_HOUR).padStart(2,'0')}:00 den dagen?</p>
+        <div class="toolbar">
+          <a class="btn primary" href="${url}" ${linkAttrs} onclick="setTimeout(closeModal,300)" style="text-decoration:none">📅 Legg i kalender</a>
+          <button class="btn secondary" onclick="closeModal()">Nei takk</button>
+        </div>`);
+    }
+
+    function buildFollowUpIcs(p,start){
+      const cust=getCustomer(p.customerId);
+      const end=new Date(start.getTime()+FOLLOW_UP_EVENT_MINUTES*60*1000);
+      const details=[
+        'Tilbudet står fortsatt som sendt uten svar.',
+        cust&&cust.name?'Kunde: '+cust.name:'',
+        cust&&cust.phone?'Telefon: '+cust.phone:'',
+        cust&&cust.email?'E-post: '+cust.email:'',
+        p.address?'Adresse: '+p.address:''
+      ].filter(Boolean).join('\n');
+      const summary='Følg opp tilbud: '+(p.name||'prosjekt');
+      return [
+        'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Byggeplassen//Tilbudsoppfolging//NO','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        'UID:'+p.id+'-'+start.getTime()+'@byggeplassen',
+        'DTSTAMP:'+toIcsUtc(new Date()),
+        'DTSTART:'+toIcsUtc(start),
+        'DTEND:'+toIcsUtc(end),
+        'SUMMARY:'+escapeIcsText(summary),
+        'DESCRIPTION:'+escapeIcsText(details),
+        'BEGIN:VALARM','ACTION:DISPLAY','TRIGGER:PT0M','DESCRIPTION:'+escapeIcsText(summary),'END:VALARM',
+        'END:VEVENT','END:VCALENDAR'
+      ].map(foldIcsLine).join('\r\n');
+    }
+
+    function toIcsUtc(date){
+      return date.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+    }
+
+    // RFC 5545: \, ; , og linjeskift må escapes i tekstfelt.
+    function escapeIcsText(text){
+      return String(text).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+    }
+
+    // RFC 5545: linjer over 75 bytes brytes med linjeskift + mellomrom. 60 tegn
+    // gir margin for æøå, som tar 2 bytes hver.
+    function foldIcsLine(line){
+      const parts=[];
+      for(let i=0;i<line.length;i+=60) parts.push((i?' ':'')+line.slice(i,i+60));
+      return parts.join('\r\n');
+    }
+
+    // iPadOS rapporterer seg som Mac, men har berøringsskjerm.
+    function isAppleTouchDevice(){
+      return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    }
 
     function openCustomerModal(existing){
       const c=existing||{id:uid(),name:'',phone:'',email:'',address:''};
