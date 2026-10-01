@@ -5,12 +5,12 @@
 
     const ChangeOrderPricing={ Fixed:'fastpris', TimeAndMaterials:'medgatt' };
 
-    // Merkene har alltid tekst (ikke bare farge); kantfargen skiller statusene.
+    // Merkene har alltid tekst (ikke bare farge); fargen kommer fra .co-status--<status>.
     const CHANGE_ORDER_STATUS_META={
-      utkast:  {label:'Utkast',   border:'var(--line-strong)', bg:'var(--bg-warm)'},
-      sendt:   {label:'Sendt',    border:'var(--yellow)',      bg:'var(--yellow-soft)'},
-      godkjent:{label:'Godkjent', border:'var(--green)',       bg:'var(--green-soft)'},
-      avvist:  {label:'Avvist',   border:'var(--red)',         bg:'var(--red-soft)'}
+      utkast:  {label:'Utkast'},
+      sendt:   {label:'Sendt'},
+      godkjent:{label:'Godkjent'},
+      avvist:  {label:'Avvist'}
     };
 
     const VAT_RATE=0.25;
@@ -24,16 +24,18 @@
     function renderChangeOrders(p){
       const changeOrders=(p.offerPosts||[]).filter(isChangeOrder);
       const list=changeOrders.length
-        ? changeOrders.map(post=>renderChangeOrderCard(p,post)).join('')
-        : '<div class="empty">Ingen tillegg registrert. Legg til et tillegg når kunden ønsker endringer underveis.</div>';
-      return `
-        <div class="section-head" style="margin-top:18px">
-          <div class="section-title">Endringer og tillegg</div>
-          <div class="toolbar">
-            <button class="btn small secondary" onclick="addChangeOrder()">+ Nytt tillegg</button>
+        ? `<div class="offer-table offer-table--changes">
+            <div class="offer-table-head" aria-hidden="true"><div class="offer-row-cells"><span>Nr.</span><span>Tillegg</span><span class="offer-col-wide">Prising</span><span class="offer-col-wide">Status</span><span class="offer-col-num">Sum ${getVatLabel(p)}</span><span></span></div></div>
+            ${changeOrders.map(post=>renderChangeOrderItem(p,post)).join('')}
+          </div>`
+        : '<div class="offer-empty">Ingen tillegg registrert. Legg til et tillegg når kunden ønsker endringer underveis.</div>';
+      return `<section class="offer-card" aria-labelledby="changeOrdersTitle">
+          <div class="offer-card-head">
+            <h2 class="offer-card-title" id="changeOrdersTitle">Endringer og tillegg</h2>
+            <button class="btn small soft" onclick="addChangeOrder()" aria-label="Nytt tillegg">+ Tillegg</button>
           </div>
-        </div>
-        <div class="card" style="margin-top:8px;background:var(--card-hover)">${list}</div>`;
+          ${list}
+        </section>`;
     }
 
     // Kalles etter at kortene er satt inn i DOM-en: henter visnings-URL-er for
@@ -42,30 +44,40 @@
       (p.offerPosts||[]).filter(post=>isChangeOrder(post)&&post._open).forEach(post=>refreshChangeOrderPhotos(post.id));
     }
 
-    function renderChangeOrderCard(p,post){
-      const co=post.changeOrder||{};
-      const meta=CHANGE_ORDER_STATUS_META[co.status]||CHANGE_ORDER_STATUS_META.utkast;
+    function renderChangeOrderItem(p,post){
       const isOpen=post._open===true;
-      const id=escapeAttr(post.id);
-      const isRejected=co.status===ChangeOrderStatus.Rejected;
-      const header=`<div role="button" tabindex="0" aria-expanded="${isOpen}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:44px;cursor:pointer;background:${isOpen?'var(--bg-warm)':'var(--card)'};border-radius:${isOpen?'var(--radius) var(--radius) 0 0':'var(--radius)'}" onclick="toggleOfferPost('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleOfferPost('${id}');}">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-weight:800;font-size:14px">Nr. ${co.number||'?'} · ${escapeHtml(post.name||'Nytt tillegg')}</span>
-              <span style="font-size:11px;font-weight:700;color:var(--text);background:${meta.bg};border:1px solid ${meta.border};border-radius:var(--radius-xs);padding:1px 6px">${meta.label}</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">${formatChangeOrderDate(co.createdDate)} · ${co.pricing===ChangeOrderPricing.TimeAndMaterials?'Etter medgått tid':'Fastpris'}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:17px;font-weight:800;color:${isRejected?'var(--muted)':'var(--indigo)'};${isRejected?'text-decoration:line-through':''}">${currency(displayVatValue(p,post.price||0))}</div>
-            <div style="font-size:10px;color:var(--muted)">${co.pricing===ChangeOrderPricing.TimeAndMaterials?'estimat eks. mva':'eks. mva'}</div>
-          </div>
-          <div style="color:var(--muted);font-size:13px">${isOpen?'▲':'▼'}</div>
-        </div>`;
-      if(!isOpen) return `<div style="border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);margin-bottom:6px">${header}</div>`;
+      return `<div class="offer-item${isOpen?' is-open':''}">${renderChangeOrderRow(p,post)}${isOpen?renderChangeOrderDetail(p,post):''}</div>`;
+    }
 
+    function renderChangeOrderRow(p,post){
+      const co=post.changeOrder||{};
+      const status=CHANGE_ORDER_STATUS_META[co.status]?co.status:ChangeOrderStatus.Draft;
+      const id=escapeAttr(post.id);
+      const isRejected=status===ChangeOrderStatus.Rejected;
+      const isTimeAndMaterials=co.pricing===ChangeOrderPricing.TimeAndMaterials;
+      const pricingLabel=isTimeAndMaterials?'Medgått tid':'Fastpris';
+      const statusBadge=`<span class="co-status co-status--${status}">${CHANGE_ORDER_STATUS_META[status].label}</span>`;
+      return `<div class="offer-row${isRejected?' is-muted':''}" id="changeOrderRow_${id}">
+        <button type="button" class="offer-row-cells" aria-expanded="${post._open===true}" onclick="toggleOfferPost('${id}')">
+          <span class="co-number"><span class="visually-hidden">Nr. </span>${co.number||'?'}</span>
+          <span class="offer-cell-name">
+            <span class="offer-name">${escapeHtml(post.name||'Nytt tillegg')}</span>
+            <span class="offer-cell-desc">${formatChangeOrderDate(co.createdDate)}${isTimeAndMaterials?' · estimert sum':''}</span>
+            <span class="offer-cell-compact">${pricingLabel} · ${statusBadge}</span>
+          </span>
+          <span class="offer-col-wide">${pricingLabel}</span>
+          <span class="offer-col-wide">${statusBadge}</span>
+          <span class="offer-col-num offer-cell-sum${isRejected?' is-struck':''}">${formatNumber(displayVatValue(p,post.price||0))}</span>
+          <span class="offer-chevron">${CHEVRON_DOWN_ICON}</span>
+        </button>
+      </div>`;
+    }
+
+    function renderChangeOrderDetail(p,post){
+      const co=post.changeOrder||{};
+      const id=escapeAttr(post.id);
       const hours=getChangeOrderHours(post);
-      const body=`<div style="padding:12px 14px 14px;border-top:1px solid var(--line)">
+      return `<div class="offer-row-detail">
           <div class="row">
             <div><label>Navn på tillegget</label><input value="${escapeAttr(post.name||'')}" placeholder="F.eks. Ekstra vindu på gavl" aria-label="Navn på tillegget" onchange="updatePost('${id}','name',this.value)" /></div>
             <div><label>Prising</label><select aria-label="Prising" onchange="updateChangeOrder('${id}','pricing',this.value)">
@@ -106,7 +118,6 @@
             <button class="btn small primary" onclick="sendChangeOrder('${id}')">Send på e-post</button>
           </div>
         </div>`;
-      return `<div style="border:1.5px solid var(--line-strong);border-radius:var(--radius);overflow:hidden;background:var(--card);margin-bottom:6px">${header}${body}</div>`;
     }
 
     window.addChangeOrder=function(){

@@ -29,7 +29,10 @@
       const p=getProject(currentProjectId); if(!p) return;
       const cust=getCustomer(p.customerId);
       $('#projectTitle').textContent=p.name||'Prosjekt';
-      $('#projectSubtitle').textContent=[cust?.name||'Ingen kunde valgt', p.type, p.address].filter(Boolean).join(' · ');
+      $('#projectSubtitle').textContent=[cust?.name||'Ingen kunde valgt', p.address].filter(Boolean).join(' · ');
+      const avatar=$('#projectAvatar');
+      avatar.textContent=getInitials(p.name);
+      avatar.className='dash-avatar project-avatar dash-avatar--'+getAvatarTone(p.id);
       $('#toggleEx').classList.toggle('active',p.settings.vatMode==='ex');
       $('#toggleInc').classList.toggle('active',p.settings.vatMode==='inc');
       $('#projectTopPills').innerHTML=`<button class="pill status-${escapeAttr(p.status)} project-status-pill" onclick="goToProjectStatus()" aria-label="Status: ${escapeAttr(p.status)}. Endre status">${escapeHtml(p.status)}</button>`;
@@ -41,7 +44,8 @@
         {id:'offer',     label:'Prisoverslag',    short:'Overslag'},
         {id:'preview',   label:'Forhåndsvisning', short:'Visning'},
       ];
-      const tabBar=`<nav class="tab-bar" aria-label="Prosjektfaner">${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" ${currentTab===t.id?'aria-current="page"':''} onclick="switchTab('${t.id}')"><span class="tab-label-long">${t.label}</span><span class="tab-label-short">${t.short}</span></button>`).join('')}</nav>`;
+      const sendIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>';
+      const projectDock=`<nav class="dock dock--project" aria-label="Prosjektfaner">${tabs.map(t=>`<button class="dock-item ${currentTab===t.id?'active':''}" ${currentTab===t.id?'aria-current="page"':''} onclick="switchTab('${t.id}')"><span class="dock-label-long">${t.label}</span><span class="dock-label-short">${t.short}</span></button>`).join('')}<span class="dock-sep" aria-hidden="true"></span><button class="dock-item dock-item--send" onclick="sendFromDock()" aria-label="Send prisoverslag">${sendIcon}<span class="dock-label-long">Send prisoverslag</span></button></nav>`;
 
       let panel='';
       try{
@@ -49,7 +53,7 @@
         if(currentTab==='materials') panel=renderTabMaterials(p);
         if(currentTab==='offer')     panel=renderTabOffer(p);
         if(currentTab==='preview'){
-          $('#stepsContainer').innerHTML=tabBar+'<div class="tab-panel" style="padding:0">'+renderTabPreview(p)+'</div>';
+          $('#stepsContainer').innerHTML=projectDock+'<div class="tab-panel tab-panel--bare">'+renderTabPreview(p)+'</div>';
           bindProjectEvents();
           initOfferPreviewTab(p);
           return;
@@ -62,8 +66,10 @@
         panel=`<div class="empty" style="color:var(--red)">Klarte ikke å vise denne fanen på grunn av en feil i prosjektdataene.<br>Feilmelding: ${escapeHtml(err.message)}</div>`;
       }
 
-      $('#stepsContainer').innerHTML=tabBar+`<div class="tab-panel">${panel}</div>`;
-      bindProjectEvents(); updateSummary(); refreshOpSummary();
+      // Faner med egne kort ligger rett på bakgrunnen.
+      const hasOwnCards=currentTab==='offer'||currentTab==='info'||currentTab==='materials';
+      $('#stepsContainer').innerHTML=projectDock+`<div class="tab-panel${hasOwnCards?' tab-panel--bare':''}">${panel}</div>`;
+      bindProjectEvents(); refreshOpSummary();
       if(currentTab==='offer') loadOpenChangeOrderPhotos(p);
     }
 
@@ -78,97 +84,165 @@
       currentTab=(id==='costs'||id==='work')?'info':id; renderProjectView();
     }
 
+    // «Send prisoverslag» i dokken: e-post og utskrift bygger på
+    // forhåndsvisningen, så den åpnes først.
+    window.sendFromDock=function(){
+      if(currentTab!=='preview') switchTab('preview');
+      sendOfferNow();
+    };
+
     function persistAndUpdate(){ const p=getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); updateSummary(); }
     function persistAndRenderProject(){ const p=getProject(currentProjectId); if(!p) return; p.updatedAt=Date.now(); saveState(); renderProjectView(); renderDashboard(); }
 
+    // Etter redigering: tegn sammendraget og radene på nytt, men ikke feltene
+    // i åpne poster — da blir fokus og tastatur stående.
     function updateSummary(){
       const p=getProject(currentProjectId); if(!p) return;
-      const c=window.compute(p), ps=window.computeOfferPostsTotal(p);
-      const vatM=p.settings.vatMode==='inc';
-      // Update Tømrerarbeid display live
-      const laborEl=document.getElementById('summaryLaborVal');
-      if(laborEl) laborEl.textContent=currency(vatM?c.totalLaborSaleEx*1.25:c.totalLaborSaleEx);
-      const extrasEl=document.getElementById('summaryExtrasVal');
-      if(extrasEl) extrasEl.textContent=currency(vatM?(c.extrasBase+c.rigEx)*1.25:(c.extrasBase+c.rigEx));
-      const extrasDetailEl=document.getElementById('summaryExtrasDetail');
-      if(extrasDetailEl) extrasDetailEl.textContent=(c.rigHours>0?'Rigg '+c.rigHours+'t m.m.':'Rigg m.m.');
-      const totalDisplayHours=(c.hoursTotal||0)+(ps.hours||0);
-      const hoursEl=document.getElementById('summaryLaborHours');
-      if(hoursEl) hoursEl.textContent='Totalt: '+totalDisplayHours+'t | Tømrer: '+(c.hoursTotal||0)+'t | Poster: '+(ps.hours||0)+'t';
-      const ohd=document.getElementById('offerTotalHoursDisplay');
-      if(ohd) ohd.textContent=totalDisplayHours+'t';
-      const oht=document.getElementById('offerTotalHoursText');
-      if(oht) oht.textContent=totalDisplayHours+'t';
-      const ohDetail=document.getElementById('offerTotalHoursDetail');
-      if(ohDetail){
-        const parts=[];
-        if(c.hoursTotal>0) parts.push(c.hoursTotal+'t fra arbeid');
-        if(ps.hours>0) parts.push(ps.hours+'t fra poster');
-        ohDetail.textContent=parts.join(' + ');
-      }
-      const ohInput=document.getElementById('offerTotalHours');
-      if(ohInput) ohInput.placeholder=(c.totalHours||0)+'';
-      const summaryModeNote=$('#summaryModeNote'); if(summaryModeNote) summaryModeNote.textContent=(p.offerPosts&&p.offerPosts.length)?'Viser sum av poster':(p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva');
+      const summary=document.getElementById('offerSummary');
+      if(summary) summary.outerHTML=renderOfferSummary(p);
+      refreshOfferRows(p);
+      const extrasTotal=document.getElementById('extrasTotal');
+      if(extrasTotal) extrasTotal.textContent=currency(displayVatValue(p,sumProjectCosts(p)));
+    }
+
+    function refreshOfferRows(p){
+      const isSelectable=(p.offerPosts||[]).filter(post=>!isChangeOrder(post)).length>=2;
+      (p.offerPosts||[]).forEach(post=>{
+        const isCo=isChangeOrder(post);
+        const row=document.getElementById((isCo?'changeOrderRow_':'offerPostRow_')+post.id);
+        if(row) row.outerHTML=isCo?renderChangeOrderRow(p,post):renderOfferPostRow(p,post,isSelectable);
+      });
     }
 
     function openDashboard(){ currentProjectId=null; $('#projectView').classList.add('hidden'); $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
 
     window.goToProjectStatus=function(){
       if(currentTab!=='info') switchTab('info');
-      const el=$('#fStatus'); if(!el) return;
+      const el=$('#fStatus [aria-checked="true"]')||$('#fStatus button'); if(!el) return;
       el.scrollIntoView({behavior:'smooth',block:'center'});
       el.focus({preventScroll:true});
     };
 
+    const JOB_TYPES=['Terrasse','Lettvegg','Vindu','Listing','Kledning','Etterisolering','Rehabilitering','Bad','Tak','Annet'];
+    const START_OPTIONS=['Snarest','Innen 2 uker','Innen 1 måned','Etter avtale'];
+    const PROJECT_STATUSES=['Utkast','Sendt','Vunnet','Pågår','Ferdig','Tapt'];
+    const SUBCONTRACTOR_TRADES=['Rørlegger','Elektriker','Maler','Snekker','Flislegger','Tømrer','Annet'];
+
+    // Info: prosjekt, tidsplan og status, notater — og prosjektets satser og
+    // andre kostnader (container, leie, stillas, underentreprenører …).
     function renderTabInfo(p){
-      const opts=['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${c.id}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
+      const customerOpts=['<option value="">Velg kunde</option>'].concat(state.customers.map(c=>`<option value="${escapeAttr(c.id)}" ${p.customerId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`)).join('');
+      const options=(values,current)=>values.map(v=>`<option ${sel(current,v)}>${v}</option>`).join('');
+      const hasScaffoldingOperation=(p.operations||[]).some(op=>op&&op.type==='stillas');
       return `
-        <div class="tab-section">
-          <div class="tab-section-heading">Prosjektdetaljer</div>
-          <div class="row">
-            <div><label>Prosjektnavn</label><input id="fName" value="${escapeAttr(p.name)}" /></div>
-            <div><label>Adresse</label><input id="fAddress" value="${escapeAttr(p.address)}" /></div>
+        <div class="info-layout">
+          <div class="info-main">
+            <section class="offer-card" aria-labelledby="infoProjectTitle">
+              <h2 class="offer-card-title" id="infoProjectTitle">Prosjekt</h2>
+              <div class="info-grid">
+                <div><label for="fName">Prosjektnavn</label><input id="fName" value="${escapeAttr(p.name)}" /></div>
+                <div><label for="fAddress">Adresse</label><input id="fAddress" value="${escapeAttr(p.address)}" /></div>
+                <div><label for="fCustomer">Kunde</label><select id="fCustomer">${customerOpts}</select></div>
+                <div><label for="fType">Type jobb</label><select id="fType">${options(JOB_TYPES,p.type)}</select></div>
+              </div>
+              <label class="info-switch-row" for="fBebodd">
+                <span><span class="info-switch-title">Bebodd bolig</span><span class="info-switch-hint">kunden bor i huset under arbeidet</span></span>
+                <input type="checkbox" role="switch" class="switch" id="fBebodd" ${p.bebodd?'checked':''} />
+              </label>
+            </section>
+            <section class="offer-card" aria-labelledby="infoScheduleTitle">
+              <h2 class="offer-card-title" id="infoScheduleTitle">Tidsplan og status</h2>
+              <div class="segmented" id="fStatus" role="radiogroup" aria-label="Status">
+                ${PROJECT_STATUSES.map(s=>`<button type="button" role="radio" aria-checked="${p.status===s}" class="${p.status===s?'is-active':''}" onclick="changeProjectStatus('${s}')">${s}</button>`).join('')}
+              </div>
+              <div class="info-grid info-grid--3">
+                <div><label for="fStart">Ønsket oppstart</label><select id="fStart">${options(START_OPTIONS,p.startPref)}</select></div>
+                <div><label for="oValidity">Prisoverslaget gjelder i</label><div class="input-unit"><input id="oValidity" inputmode="numeric" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /><span>dager</span></div></div>
+                <div><label for="wActualHours">Timer brukt</label><div class="input-unit"><input id="wActualHours" type="number" inputmode="decimal" value="${p.work.actualHours||0}" /><span>t</span></div></div>
+              </div>
+            </section>
+            <section class="offer-card" aria-labelledby="infoNotesTitle">
+              <h2 class="offer-card-title" id="infoNotesTitle">Notater</h2>
+              <label for="fDescription">Beskrivelse <span class="label-hint">· brukes som innledning i prisoverslaget</span></label>
+              <textarea id="fDescription">${escapeHtml(p.description)}</textarea>
+              <label for="fNote">Notat <span class="label-hint">· bare for deg</span></label>
+              <textarea id="fNote">${escapeHtml(p.note||'')}</textarea>
+            </section>
           </div>
-        </div>
-        <div class="tab-section">
-          <div class="tab-section-heading">Kunde og type</div>
-          <div class="row">
-            <div><label>Kunde</label><select id="fCustomer">${opts}</select></div>
-            <div><label>Type jobb</label><select id="fType"><option ${sel(p.type,'Terrasse')}>Terrasse</option><option ${sel(p.type,'Lettvegg')}>Lettvegg</option><option ${sel(p.type,'Vindu')}>Vindu</option><option ${sel(p.type,'Listing')}>Listing</option><option ${sel(p.type,'Kledning')}>Kledning</option><option ${sel(p.type,'Etterisolering')}>Etterisolering</option><option ${sel(p.type,'Rehabilitering')}>Rehabilitering</option><option ${sel(p.type,'Bad')}>Bad</option><option ${sel(p.type,'Tak')}>Tak</option><option ${sel(p.type,'Annet')}>Annet</option></select></div>
+          <div class="info-side">
+            <section class="info-rates" aria-labelledby="infoRatesTitle">
+              <div class="info-rates-head"><h2 class="offer-card-title" id="infoRatesTitle">Satser</h2><span>gjelder dette prosjektet</span></div>
+              ${renderRateRow('wTimeRate','Timepris',getVatLabel(p),displayVatValue(p,p.work.timeRate),'kr/t')}
+              ${renderRateRow('wInternalCost','Intern timekost','din kostnad',p.work.internalCost,'kr/t')}
+              ${renderRateRow('wMatMarkup','Påslag materialer','',p.settings.materialMarkup,'%')}
+              ${renderRateRow('eRig','Rigg og drift','av arbeid og materialer',p.extras.rigPercent,'%')}
+              ${renderRateRow('pOccupiedPct','Bebodd bolig','ekstra tid på arbeidet',p.settings.occupiedPct??'','%',DEFAULT_OCCUPIED_PCT)}
+              ${renderRateRow('pMarginGoal','Marginmål','brukes i rabattrom',p.settings.marginGoal??'','%',Number(state.settings.marginGoal)||DEFAULT_MARGIN_GOAL_PCT)}
+            </section>
+            <section class="offer-card" aria-labelledby="infoCostsTitle">
+              <div class="offer-card-head"><h2 class="offer-card-title" id="infoCostsTitle">Andre kostnader</h2><span class="info-costs-total" id="extrasTotal">${currency(displayVatValue(p,sumProjectCosts(p)))}</span></div>
+              ${renderCostRow(p,'eWaste','Container og avfall',p.extras.waste)}
+              ${renderCostRow(p,'eRental','Leie av utstyr',p.extras.rental)}
+              ${renderCostRow(p,'eScaffolding','Stillas',p.extras.scaffolding,hasScaffoldingOperation?'prises via stillas-operasjonen':'')}
+              ${renderCostRow(p,'eDrawings','Tegninger og byggesøknad',p.extras.drawings)}
+              ${renderCostRow(p,'eMisc','Diverse',p.extras.misc)}
+              ${(p.extras.subcontractors||[]).map(sub=>renderSubcontractorRow(p,sub)).join('')}
+              <button class="btn small soft info-add" onclick="addSubcontractor()">+ Underentreprenør</button>
+            </section>
           </div>
-          <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer"><input type="checkbox" id="fBebodd" style="width:auto" ${p.bebodd?'checked':''} /> Bebodd bolig (kunden bor i bygget under arbeidet)</label>
-        </div>
-        <div class="tab-section">
-          <div class="tab-section-heading">Tidsplan og status</div>
-          <div class="row">
-            <div><label>Ønsket oppstart</label><select id="fStart"><option ${sel(p.startPref,'Snarest')}>Snarest</option><option ${sel(p.startPref,'Innen 2 uker')}>Innen 2 uker</option><option ${sel(p.startPref,'Innen 1 måned')}>Innen 1 måned</option><option ${sel(p.startPref,'Etter avtale')}>Etter avtale</option></select></div>
-            <div><label>Status</label><select id="fStatus"><option ${sel(p.status,'Utkast')}>Utkast</option><option ${sel(p.status,'Sendt')}>Sendt</option><option ${sel(p.status,'Vunnet')}>Vunnet</option><option ${sel(p.status,'Tapt')}>Tapt</option><option ${sel(p.status,'Pågår')}>Pågår</option><option ${sel(p.status,'Ferdig')}>Ferdig</option></select></div>
-          </div>
-        </div>
-        <div class="tab-section">
-          <div class="tab-section-heading">Notater</div>
-          <label>Beskrivelse</label><textarea id="fDescription">${escapeHtml(p.description)}</textarea>
-          <label>Notat</label><textarea id="fNote">${escapeHtml(p.note||'')}</textarea>
-        </div>
-        <div class="tab-section collapsed">
-          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Satser</div>
-          <div class="tab-section-body">
-            <div class="row">
-              <div><label>Timepris eks. mva</label><input id="wTimeRate" type="number" value="${displayVatValue(p,p.work.timeRate)}" /></div>
-              <div><label>Intern timekost</label><input id="wInternalCost" type="number" value="${p.work.internalCost}" /></div>
-            </div>
-            <div class="row-3" style="margin-top:12px">
-              <div><label>Påslag materialer %</label><input id="wMatMarkup" type="number" value="${p.settings.materialMarkup}" /></div>
-              <div><label>Rigg & drift %</label><input id="eRig" type="number" value="${p.extras.rigPercent}" /></div>
-            </div>
-            <div class="row" style="margin-top:12px">
-              <div><label>Gyldighet (dager)</label><input id="oValidity" value="${escapeAttr(p.offer.validity||'14')}" placeholder="14" /></div>
-            </div>
-            <div class="footer-note" style="margin-top:8px">Timepris og satser brukes i alle kalkyler for dette prosjektet.</div>
-          </div>
-        </div>
-        `;
+        </div>`;
     }
+
+    function renderRateRow(id,label,hint,value,unit,placeholder){
+      return `<div class="info-rate">
+          <label class="info-rate-text" for="${id}"><span class="info-rate-label">${label}</span>${hint?`<span class="info-rate-hint">${hint}</span>`:''}</label>
+          <div class="info-rate-field"><input id="${id}" type="number" inputmode="decimal" value="${escapeAttr(value)}" ${placeholder!=null?`placeholder="${placeholder}"`:''} /><span>${unit}</span></div>
+        </div>`;
+    }
+
+    function renderCostRow(p,id,label,amount,hint){
+      return `<div class="info-cost">
+          <label for="${id}">${label}${hint?`<span class="info-cost-hint">${hint}</span>`:''}</label>
+          <input id="${id}" type="number" inputmode="decimal" value="${displayVatValue(p,amount||0)}" />
+        </div>`;
+    }
+
+    function renderSubcontractorRow(p,sub){
+      const id=escapeAttr(sub.id);
+      return `<div class="info-sub">
+          <select aria-label="Fag" onchange="updSubcontractor('${id}','trade',this.value)">${SUBCONTRACTOR_TRADES.map(t=>`<option value="${t}" ${sub.trade===t?'selected':''}>${t}</option>`).join('')}</select>
+          <input type="number" inputmode="decimal" aria-label="Beløp for ${escapeAttr(sub.trade||'underentreprenør')}" value="${displayVatValue(p,sub.amount||0)}" onchange="updSubcontractor('${id}','amount',this.value)" />
+          <button class="btn small danger" onclick="removeSubcontractor('${id}')">Slett</button>
+        </div>`;
+    }
+
+    // Summen av det som er ført under «Andre kostnader» (rigg regnes for seg).
+    function sumProjectCosts(p){
+      const e=p.extras||{};
+      const subs=(e.subcontractors||[]).reduce((s,x)=>s+(Number(x.amount)||0),0);
+      return [e.waste,e.rental,e.scaffolding,e.drawings,e.misc].reduce((s,v)=>s+(Number(v)||0),0)+subs;
+    }
+
+    window.scrollToCalcSection=function(id){
+      const el=document.getElementById(id);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+
+    // Timeloggen føres under Info → Tidsplan og status.
+    window.goToActualHours=function(){
+      switchTab('info');
+      const el=$('#wActualHours'); if(!el) return;
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.focus({preventScroll:true});
+    };
+
+    // Statusknappene i Info. Samme virkning som før (ingen ferdigmelding her —
+    // den kommer fra forsiden).
+    window.changeProjectStatus=function(status){
+      const p=getProject(currentProjectId); if(!p) return;
+      setProjectStatus(p,status,Date.now());
+      persistAndRenderProject();
+    };
 
 
 
@@ -651,6 +725,7 @@
       const builtIn=allTpls.filter(t=>t.builtIn);
       const userTpls=allTpls.filter(t=>!t.builtIn);
       const hasCatalog=state.priceCatalog.length>0;
+      const materialSummary=renderMaterialSummary(p);
       return `
         <!-- KALKYLEMOTOR (DEACTIVATED) -->
         <div class="card" style="background:#fafcff;border:1px solid var(--line);box-shadow:none;margin-bottom:14px;display:none">
@@ -661,16 +736,14 @@
           ${renderOperations(p)}
         </div>
 
-        <!-- KALKULATOR (MAIN) -->
-        <div class="card" style="background:#fafcff;border:1px solid var(--line);box-shadow:none;margin-bottom:14px">
-          <div class="calc-widget-header">
-            <div class="section-title">Time & Material Kalkulator</div>
-            <button class="btn small secondary" onclick="toggleRateSettings()">Mine erfaringstimer</button>
-          </div>
-          <div class="calc-info-tip">
-            <span>Velg jobbtype, fyll inn mal, fa materialer og pris automatisk, deretter send til prisoverslag.</span>
-          </div>
-          <div id="calcWidget">
+        <!-- KALKULATOR -->
+        <div class="calc-layout">
+          <div class="calc-main">
+            <section class="offer-card" aria-labelledby="calcPickTitle">
+              <div class="offer-card-head">
+                <h2 class="offer-card-title" id="calcPickTitle">Velg jobb</h2>
+                <button class="btn small soft" onclick="toggleRateSettings()">Mine erfaringstimer</button>
+              </div>
             <div class="calc-job-grid">
               <div class="calc-job-col calc-job-utvendig">
                 <label>Utvendig arbeid</label>
@@ -715,10 +788,9 @@
                 </select>
               </div>
             </div>
-            <input type="hidden" id="calcJobType" />
-            <div id="calcInputs"></div>
-            <div id="calcResults"></div>
-            <div id="calcRateSettings" class="hidden rate-settings-panel">
+              <input type="hidden" id="calcJobType" />
+            </section>
+            <section id="calcRateSettings" class="hidden rate-settings-panel offer-card" aria-label="Mine erfaringstimer">
               <div class="rate-settings-header">Mine egne erfaringstimer (per enhet)</div>
               ${rateSettingsGroups.map((group,gi) => `
                 <div class="rate-section">
@@ -742,8 +814,18 @@
               <div class="rate-settings-header" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">Materialresepter (forholdstall)</div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Juster mengdeforholdstall for materialer. P\u00E5virker beregning for jobbtyper med resept.</div>
               ${buildRecipeSettingsHtml()}
-            </div>
+            </section>
+            <section class="offer-card" id="calcInputs" aria-label="Mål og forhold" hidden></section>
+            <section class="offer-card" id="calcMaterials" aria-label="Materialer" hidden></section>
           </div>
+          <aside class="calc-side">
+            <section class="calc-summary" id="calcSummary" aria-label="Resultat">${CALC_SUMMARY_EMPTY_HTML}</section>
+            <div class="calc-shortcuts">
+              <button class="calc-shortcut" onclick="scrollToCalcSection('priceFileCard')"><span>Prisfil</span><span>${hasCatalog?escapeHtml(state.priceFileName):'ingen lastet opp'}</span></button>
+              ${materialSummary?`<button class="calc-shortcut" onclick="scrollToCalcSection('matSummaryCard')"><span>Materialoversikt</span><span>alle poster</span></button>`:''}
+              <button class="calc-shortcut" onclick="goToActualHours()"><span>Timelogg</span><span>${formatHours(p.work.actualHours||0)} t</span></button>
+            </div>
+          </aside>
         </div>
 
         <!-- MALER (DEACTIVATED) -->
@@ -779,7 +861,7 @@
           </div>
 
         <!-- PRISFIL OG SØK -->
-        <div class="card" style="padding:14px;background:#fafcff;border:1px solid var(--line);box-shadow:none;margin-bottom:14px">
+        <section class="offer-card calc-pricefile" id="priceFileCard" aria-label="Prisfil">
           <div class="row">
             <div>
               <label>Prisfil</label>
@@ -798,51 +880,9 @@
           </div>
           <div id="priceSearchResults" class="list" style="margin-top:12px"></div>
           ${renderManualPriceSection()}
-        </div>
+        </section>
 
-        <div class="tab-section collapsed">
-          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Prosjektkostnader</div>
-          <div class="tab-section-body">
-            <div class="row-3">
-              <div><label>Leie av utstyr</label><input id="eRental" type="number" value="${displayVatValue(p,p.extras.rental)}" /></div>
-              <div><label>Avfall / deponi</label><input id="eWaste" type="number" value="${displayVatValue(p,p.extras.waste)}" /></div>
-              <div><label>Stillas</label><input id="eScaffolding" type="number" value="${displayVatValue(p,p.extras.scaffolding||0)}" /></div>
-            </div>
-            <div class="row" style="margin-top:12px">
-              <div><label>Tegninger / byggesøknad</label><input id="eDrawings" type="number" value="${displayVatValue(p,p.extras.drawings||0)}" /></div>
-              <div><label>Diverse</label><input id="eMisc" type="number" value="${displayVatValue(p,p.extras.misc)}" /></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tab-section collapsed">
-          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Underentreprenører</div>
-          <div class="tab-section-body">
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-              ${(p.extras.subcontractors||[]).map(s=>`
-                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
-                  <select onchange="updSubcontractor('${s.id}','trade',this.value)">
-                    ${['Rørlegger','Elektriker','Maler','Snekker','Flislegger','Tømrer','Annet'].map(t=>`<option value="${t}" ${s.trade===t?'selected':''}>${t}</option>`).join('')}
-                  </select>
-                  <input type="number" placeholder="Beløp" value="${displayVatValue(p,s.amount||0)}" onchange="updSubcontractor('${s.id}','amount',this.value)" />
-                  <button class="btn small danger" onclick="removeSubcontractor('${s.id}')">Slett</button>
-                </div>`).join('')}
-            </div>
-            <button class="btn small soft" onclick="addSubcontractor()">+ Legg til underentreprenør</button>
-            ${(p.extras.subcontractors||[]).length ? `<div class="footer-note" style="margin-top:8px">Total: <strong>${currency((p.extras.subcontractors||[]).reduce((s,x)=>s+(Number(x.amount)||0),0))}</strong></div>` : ''}
-          </div>
-        </div>
-
-        <div class="tab-section collapsed">
-          <div class="tab-section-heading tab-section-toggle" onclick="toggleSection(this)">Timelogg</div>
-          <div class="tab-section-body">
-            <div class="row-3">
-              <div><label>Faktiske timer brukt (logging)</label><input id="wActualHours" type="number" value="${p.work.actualHours||0}" /></div>
-            </div>
-          </div>
-        </div>
-
-        ${renderMaterialSummary(p)}
+        ${materialSummary?`<div id="matSummaryCard">${materialSummary}</div>`:''}
         `;
     }
 
@@ -1082,24 +1122,18 @@
       if(el) el.innerHTML = renderMaterialSummaryContent(p);
     };
 
+    // Faglige varsler (stillas, riving, avstand …). Margin og materialpris
+    // står i sammendraget og filtreres bort her.
     function renderWarnings(p, c){
-      var warnings=window.generateWarnings(p, c);
+      var warnings=window.generateWarnings(p, c).filter(function(w){ return w.code!==WarningCode.Margin&&w.code!==WarningCode.MaterialPrice; });
       if(!warnings.length) return '';
-      var styles={
-        danger:'background:#fef2f2;border:1px solid #fca5a5;color:#991b1b',
-        warning:'background:#fffbeb;border:1px solid #fde68a;color:#92400e',
-        info:'background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af'
-      };
-      var icons={danger:'!!',warning:'!',info:'i'};
-      var iconBg={danger:'#fee2e2;color:#dc2626',warning:'#fef3c7;color:#d97706',info:'#dbeafe;color:#2563eb'};
-      return '<div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;margin-bottom:14px">'
-        +warnings.map(function(w){
-          return '<div style="'+styles[w.severity]+';border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px">'
-            +'<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:'+iconBg[w.severity]+'">'+icons[w.severity]+'</span>'
-            +'<span>'+escapeHtml(w.text)+'</span>'
-          +'</div>';
-        }).join('')
-      +'</div>';
+      var severityLabels={danger:'Viktig',warning:'Sjekk',info:'Tips'};
+      return '<section class="offer-card offer-warnings" aria-labelledby="offerWarningsTitle">'
+        +'<h2 class="offer-card-title" id="offerWarningsTitle">Verdt å sjekke</h2>'
+        +'<ul>'+warnings.map(function(w){
+          return '<li class="offer-warning offer-warning--'+w.severity+'"><span class="offer-warning-tag">'+severityLabels[w.severity]+'</span><span>'+escapeHtml(w.text)+'</span></li>';
+        }).join('')+'</ul>'
+      +'</section>';
     }
 
     function renderSuggestedMaterialsForOffer(p){
@@ -1150,103 +1184,119 @@
 
     // Vises kun når prosjektet har tillegg: opprinnelig tilbud + godkjente
     // tillegg = ny kontraktssum. Ventende tillegg vises, men regnes ikke med.
-    function renderContractSum(offerSaleEx, changeOrders){
-      if(!changeOrders.approvedCount&&!changeOrders.pendingCount) return '';
+    function renderTabOffer(p){
       return `
-          <div class="offer-bottom-stats" style="margin-top:10px">
-            <div class="offer-bottom-stat"><strong>Opprinnelig prisoverslag</strong><div>${currency(offerSaleEx)}</div></div>
-            <div class="offer-bottom-stat"><strong>Godkjente tillegg (${changeOrders.approvedCount})</strong><div>+ ${currency(changeOrders.approved)}</div></div>
-            <div class="offer-bottom-stat"><strong>Ny kontraktssum eks. mva</strong><div>${currency(offerSaleEx+changeOrders.approved)}</div></div>
+        <div class="offer-layout">
+          <div class="offer-layout-main">
+            ${renderSuggestedMaterialsForOffer(p)}
+            <section class="offer-card" aria-labelledby="offerPostsTitle">
+              <div class="offer-card-head">
+                <h2 class="offer-card-title" id="offerPostsTitle">Poster</h2>
+                <button class="btn small soft" onclick="addOfferPost()" aria-label="Legg til post">+ Post</button>
+              </div>
+              ${renderOfferPosts(p)}
+            </section>
+            ${renderChangeOrders(p)}
+            ${p.materials.length?'<div class="offer-note">Materialer i materiallisten er ikke med i summen. Legg dem inn i poster for å få dem med.</div>':''}
+            ${renderWarnings(p, window.compute(p))}
           </div>
-          ${changeOrders.pendingCount?`<div class="footer-note" style="margin-top:6px">Ikke godkjent ennå: ${changeOrders.pendingCount} tillegg på ${currency(changeOrders.pending)} eks. mva (ikke med i kontraktssummen).</div>`:''}`;
+          ${renderOfferSummary(p)}
+        </div>`;
     }
 
-    function renderTabOffer(p){
-      const c=window.compute(p), ps=window.computeOfferPostsTotal(p);
-      // Exclude raw p.materials from offer sums — only offer posts count
-      const offerMatSaleEx=c.totalMatSaleEx-c.matSaleEx;
-      const offerMatCost=c.totalMatCost-c.matCost;
-      const offerSaleEx=c.totalSaleEx-c.matSaleEx;
-      const offerCostPrice=c.totalCostPrice-c.matCost;
-      const offerProfit=offerSaleEx-offerCostPrice;
-      const offerMargin=offerSaleEx?(offerProfit/offerSaleEx*100):0;
-      return `
-        <div class="section-head">
-          <div class="section-title">Poster</div>
-          <div class="toolbar">
-            <button class="btn small secondary" onclick="addOfferPost()">+ Legg til post</button>
-          </div>
-        </div>
-        ${renderSuggestedMaterialsForOffer(p)}
-        <div class="card" style="margin-top:8px;background:#fafcff">${renderOfferPosts(p)}</div>
-        ${renderChangeOrders(p)}
-        ${p.materials.length?`<div class="footer-note" style="margin:10px 0;padding:10px;background:#fffbea;border:1px solid #fde68a;border-radius:12px"> Merk: Materialer i materiallisten er ikke med i summen. Legg dem inn i poster for å få dem med.</div>`:''}
-        <div class="card" style="margin-top:14px;background:#fafcff">
-          <div class="section-head"><div class="section-title">Oppsummering</div></div>
+    const OFFER_MIX_PARTS=[
+      {key:'labor', label:'Arbeid'},
+      {key:'material', label:'Materialer'},
+      {key:'fixed', label:'Fastpris uten kalkyle'},
+      {key:'rig', label:'Rigg og drift'},
+      {key:'waste', label:'Container og avfall'},
+      {key:'other', label:'Andre kostnader'}
+    ];
+    // Rabattrom og manglende beløp vises avrundet (nedover / oppover) til hele hundrelapper.
+    const DISCOUNT_ROUND_TO=100;
+    const READINESS_OK_ICON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
+    const READINESS_MISSING_ICON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>';
 
-          <div class="offer-hours-bar">
-            <div class="hours-value" id="offerTotalHoursDisplay">${ps.hours+c.hoursTotal}t</div>
+    // Den blå ruten: prisoverslagets sum og fordeling, opsjoner, tillegg,
+    // inntjening mot marginmålet og sjekkliste før sending.
+    function renderOfferSummary(p){
+      const os=readOfferState(p);
+      const marginGoal=getMarginGoal(p);
+      const summary=computeOfferSummary(p, os, marginGoal);
+      const isInc=vatFactor(p)!==1;
+      const altTotal=isInc?summary.totalEx:summary.totalEx*(1+VAT_RATE);
+      return `<aside class="offer-summary" id="offerSummary" aria-label="Oppsummering">
+          <div class="offer-summary-head">
             <div>
-              <div class="hours-label"> Totalt timebruk</div>
-              <div class="hours-detail" id="offerTotalHoursDetail">${c.hoursTotal>0?c.hoursTotal+'t fra arbeid':''} ${ps.hours>0&&c.hoursTotal>0?'+ ':''} ${ps.hours>0?ps.hours+'t fra poster':''}</div>
+              <div class="offer-summary-label">Prisoverslag ${getVatLabel(p)}</div>
+              <div class="offer-summary-total">${formatNumber(displayVatValue(p,summary.totalEx))} <span>kr</span></div>
             </div>
+            <div class="offer-summary-alt"><strong>${formatNumber(altTotal)}</strong> ${isInc?'eks.':'inkl.'} mva</div>
           </div>
+          ${renderOfferMix(p, summary)}
+          ${renderOfferSummaryChangeOrders(p, summary)}
+          ${renderOfferTiles(p, summary, marginGoal)}
+          ${renderOfferReadiness(p, os)}
+        </aside>`;
+    }
 
-          <div class="row-3">
-            <div class="offer-stat-card blue-theme">
-              <div class="offer-stat-label"> Tømrerarbeid</div>
-              <div class="offer-stat-value" id="summaryLaborVal">${currency(p.settings.vatMode==='inc'?c.totalLaborSaleEx*1.25:c.totalLaborSaleEx)}</div>
-              <div class="offer-stat-detail" id="summaryLaborHours">Totalt: ${c.totalHours}t | Tømrer: ${c.hoursTotal}t | Poster: ${ps.hours}t</div>
-            </div>
-            <div class="offer-stat-card green-theme">
-              <div class="offer-stat-label"> Materialer</div>
-              <div class="offer-stat-value">${currency(p.settings.vatMode==='inc'?offerMatSaleEx*1.25:offerMatSaleEx)}</div>
-              <div class="offer-stat-detail">Innkjøp: ${currency(offerMatCost)}</div>
-            </div>
-            <div class="offer-stat-card amber-theme">
-              <div class="offer-stat-label"> Andre kostnader</div>
-              <div class="offer-stat-value" id="summaryExtrasVal">${currency(p.settings.vatMode==='inc'?(c.extrasBase+c.rigEx)*1.25:(c.extrasBase+c.rigEx))}</div>
-              <div class="offer-stat-detail" id="summaryExtrasDetail">${c.rigHours>0?'Rigg '+c.rigHours+'t m.m.':'Rigg m.m.'}</div>
-            </div>
-          </div>
+    function renderOfferMix(p, summary){
+      if(!summary.totalEx) return '<div class="offer-summary-note">Legg til poster for å se fordelingen.</div>';
+      const rigPercent=Number((p.extras||{}).rigPercent)||0;
+      const hours=formatHours(summary.hours);
+      const parts=OFFER_MIX_PARTS.filter(part=>summary.parts[part.key]>=1);
+      const labelFor=part=>{
+        if(part.key==='labor'&&summary.hours) return `${part.label} · ${hours}&nbsp;t`;
+        if(part.key==='rig'&&rigPercent) return `${part.label} · ${rigPercent}&nbsp;%`;
+        return part.label;
+      };
+      const bar=parts.map(part=>`<span class="offer-mix-seg offer-mix--${part.key}" style="width:${(summary.parts[part.key]/summary.totalEx*100).toFixed(2)}%"></span>`).join('');
+      const legend=parts.map(part=>`<div class="offer-mix-item"><span class="offer-mix-dot offer-mix--${part.key}"></span><span class="offer-mix-name">${labelFor(part)}</span><span class="offer-mix-value">${formatNumber(displayVatValue(p,summary.parts[part.key]))}</span></div>`).join('');
+      const options=summary.options
+        .filter(option=>Math.abs(option.totalEx-summary.totalEx)>=1)
+        .map(option=>`<div class="offer-mix-option">Med opsjonen «${escapeHtml(option.name)}»: <strong>${formatNumber(displayVatValue(p,option.totalEx))}</strong></div>`).join('');
+      return `<div class="offer-mix">
+          <div class="offer-mix-bar" aria-hidden="true">${bar}</div>
+          <div class="offer-mix-legend">${legend}</div>
+          ${options}
+        </div>`;
+    }
 
-          ${renderWarnings(p, c)}
+    function renderOfferSummaryChangeOrders(p, summary){
+      const changes=summary.changeOrders;
+      if(!changes.approved.length&&!changes.pendingCount) return '';
+      const isInc=vatFactor(p)!==1;
+      const contractEx=summary.totalEx+changes.approvedEx;
+      const altContract=isInc?contractEx:contractEx*(1+VAT_RATE);
+      const lines=changes.approved.map(item=>`<div class="offer-summary-line"><span>Nr. ${item.number||'?'} · ${escapeHtml(item.name)}</span><span>+${formatNumber(displayVatValue(p,item.priceEx))}</span></div>`).join('');
+      return `<div class="offer-summary-panel">
+          <div class="offer-summary-panel-head"><span>Godkjente tillegg</span><span>${changes.approved.length} stk</span></div>
+          ${lines}
+          ${changes.approved.length?`<div class="offer-summary-contract"><span>Kontraktssum</span><span><strong>${formatNumber(displayVatValue(p,contractEx))}</strong> <small>· ${formatNumber(altContract)} ${isInc?'eks.':'inkl.'} mva</small></span></div>`:''}
+          ${changes.pendingCount?`<div class="offer-summary-note">Venter på svar: ${changes.pendingCount} tillegg på ${formatNumber(displayVatValue(p,changes.pendingEx))} kr – ikke med i kontraktssummen.</div>`:''}
+        </div>`;
+    }
 
-          <div class="offer-total-panel">
-            <div class="panel-label">Totaloversikt</div>
-            <div class="offer-total-grid">
-              <div class="offer-total-item">
-                <div class="item-label">Pris til kunde eks. mva</div>
-                <div class="item-value">${currency(offerSaleEx)}</div>
-              </div>
-              <div class="offer-total-item">
-                <div class="item-label">Pris til kunde inkl. mva</div>
-                <div class="item-value highlight">${currency(offerSaleEx*1.25)}</div>
-              </div>
-            </div>
-            <div class="offer-detail-grid">
-              <div class="offer-detail-item">
-                <div class="detail-label">Din kostnad</div>
-                <div class="detail-value">${currency(offerCostPrice)}</div>
-              </div>
-              <div class="offer-detail-item">
-                <div class="detail-label">Fortjeneste</div>
-                <div class="detail-value profit">${currency(offerProfit)}</div>
-              </div>
-              <div class="offer-detail-item">
-                <div class="detail-label">Margin</div>
-                <div class="detail-value">${percent(offerMargin)}</div>
-              </div>
-            </div>
-            <div class="offer-total-footer">
-              <div class="footer-text" id="summaryModeNote">${p.settings.vatMode==='inc'?'Viser inkl. mva':'Viser eks. mva'}</div>
-            </div>
-          </div>
-          ${renderContractSum(offerSaleEx, window.computeChangeOrdersTotal(p))}
-          <div class="offer-bottom-stats">
-            <div class="offer-bottom-stat"><strong>Faste poster</strong><div>${currency(ps.fixed)}</div></div>
-            <div class="offer-bottom-stat"><strong>Valgte opsjoner</strong><div>${currency(ps.options)}</div></div>
-            <div class="offer-bottom-stat"><strong>Sum poster</strong><div>${currency(ps.total)}</div></div>
-          </div>
+    function renderOfferTiles(p, summary, marginGoal){
+      if(!summary.totalEx) return '';
+      const isGoalMet=summary.marginPct>=marginGoal;
+      const room=displayVatValue(p,summary.discountRoomEx);
+      const roomTile=room>=0
+        ? {label:'Rabattrom', value:Math.floor(room/DISCOUNT_ROUND_TO)*DISCOUNT_ROUND_TO, note:'før under målet'}
+        : {label:'Mangler', value:Math.ceil(-room/DISCOUNT_ROUND_TO)*DISCOUNT_ROUND_TO, note:'for å nå målet'};
+      return `<div class="offer-tiles">
+          <div class="offer-tile"><div class="offer-tile-label">Du tjener</div><div class="offer-tile-value">${summary.hours?formatNumber(summary.earningsPerHour)+'&nbsp;kr/t':'–'}</div><div class="offer-tile-note">${formatNumber(summary.profitEx)} totalt</div></div>
+          <div class="offer-tile"><div class="offer-tile-label">Margin</div><div class="offer-tile-value">${Math.round(summary.marginPct)}&nbsp;%</div><div class="offer-tile-note ${isGoalMet?'is-good':'is-warn'}">mål ${marginGoal}&nbsp;% · ${isGoalMet?'nådd':'ikke nådd'}</div></div>
+          <div class="offer-tile"><div class="offer-tile-label">${roomTile.label}</div><div class="offer-tile-value">${formatNumber(roomTile.value)}</div><div class="offer-tile-note">${roomTile.note}</div></div>
+        </div>
+        ${summary.uncalculatedPostCount?`<div class="offer-summary-note">${summary.uncalculatedPostCount===1?'1 post':summary.uncalculatedPostCount+' poster'} uten kalkyle er regnet uten fortjeneste.</div>`:''}`;
+    }
+
+    function renderOfferReadiness(p, os){
+      const items=getOfferReadiness(p, os, getCustomer(p.customerId));
+      const okCount=items.filter(item=>item.isOk).length;
+      return `<div class="offer-checklist">
+          <div class="offer-checklist-title">Klar til å sende? ${okCount} av ${items.length}</div>
+          <ul>${items.map(item=>`<li class="${item.isOk?'is-ok':'is-missing'}">${item.isOk?READINESS_OK_ICON:READINESS_MISSING_ICON}<span>${escapeHtml(item.text)}</span></li>`).join('')}</ul>
         </div>`;
     }

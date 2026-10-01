@@ -1,73 +1,111 @@
     /* ══════════════════════════════════════════════════════
-       BYGGEPLASSEN — California beaches
-       Breezy light with sand accent, ocean blues, open air.
-       #FFC067 · #66F4FF · #66C4FF · #7D99AA
+       BYGGEPLASSEN — Kjølig
+       Rolig, kjølig grunnflate med pastellkort og blå aksent.
+       Skrift: Geist. Mørke primærknapper, pilleformer, myke skygger.
        ══════════════════════════════════════════════════════ */
 
     /* ── Design Tokens ──────────────────────────────────── */
     :root{
-      /* Surfaces — cool off-white with ocean tint */
-      --bg:#F4F7F9;
-      --bg-warm:#EAF0F4;
+      /* Flater */
+      --bg:#F1F3F6;
+      --bg-warm:#EDF0F4;
       --card:#FFFFFF;
-      --card-hover:#F7FAFB;
+      --card-hover:#F7F8FA;
 
-      /* Text — deep ocean */
-      --text:#162736;
-      --muted:#5A7B8C;
-      --muted-strong:#3A5E70;
+      /* Tekst */
+      --text:#18202A;
+      --muted:#646B76;
+      --muted-strong:#454C58;
 
-      /* Borders — sea glass */
-      --line:#DDE6EC;
-      --line-strong:#C3D2DB;
+      /* Linjer */
+      --line:#E3E6EB;
+      --line-strong:#CDD3DB;
 
-      /* Primary accent — warm sand */
-      --accent:#FFC067;
-      --accent-hover:#F0A840;
-      --accent-soft:rgba(255,192,103,.1);
-      --accent-muted:#FFD08A;
-      --accent-glow:rgba(255,192,103,.25);
+      /* Aksent — sterk blå. Tekst oppå aksentflater er hvit (--on-accent). */
+      --accent:#25507F;
+      --accent-hover:#1D416A;
+      --accent-soft:rgba(37,80,127,.08);
+      --accent-muted:#B9D0EA;
+      --accent-glow:rgba(37,80,127,.18);
+      --on-accent:#FFFFFF;
+
+      /* Pastellflater (kort og merker) med tilhørende mørk tekst */
+      --pastel-blue:#DCE9F7;   --pastel-blue-ink:#25507F;
+      --pastel-mint:#DDF0EA;   --pastel-mint-ink:#1F5C4C;
+      --pastel-lilac:#ECE6F6;  --pastel-lilac-ink:#4A3A78;
+      --pastel-peach:#F6E4DA;  --pastel-peach-ink:#7A4A2E;
+
+      /* Dokk — mørk flytende meny nederst. Synkprikkene er lysere varianter av
+         de semantiske fargene, så de synes mot den mørke dokken. */
+      --dock-bg:var(--text);
+      --dock-ink:#CFD3DA;
+      --dock-ink-hover:#FFFFFF;
+      --dock-line:rgba(207,211,218,.25);
+      --dock-shadow:0 12px 32px rgba(24,32,42,.25);
+      --scrim:rgba(24,32,42,.25);
+      --sync-ok:#3FB67E;
+      --sync-saving:#9AA3AE;
+      --sync-offline:#E0A93B;
+      --sync-error:#E5534B;
+
+      /* Sammendraget på Prisoverslag-fanen (blå rute) og fordelingslinjen */
+      --summary-ink:#243C58;
+      --summary-muted:#3C5F86;
+      --summary-panel:rgba(255,255,255,.6);
+      --summary-tile:rgba(255,255,255,.65);
+      --summary-line:rgba(37,80,127,.15);
+      --mix-labor:var(--accent);
+      --mix-material:#86AED8;
+      --mix-fixed:#B7A6DA;
+      --mix-rig:var(--teal);
+      --mix-waste:#A8BED6;
+      --mix-other:#C9D3DF;
+      --good-ink:#2A7A62;
+      --warn-ink:#8A4A2E;
+      --warn-icon:#B4552F;
+      --win-ring:#7160A8;
+      --preview-backdrop:#E4E8EE;
 
       /* Panel surfaces */
-      --navy:#F4F7F9;
-      --panel:#F4F7F9;
-      --panel-mid:#EAF0F4;
+      --navy:#F1F3F6;
+      --panel:#F1F3F6;
+      --panel-mid:#EDF0F4;
       --panel-light:#FFFFFF;
 
-      /* Semantic colors */
-      --green:#16A34A;
-      --green-soft:rgba(22,163,74,.07);
-      --blue:#66C4FF;
-      --blue-soft:rgba(102,196,255,.08);
-      --yellow:#F0A840;
-      --yellow-soft:rgba(240,168,64,.08);
-      --red:#E04848;
-      --red-soft:rgba(224,72,72,.06);
-      --teal:#40D9CC;
-      --teal-soft:rgba(64,217,204,.07);
-      --amber:#F0A840;
-      --amber-soft:rgba(240,168,64,.07);
-      --indigo:#5B8EC9;
-      --indigo-soft:rgba(91,142,201,.07);
-      --orange:#FFA04D;
-      --cyan:#66F4FF;
-      --cyan-soft:rgba(102,244,255,.08);
-      --steel:#7D99AA;
+      /* Semantiske farger */
+      --green:#1F7A55;
+      --green-soft:rgba(31,122,85,.08);
+      --blue:#3C6FA8;
+      --blue-soft:rgba(60,111,168,.08);
+      --yellow:#B7791F;
+      --yellow-soft:rgba(183,121,31,.09);
+      --red:#C8403D;
+      --red-soft:rgba(200,64,61,.07);
+      --teal:#2F8A70;
+      --teal-soft:rgba(47,138,112,.08);
+      --amber:#B7791F;
+      --amber-soft:rgba(183,121,31,.08);
+      --indigo:#4A64B8;
+      --indigo-soft:rgba(74,100,184,.08);
+      --orange:#C7764A;
+      --cyan:#5AA9C9;
+      --cyan-soft:rgba(90,169,201,.08);
+      --steel:#6F8196;
 
-      /* Elevation — soft ocean shadows */
-      --shadow:0 1px 3px rgba(22,39,54,.05),0 4px 16px rgba(22,39,54,.04);
-      --shadow-sm:0 1px 2px rgba(22,39,54,.04);
-      --shadow-lg:0 4px 12px rgba(22,39,54,.05),0 12px 36px rgba(22,39,54,.05);
-      --shadow-xl:0 8px 24px rgba(22,39,54,.07),0 24px 60px rgba(22,39,54,.05);
+      /* Skygger — myke og kjølige */
+      --shadow:0 1px 2px rgba(24,32,42,.03),0 8px 24px rgba(24,32,42,.05);
+      --shadow-sm:0 1px 2px rgba(24,32,42,.05);
+      --shadow-lg:0 2px 6px rgba(24,32,42,.05),0 14px 36px rgba(24,32,42,.07);
+      --shadow-xl:0 10px 30px rgba(24,32,42,.10),0 30px 70px rgba(24,32,42,.08);
 
-      /* Radii — slightly rounder, friendlier */
-      --radius:16px;
-      --radius-sm:12px;
-      --radius-xs:8px;
+      /* Hjørner */
+      --radius:22px;
+      --radius-sm:14px;
+      --radius-xs:10px;
 
-      /* Typography */
-      --font-display:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;
-      --font-body:'DM Sans',system-ui,sans-serif;
+      /* Skrift */
+      --font-display:'Geist',system-ui,-apple-system,sans-serif;
+      --font-body:'Geist',system-ui,-apple-system,sans-serif;
       --font-mono:'JetBrains Mono','SF Mono','Fira Code',monospace;
 
       /* Motion */
@@ -103,29 +141,35 @@
       pointer-events:none;z-index:9999;opacity:.35;
     }
 
-    .app,#settingsView{max-width:1200px;margin:0 auto;padding:32px 28px 96px}
+    .app,#settingsView{max-width:1200px;margin:0 auto;padding:32px 28px calc(120px + env(safe-area-inset-bottom,0px))}
 
     .hidden{display:none!important}
 
     /* ── Typography ──────────────────────────────────────── */
     .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin:0 0 28px;gap:16px}
-    .title{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text)}
+    .title{font-family:var(--font-display);font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1.15;color:var(--text)}
     .subtitle{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.5}
 
     /* ── Prosjekthode ────────────────────────────────────── */
-    .project-header{margin:0 0 16px}
-    .project-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-    .project-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .project-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 16px;margin:0 0 20px}
+    .project-identity{display:flex;align-items:center;gap:14px;min-width:0}
     .project-back{
-      appearance:none;border:none;background:none;cursor:pointer;
-      display:inline-flex;align-items:center;min-height:44px;padding:0 4px;margin-left:-4px;
-      font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--muted-strong);
-      border-radius:var(--radius-xs);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      width:46px;height:46px;border:none;border-radius:999px;
+      background:var(--card);box-shadow:var(--shadow-sm);color:var(--text);cursor:pointer;
     }
-    .project-back:hover{color:var(--text)}
-    .project-title{margin:0}
-    .project-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:6px}
-    .project-meta-text{color:var(--muted);font-size:13px;line-height:1.4;min-width:0}
+    .project-back:hover{background:var(--card-hover)}
+    .project-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .dash-avatar.project-avatar{width:52px;height:52px;border-radius:17px;font-size:17px;flex-shrink:0}
+    .project-heading{min-width:0}
+    .project-title{margin:0;font-family:var(--font-display);font-size:28px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+    .project-header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .project-meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:2px}
+    .project-meta-text{color:var(--muted);font-size:14px;line-height:1.4;min-width:0}
+    @media (max-width:640px){
+      .dash-avatar.project-avatar{display:none}
+      .project-title{font-size:24px}
+    }
     .project-status-pill{cursor:pointer;min-height:0}
     #projectTopPills:empty{display:none}
 
@@ -154,7 +198,7 @@
     .co-photo--pick.is-selected{outline:3px solid var(--accent);outline-offset:-3px}
     .co-photo-check{
       position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;
-      background:var(--accent);color:var(--text);font-weight:800;font-size:14px;
+      background:var(--accent);color:var(--on-accent);font-weight:800;font-size:14px;
       display:flex;align-items:center;justify-content:center;
     }
     .co-photos-empty{grid-column:1/-1;font-size:13px;color:var(--muted);padding:6px 0}
@@ -165,8 +209,8 @@
 
     .btn{
       appearance:none;border:none;
-      border-radius:var(--radius-xs);
-      padding:9px 16px;
+      border-radius:999px;
+      padding:9px 18px;
       font-family:var(--font-display);
       font-weight:600;font-size:13px;
       cursor:pointer;
@@ -182,10 +226,10 @@
     .btn:active{transform:scale(.97)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-    .btn.primary{background:var(--accent);color:#162736}
-    .btn.primary:hover{background:var(--accent-hover);box-shadow:0 4px 18px var(--accent-glow)}
+    .btn.primary{background:var(--text);color:#FFFFFF}
+    .btn.primary:hover{background:#0F151D;box-shadow:var(--shadow-lg)}
 
-    .btn.secondary{background:var(--card);color:var(--text);border:1.5px solid var(--line)}
+    .btn.secondary{background:var(--card);color:var(--text);border:1px solid var(--line-strong)}
     .btn.secondary:hover{background:var(--card-hover);border-color:var(--line-strong)}
 
     .btn.soft{background:var(--bg-warm);color:var(--muted-strong);border:1px solid transparent}
@@ -197,7 +241,7 @@
     .btn.success{background:var(--green-soft);color:var(--green);border:1.5px solid rgba(22,163,74,.12)}
     .btn.success:hover{background:rgba(22,163,74,.1)}
 
-    .btn.small{padding:6px 11px;border-radius:var(--radius-xs);font-size:12px}
+    .btn.small{padding:6px 13px;border-radius:999px;font-size:12px}
 
     /* ── Grid System ────────────────────────────────────── */
     .grid{display:grid;gap:16px}
@@ -208,7 +252,7 @@
     /* ── Cards ───────────────────────────────────────────── */
     .card{
       background:var(--card);
-      border:1px solid var(--line);
+      border:1px solid rgba(24,32,42,.04);
       border-radius:var(--radius);
       padding:22px;
       box-shadow:var(--shadow);
@@ -275,11 +319,11 @@
       color:var(--muted-strong);
       letter-spacing:.01em;
     }
-    .status-Utkast{background:var(--blue-soft);color:var(--steel);border-color:rgba(102,196,255,.2)}
-    .status-Sendt{background:var(--yellow-soft);color:var(--accent-hover);border-color:rgba(240,168,64,.15)}
-    .status-Vunnet,.status-Pågår{background:var(--green-soft);color:var(--green);border-color:rgba(22,163,74,.12)}
-    .status-Tapt{background:var(--red-soft);color:var(--red);border-color:rgba(220,38,38,.12)}
-    .status-Ferdig{background:var(--bg-warm);color:var(--muted-strong);border-color:var(--line)}
+    .status-Utkast{background:#EEF0F3;color:var(--muted-strong);border-color:transparent}
+    .status-Sendt{background:var(--pastel-mint);color:var(--pastel-mint-ink);border-color:transparent}
+    .status-Vunnet,.status-Pågår{background:var(--pastel-blue);color:var(--pastel-blue-ink);border-color:transparent}
+    .status-Tapt{background:var(--red-soft);color:var(--red);border-color:transparent}
+    .status-Ferdig{background:var(--pastel-lilac);color:var(--pastel-lilac-ink);border-color:transparent}
 
     /* ── Empty State ─────────────────────────────────────── */
     .empty{
@@ -334,10 +378,10 @@
     }
     input,select,textarea{
       width:100%;
-      padding:10px 12px;
-      border-radius:var(--radius-xs);
-      border:1.5px solid var(--line);
-      background:var(--bg-warm);
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#F7F8FA;
       font:inherit;color:var(--text);
       outline:none;
       transition:border-color var(--dur-normal) var(--ease),box-shadow var(--dur-normal) var(--ease);
@@ -353,7 +397,7 @@
       appearance:none;-webkit-appearance:none;
       cursor:pointer;
       padding-right:34px;
-      background-image:url("data:image/svg+xml,%3Csvg width='10' height='7' viewBox='0 0 10 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237D99AA' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-image:url("data:image/svg+xml,%3Csvg width='10' height='7' viewBox='0 0 10 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236F8196' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;
       background-position:right 10px center;
       background-size:10px 7px;
@@ -363,48 +407,6 @@
     /* ── Toolbar ─────────────────────────────────────────── */
     .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 
-    /* ── Tab Bar ─────────────────────────────────────────── */
-    .tab-bar{
-      display:flex;gap:2px;
-      background:var(--bg-warm);
-      border:1px solid var(--line);
-      border-radius:var(--radius-sm);
-      padding:4px;
-      margin-bottom:20px;
-      overflow-x:auto;
-    }
-    .tab-bar::-webkit-scrollbar{display:none}
-    #projectView .tab-bar{
-      position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:40;
-      margin-bottom:16px;
-      /* Første skygge fyller luften over fanene med sidebakgrunnen, så
-         innhold som scrolles forbi ikke skimtes over dem. */
-      box-shadow:0 -8px 0 0 var(--bg),var(--shadow-sm);
-    }
-    .tab-label-short{display:none}
-    @media (max-width:640px){
-      .tab-label-long{display:none}
-      .tab-label-short{display:inline}
-      .tab-btn{min-width:0;padding:10px 6px}
-    }
-    .tab-btn{
-      flex:1;min-width:80px;
-      border:none;background:transparent;
-      color:var(--muted);
-      padding:10px 12px;
-      border-radius:var(--radius-xs);
-      font-family:var(--font-display);
-      font-weight:600;font-size:13px;
-      cursor:pointer;white-space:nowrap;
-      transition:background var(--dur-normal) var(--ease),color var(--dur-normal) var(--ease),box-shadow var(--dur-normal) var(--ease);
-    }
-    .tab-btn:hover{background:rgba(255,192,103,.08)}
-    .tab-btn.active{
-      background:var(--card);
-      box-shadow:var(--shadow-sm);
-      color:var(--text);
-    }
-
     /* ── Tab Panel ───────────────────────────────────────── */
     .tab-panel{
       background:var(--card);
@@ -413,6 +415,7 @@
       padding:24px;
       box-shadow:var(--shadow);
     }
+    .tab-panel--bare{background:transparent;border:none;padding:0;box-shadow:none}
 
     /* ── Row Grids ───────────────────────────────────────── */
     .row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -490,9 +493,7 @@
     .template-mat-row input{padding:8px 10px;font-size:13px}
 
     /* ── Calc Widget Styles ──────────────────────────────── */
-    .calc-widget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .calc-widget-header .section-title{font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:-.02em}
-    .calc-job-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+    .calc-job-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 
     /* ── Job column shared ── */
     .calc-job-col{position:relative}
@@ -598,24 +599,15 @@
     }
     .op-row-factors select option{font-size:13px;padding:8px 12px;min-height:44px}
 
-    /* ── Difficulty buttons ── */
-    .diff-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    .diff-btn{
-      padding:12px 10px;border-radius:var(--radius-sm);
-      border:1.5px solid var(--line);background:var(--card);
-      cursor:pointer;text-align:center;
-      transition:border-color var(--dur-normal) var(--ease),background var(--dur-normal) var(--ease),box-shadow var(--dur-normal) var(--ease);
-    }
-    .diff-btn:hover{border-color:var(--accent-muted);background:var(--accent-soft)}
-    .diff-btn.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
-    .diff-btn .diff-label{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text)}
-    .diff-btn .diff-desc{font-size:11px;color:var(--muted);font-weight:500;margin-top:3px}
-    .diff-btn .diff-factor{font-size:11px;font-weight:700;margin-top:3px;color:var(--accent)}
+    /* ── Kompleksitet (valgknapper) ── */
+    .diff-grid{display:flex;flex-wrap:wrap;gap:6px}
+    .diff-btn{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:48px;padding:6px 14px;border:none;border-radius:14px;background:var(--bg);font:inherit;color:var(--muted-strong);cursor:pointer}
+    .diff-btn:hover{color:var(--text)}
+    .diff-btn.active{background:var(--text);color:var(--on-accent)}
+    .diff-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .diff-btn .diff-label{font-size:13px;font-weight:600;color:inherit}
+    .diff-btn .diff-factor{font-size:11px;font-weight:500;color:inherit;opacity:.8}
 
-    /* ── Calc inputs section ── */
-    .calc-inputs-section{margin-bottom:16px}
-    .calc-inputs-section label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-    .calc-section-divider{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
     .calc-section-label{font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
     /* ── Calc results ── */
@@ -646,73 +638,37 @@
     .handleliste-item .hl-total{text-align:right;font-weight:700;white-space:nowrap;min-width:70px;color:var(--accent)}
     .handleliste-item .hl-check{width:20px;height:20px;accent-color:var(--accent)}
     @media print{.handleliste-overlay{position:static;background:none}.handleliste-modal{max-width:100%;max-height:none;box-shadow:none;padding:0}.handleliste-header button{display:none}}
-    .calc-result-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;margin-top:8px}
-    .calc-result-header{font-family:var(--font-display);font-weight:700;font-size:15px;margin-bottom:4px}
-    .calc-result-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-    .calc-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-    .calc-stat-box{padding:14px;border-radius:var(--radius-sm)}
-    .calc-stat-box .stat-label{font-size:11px;color:var(--muted);font-weight:700}
-    .calc-stat-box .stat-value{font-family:var(--font-display);font-size:20px;font-weight:700;margin-top:4px}
-    .calc-stat-box .stat-detail{font-size:10px;color:var(--muted);margin-top:4px}
-    .calc-stat-box.blue{background:var(--blue-soft)}
-    .calc-stat-box.blue .stat-value{color:var(--blue)}
-    .calc-stat-box.orange{background:var(--accent-soft)}
-    .calc-stat-box.orange .stat-value{color:var(--accent)}
-    .calc-price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;padding:16px;background:var(--bg-warm);border-radius:var(--radius-sm);border:1px solid var(--line)}
-    .calc-price-item .price-label{font-size:11px;color:var(--muted);font-weight:700}
-    .calc-price-item .price-value{font-family:var(--font-display);font-size:17px;font-weight:700;margin-top:3px}
-    .calc-totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-    .calc-total-box{padding:14px;border-radius:var(--radius-sm);border:1.5px solid}
-    .calc-total-box .total-label{font-size:11px;color:var(--muted);font-weight:700}
-    .calc-total-box .total-value{font-family:var(--font-display);font-size:24px;font-weight:700}
-    .calc-total-box.green{background:var(--green-soft);border-color:rgba(22,163,74,.15)}
-    .calc-total-box.green .total-value{color:var(--green)}
-    .calc-total-box.blue-border{background:var(--blue-soft);border-color:rgba(102,196,255,.2)}
-    .calc-total-box.blue-border .total-value{color:var(--blue)}
-    .calc-actions{display:flex;gap:8px}
-    .calc-actions .btn{flex:1}
-    .calc-sent-msg{margin-top:10px;padding:12px;background:var(--green-soft);border:1px solid rgba(22,163,74,.15);border-radius:var(--radius-xs);font-size:12px;color:var(--green);font-weight:700}
 
-    /* ── Materials table in calc ── */
-    .calc-mat-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
-    .calc-mat-table thead{background:var(--bg-warm);border-bottom:2px solid var(--line)}
-    .calc-mat-table th{text-align:left;padding:8px;font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
-    .calc-mat-table th:not(:first-child){text-align:center}
-    .calc-mat-table th:last-child{text-align:center}
-    .calc-mat-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
-    .calc-mat-table input,.calc-mat-table select{
-      padding:7px 8px;border:1.5px solid var(--line);border-radius:var(--radius-xs);
-      font-size:12px;background:var(--bg-warm);transition:border-color var(--dur-normal) var(--ease);
-    }
-    .calc-mat-table select{padding-right:26px;background-position:right 8px center;background-size:8px 6px}
-    .calc-mat-table input:focus,.calc-mat-table select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px var(--accent-soft)}
-    .calc-mat-table .mat-name-input{width:100%;min-width:140px;cursor:pointer}
-    .calc-mat-table .mat-num-input{width:58px;text-align:right}
-    .calc-mat-table .mat-unit-select{width:62px}
-    /* Kolonne-justering — flyttet hit fra inline stiler i app.js sin
-       rad-mal, slik at mobil-overrideet lenger ned kan omdefinere layouten
-       uten å måtte kjempe mot inline-stiler (som alltid vinner over klasser). */
-    .calc-mat-table .cmt-qty,.calc-mat-table .cmt-unit,.calc-mat-table .cmt-waste,.calc-mat-table .cmt-markup{text-align:center}
-    .calc-mat-table .cmt-brutto{text-align:center;color:var(--muted);font-size:11px}
-    .calc-mat-table .cmt-cost{text-align:right}
-    .calc-mat-table .cmt-del{text-align:center}
-    .calc-mat-table .mat-num-input--narrow{width:50px}
-    .calc-modal-select{width:100%;font-size:13px;border-radius:var(--radius-xs)}
+    /* ── Materialtabellen i kalkulatoren ── */
+    .calc-mat-scroll{overflow-x:auto}
+    .calc-mat-table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+    .calc-mat-table th{padding:8px 4px;background:var(--bg-warm);font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);text-align:left;white-space:nowrap}
+    .calc-mat-table th:first-child{padding-left:12px;border-radius:12px 0 0 12px}
+    .calc-mat-table th:last-child{border-radius:0 12px 12px 0}
+    .calc-mat-table th.num{text-align:right}
+    .calc-mat-table td{padding:4px;border-bottom:1px solid var(--line);vertical-align:middle}
+    .calc-mat-table tr.is-unpriced{background:var(--yellow-soft)}
+    .calc-mat-table input,.calc-mat-table select{min-height:40px;padding:6px 8px;border:1px solid transparent;border-radius:10px;background:transparent;font-size:14px;box-shadow:none}
+    .calc-mat-table input:hover,.calc-mat-table select:hover{border-color:var(--line)}
+    .calc-mat-table input:focus,.calc-mat-table select:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--accent-soft)}
+    .calc-mat-table select{padding-right:24px;background-position:right 8px center;background-size:8px 6px}
+    .calc-mat-table .mat-name-input{width:100%;min-width:120px;font-weight:500;cursor:pointer}
+    .calc-mat-table .mat-num-input{width:66px;text-align:right;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+    .calc-mat-table .mat-num-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .calc-mat-table .mat-num-input--narrow{width:48px}
+    .calc-mat-table .mat-unit-select{width:66px}
+    .calc-mat-table .cmt-brutto{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+    .calc-mat-table .cmt-del{width:40px;text-align:center}
+        .calc-modal-select{width:100%;font-size:13px;border-radius:var(--radius-xs)}
     /* Materialrad i "Tilpass post"-modalen. Desktop: én rad, 7 faste kolonner
        (uendret fra før). Mobil-override lenger ned bryter dette om til et
        stablet 2-kolonners kort — den faste rad-bredden (368px+) overflower
        enhver telefonskjerm. */
-    .calc-mat-modal-row{display:grid;grid-template-columns:1fr 64px 64px 72px 68px 68px 32px;gap:5px;align-items:center;padding:8px;border-radius:12px;margin-bottom:5px}
-    .calc-mat-table .mat-total{font-family:var(--font-display);font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;min-width:70px}
-    .calc-mat-table .mat-delete{padding:5px 8px;font-size:10px;background:var(--red-soft);color:var(--red);border:1px solid rgba(220,38,38,.1);border-radius:6px;cursor:pointer;transition:background var(--dur-fast) var(--ease)}
-    .calc-mat-table .mat-delete:hover{background:rgba(220,38,38,.1)}
-    .calc-add-mat-btn{
-      width:100%;padding:11px;font-size:12px;font-weight:700;
-      background:var(--accent-soft);border:1.5px dashed var(--accent-muted);color:var(--accent);
-      border-radius:var(--radius-xs);cursor:pointer;
-      transition:background var(--dur-normal) var(--ease);
-    }
-    .calc-add-mat-btn:hover{background:rgba(255,192,103,.15)}
+    .calc-mat-modal-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 60px 76px 72px 72px 80px 36px;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line)}
+    .calc-mat-table .mat-total{text-align:right;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .calc-mat-table .mat-delete{width:36px;height:36px;border:none;border-radius:10px;background:transparent;font-size:18px;color:var(--muted);cursor:pointer}
+    .calc-mat-table .mat-delete:hover{background:var(--red-soft);color:var(--red)}
+    .mat-add-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 
     /* ── Operation rows ── */
     .op-row{
@@ -740,7 +696,6 @@
     }
 
     /* ── Erfaringstimer panel ── */
-    .rate-settings-panel{margin-top:16px;padding:16px;background:var(--bg-warm);border:1px solid var(--line);border-radius:var(--radius-sm)}
     .rate-settings-header{font-family:var(--font-display);font-weight:700;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
     .rate-section{margin-bottom:12px}
     .rate-section-toggle{
@@ -759,16 +714,6 @@
     .rate-section-body .row-3{gap:12px}
     .rate-section-body label{font-size:12px;font-weight:600;color:var(--muted-strong)}
     .rate-section-body input{padding:10px 12px;border-radius:var(--radius-xs)}
-
-    /* ── Info tip box ── */
-    .calc-info-tip{
-      padding:12px 16px;background:var(--blue-soft);
-      border:1px solid rgba(102,196,255,.15);
-      border-radius:var(--radius-xs);margin-bottom:16px;
-      font-size:13px;color:var(--blue);line-height:1.5;
-      display:flex;align-items:flex-start;gap:8px;
-    }
-    .calc-info-tip strong{font-weight:700}
 
     /* ── Indirect time section ── */
     .indirect-panel{margin-top:16px;padding:16px;background:var(--bg-warm);border:1px solid var(--line);border-radius:var(--radius-sm)}
@@ -798,134 +743,334 @@
     .tab-section-body{overflow:hidden;max-height:800px;transition:max-height .3s ease,opacity .2s ease,margin .2s ease;opacity:1;margin-top:12px}
     .tab-section.collapsed .tab-section-body{max-height:0;opacity:0;margin-top:0}
 
-    /* ── Offer Summary Cards ── */
-    .offer-stat-card{padding:16px;border-radius:var(--radius-sm);border:1px solid}
-    .offer-stat-card .offer-stat-label{font-family:var(--font-display);font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px}
-    .offer-stat-card .offer-stat-value{font-family:var(--font-display);font-size:22px;font-weight:700}
-    .offer-stat-card .offer-stat-detail{font-size:12px;color:var(--muted);margin-top:4px}
-    .offer-stat-card.blue-theme{background:var(--blue-soft);border-color:rgba(102,196,255,.2)}
-    .offer-stat-card.blue-theme .offer-stat-value{color:var(--blue)}
-    .offer-stat-card.green-theme{background:var(--green-soft);border-color:rgba(22,163,74,.12)}
-    .offer-stat-card.green-theme .offer-stat-value{color:var(--green)}
-    .offer-stat-card.amber-theme{background:var(--yellow-soft);border-color:rgba(240,168,64,.15)}
-    .offer-stat-card.amber-theme .offer-stat-value{color:var(--yellow)}
+    /* ══════════════════════════════════════════════════════
+       PRISOVERSLAG-FANEN — tabeller og sammendrag (blå rute)
+       ══════════════════════════════════════════════════════ */
+    .offer-layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:start}
+    .offer-layout-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+    @media (max-width:1000px){ .offer-layout{grid-template-columns:minmax(0,1fr)} }
 
-    /* ── Offer Hours Display ── */
-    .offer-hours-bar{
-      display:flex;align-items:center;gap:14px;
-      background:var(--bg-warm);border:1px solid var(--line);
-      border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;
+    .offer-card{background:var(--card);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow-sm)}
+    .offer-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .offer-card-title{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600;letter-spacing:-.01em}
+    .offer-empty{padding:18px;border:1.5px dashed var(--line-strong);border-radius:var(--radius-sm);text-align:center;font-size:14px;color:var(--muted)}
+    .offer-note{padding:12px 14px;border-radius:var(--radius-sm);background:var(--yellow-soft);font-size:13px}
+
+    /* Tabell: overskrift og rader deler kolonnene. Raden er en knapp som
+       åpner redigeringen; avkrysningen står utenfor knappen. */
+    .offer-table{display:flex;flex-direction:column}
+    .offer-table-head,.offer-row{display:flex;align-items:stretch}
+    .offer-table-head{min-height:34px;border-radius:12px;background:var(--bg-warm);font-size:12px;font-weight:600;color:var(--muted)}
+    .offer-row-cells{flex:1;min-width:0;display:grid;align-items:center;gap:8px;padding:0 12px}
+    .offer-table--posts .offer-row-cells{grid-template-columns:minmax(0,1fr) 84px 46px 84px 104px 14px}
+    .offer-table--changes .offer-row-cells{grid-template-columns:30px minmax(0,1fr) 88px 88px 104px 14px}
+    .offer-col-num{text-align:right;font-variant-numeric:tabular-nums}
+    .offer-row-select{display:flex;align-items:center;justify-content:center;width:44px;flex-shrink:0;cursor:pointer}
+    .offer-row-select input{width:18px;height:18px;margin:0}
+    .offer-item{border-bottom:1px solid var(--line)}
+    .offer-item:last-child{border-bottom:none}
+    .offer-item.is-open{margin:4px 0;border-bottom-color:transparent;border-radius:var(--radius-sm);background:var(--bg-warm)}
+    button.offer-row-cells{min-height:56px;border:none;border-radius:12px;background:transparent;font:inherit;font-size:14px;color:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    button.offer-row-cells:hover{background:var(--card-hover)}
+    .offer-item.is-open button.offer-row-cells:hover{background:transparent}
+    button.offer-row-cells:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+    .offer-cell-name{display:flex;flex-direction:column;gap:2px;min-width:0;padding:8px 0}
+    .offer-name{font-size:15px;font-weight:600}
+    .offer-name-note{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+    .offer-cell-desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .offer-cell-compact{display:none;font-size:12px;color:var(--muted)}
+    .offer-cell-sum{font-weight:600}
+    .offer-cell-sum.is-struck{text-decoration:line-through}
+    .offer-row.is-muted{color:var(--muted)}
+    .offer-row.is-muted .offer-name,.offer-row.is-muted .offer-cell-sum{font-weight:500}
+    .offer-chevron{display:flex;color:var(--muted);transition:transform var(--dur-fast) var(--ease)}
+    .offer-item.is-open .offer-chevron{transform:rotate(180deg)}
+    .offer-row-detail{padding:4px 14px 14px}
+    .offer-row-actions{margin-top:10px;justify-content:flex-end}
+    .offer-price-readonly{padding:12px 14px;border-radius:12px;background:var(--pastel-blue);font-size:18px;font-weight:600;color:var(--pastel-blue-ink)}
+    .offer-merge-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--pastel-blue);font-size:13px;font-weight:500;color:var(--pastel-blue-ink)}
+
+    .type-badge,.co-status{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+    .type-badge--calc{background:var(--pastel-blue);color:var(--pastel-blue-ink)}
+    .type-badge--fixed{background:var(--pastel-peach);color:var(--pastel-peach-ink)}
+    .type-badge--option{background:var(--pastel-lilac);color:var(--pastel-lilac-ink)}
+    .co-status--utkast{background:var(--bg-warm);color:var(--muted-strong)}
+    .co-status--sendt{background:var(--pastel-mint);color:var(--pastel-mint-ink)}
+    .co-status--godkjent{background:var(--pastel-blue);color:var(--pastel-blue-ink)}
+    .co-status--avvist{background:var(--red-soft);color:var(--red)}
+    .co-number{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:var(--pastel-mint);font-size:12px;font-weight:700;color:var(--pastel-mint-ink)}
+
+    .offer-warnings ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+    .offer-warning{display:flex;align-items:baseline;gap:10px;padding:10px 12px;border-radius:12px;font-size:13px}
+    .offer-warning-tag{flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+    .offer-warning--danger{background:var(--red-soft)}
+    .offer-warning--danger .offer-warning-tag{color:var(--red)}
+    .offer-warning--warning{background:var(--yellow-soft)}
+    .offer-warning--warning .offer-warning-tag{color:var(--warn-ink)}
+    .offer-warning--info{background:var(--blue-soft)}
+    .offer-warning--info .offer-warning-tag{color:var(--blue)}
+
+    /* Blå rute */
+    .offer-summary{display:flex;flex-direction:column;gap:12px;padding:20px 22px;border-radius:26px;background:var(--pastel-blue);color:var(--summary-ink)}
+    .offer-summary-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .offer-summary-label{font-size:13px;font-weight:500;color:var(--summary-muted)}
+    .offer-summary-total{margin-top:2px;font-size:40px;font-weight:300;letter-spacing:-.04em;line-height:1.05;color:var(--text);font-variant-numeric:tabular-nums}
+    .offer-summary-total span{font-size:18px}
+    .offer-summary-alt{text-align:right;font-size:13px;line-height:1.55;color:var(--summary-muted);white-space:nowrap}
+    .offer-summary-alt strong{font-weight:500;color:var(--summary-ink);font-variant-numeric:tabular-nums}
+    .offer-mix{display:flex;flex-direction:column;gap:8px}
+    .offer-mix-bar{display:flex;gap:2px;height:10px;border-radius:999px;overflow:hidden;background:var(--summary-panel)}
+    .offer-mix-seg{display:block;min-width:2px}
+    .offer-mix-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px;font-size:12px;color:var(--summary-muted)}
+    .offer-mix-item{display:flex;align-items:center;gap:6px;min-width:0}
+    .offer-mix-dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+    .offer-mix-name{flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .offer-mix-value{color:var(--summary-ink);font-variant-numeric:tabular-nums}
+    .offer-mix-option{font-size:12px;color:var(--summary-muted)}
+    .offer-mix-option strong{font-weight:500;color:var(--summary-ink);font-variant-numeric:tabular-nums}
+    .offer-mix--labor{background:var(--mix-labor)}
+    .offer-mix--material{background:var(--mix-material)}
+    .offer-mix--fixed{background:var(--mix-fixed)}
+    .offer-mix--rig{background:var(--mix-rig)}
+    .offer-mix--waste{background:var(--mix-waste)}
+    .offer-mix--other{background:var(--mix-other)}
+    .offer-summary-panel{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;background:var(--summary-panel)}
+    .offer-summary-panel-head{display:flex;justify-content:space-between;font-size:12px;color:var(--summary-muted)}
+    .offer-summary-panel-head span:first-child{font-weight:600;color:var(--summary-ink)}
+    .offer-summary-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-variant-numeric:tabular-nums}
+    .offer-summary-contract{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding-top:6px;border-top:1px solid var(--summary-line);font-size:13px;font-weight:600}
+    .offer-summary-contract strong{font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
+    .offer-summary-contract small{font-size:12px;font-weight:400;color:var(--summary-muted)}
+    .offer-summary-note{font-size:12px;color:var(--summary-muted)}
+    .offer-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .offer-tile{padding:9px 12px;border-radius:14px;background:var(--summary-tile);min-width:0}
+    .offer-tile-label,.offer-tile-note{font-size:11px;color:var(--summary-muted)}
+    .offer-tile-value{font-size:19px;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .offer-tile-note.is-good{color:var(--good-ink)}
+    .offer-tile-note.is-warn{color:var(--warn-ink)}
+    .offer-checklist{padding:10px 12px;border-radius:14px;background:var(--summary-panel)}
+    .offer-checklist-title{margin-bottom:4px;font-size:12px;font-weight:600;color:var(--summary-ink)}
+    .offer-checklist ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px;font-size:12px}
+    .offer-checklist li{display:flex;align-items:flex-start;gap:8px;min-height:22px;padding:2px 0;color:var(--summary-ink)}
+    .offer-checklist li svg{flex-shrink:0;margin-top:1px}
+    .offer-checklist li.is-ok svg{color:var(--good-ink)}
+    .offer-checklist li.is-missing{color:var(--warn-ink)}
+    .offer-checklist li.is-missing svg{color:var(--warn-icon)}
+
+    /* Smal skjerm (delt skjerm / Slide Over): færre kolonner, detaljer under navnet */
+    @media (max-width:640px){
+      .offer-card{padding:16px}
+      .offer-col-wide{display:none}
+      .offer-cell-compact{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+      .offer-table--posts .offer-row-cells{grid-template-columns:minmax(0,1fr) 96px 16px}
+      .offer-table--changes .offer-row-cells{grid-template-columns:28px minmax(0,1fr) 96px 16px}
     }
-    .offer-hours-bar .hours-value{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--accent);line-height:1}
-    .offer-hours-bar .hours-label{font-family:var(--font-display);font-size:13px;font-weight:700}
-    .offer-hours-bar .hours-detail{font-size:12px;color:var(--muted);margin-top:2px}
-
-    /* ── Offer Total Panel ── */
-    .offer-total-panel{
-      margin-top:16px;padding:22px;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius-sm);color:var(--text);
-      box-shadow:var(--shadow);
+    @media (max-width:480px){
+      .offer-card{padding:14px 12px}
+      .offer-row-cells{padding:0 8px}
+      .offer-table--posts .offer-row-cells{grid-template-columns:minmax(0,1fr) 84px 14px}
+      .offer-table--changes .offer-row-cells{grid-template-columns:28px minmax(0,1fr) 84px 14px}
+      .offer-summary{padding:18px}
+      .offer-summary-total{font-size:34px}
+      .offer-mix-legend,.offer-checklist ul{grid-template-columns:minmax(0,1fr)}
     }
-    .offer-total-panel .panel-label{font-family:var(--font-display);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
-    .offer-total-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
-    .offer-total-item{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-xs);padding:14px}
-    .offer-total-item .item-label{font-size:11px;color:var(--muted);font-weight:600}
-    .offer-total-item .item-value{font-family:var(--font-display);font-size:20px;font-weight:700;margin-top:6px}
-    .offer-total-item .item-value.highlight{color:var(--green)}
-    .offer-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:12px;border-top:1px solid var(--line)}
-    .offer-detail-item .detail-label{font-size:11px;color:var(--muted);font-weight:600}
-    .offer-detail-item .detail-value{font-family:var(--font-display);font-size:16px;font-weight:700;margin-top:4px}
-    .offer-detail-item .detail-value.profit{color:var(--green)}
-    .offer-total-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-    .offer-total-footer .footer-text{font-size:12px;color:var(--muted)}
 
-    /* ── Offer Bottom Stats ── */
-    .offer-bottom-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px}
-    .offer-bottom-stat{padding:14px;background:var(--bg-warm);border:1px solid var(--line);border-radius:var(--radius-xs)}
-    .offer-bottom-stat strong{font-family:var(--font-display);font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:var(--muted)}
-    .offer-bottom-stat div{font-family:var(--font-display);font-size:17px;font-weight:700}
+    /* ══════════════════════════════════════════════════════
+       KALKULASJON — jobb, mål og materialer til venstre, resultat til høyre
+       ══════════════════════════════════════════════════════ */
+    .calc-layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:start;margin-bottom:16px}
+    .calc-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .calc-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+    .calc-card-hint{font-size:12px;color:var(--muted);text-align:right}
+    .calc-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0 12px}
+    .calc-fields--pair{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}
+    .calc-group-label{margin:16px 0 8px;font-size:12px;font-weight:600;color:var(--muted)}
+    .info-switch-row.calc-occupied{margin:0}
+    .calc-summary{display:flex;flex-direction:column;gap:12px;padding:20px 22px;border-radius:26px;background:var(--pastel-blue);color:var(--summary-ink)}
+    .calc-summary-label{font-size:13px;font-weight:500;color:var(--summary-muted)}
+    .calc-summary-total{font-size:40px;font-weight:300;letter-spacing:-.04em;line-height:1.05;color:var(--text);font-variant-numeric:tabular-nums}
+    .calc-summary-total span{font-size:18px}
+    .calc-summary-total small{font-size:13px;letter-spacing:0;color:var(--summary-muted)}
+    .calc-summary-empty{margin:0;font-size:14px;line-height:1.5;color:var(--summary-muted)}
+    .calc-breakdown{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:14px;background:var(--summary-panel);font-size:13px}
+    .calc-breakdown>div{display:flex;justify-content:space-between;gap:10px}
+    .calc-breakdown>div span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+    .calc-breakdown .is-muted{color:var(--summary-muted)}
+    .calc-breakdown .is-strong{padding-top:5px;border-top:1px solid var(--summary-line);font-weight:600}
+    .calc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .calc-summary-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+    .btn.calc-send{min-height:50px;border:none;border-radius:16px;background:var(--text);color:var(--on-accent);font-size:15px;font-weight:600}
+    .btn.calc-send:disabled{background:var(--summary-panel);color:var(--summary-ink);cursor:default}
+    .calc-summary-note{margin:0;font-size:12px;color:var(--summary-muted)}
+    .calc-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .calc-shortcut{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 14px;border:none;border-radius:14px;background:var(--card);box-shadow:var(--shadow-sm);font:inherit;font-size:13px;color:var(--text);text-align:left;cursor:pointer}
+    .calc-shortcut:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .calc-shortcut span:first-child{font-weight:500}
+    .calc-shortcut span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+    .calc-pricefile{margin-bottom:16px}
+    @media (max-width:1000px){
+      .calc-layout{grid-template-columns:minmax(0,1fr)}
+      .calc-side{position:static}
+    }
+    @media (max-width:640px){
+      .calc-job-grid{grid-template-columns:minmax(0,1fr)}
+      .calc-fields--pair{grid-template-columns:minmax(0,1fr)}
+    }
+    @media (max-width:420px){
+      .calc-mat-table tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .calc-mat-table td.cmt-name{grid-column:1}
+      .calc-mat-table td.cmt-del{grid-column:2}
+    }
+
+    /* ══════════════════════════════════════════════════════
+       INFO-FANEN — prosjekt, tidsplan, notater, satser og andre kostnader
+       ══════════════════════════════════════════════════════ */
+    .info-layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px;align-items:start}
+    .info-main,.info-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+    .info-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .info-switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;margin:14px 0 0;padding:0 14px;border-radius:12px;background:var(--card-hover);font-family:var(--font-body);font-size:14px;font-weight:400;color:var(--text);cursor:pointer}
+    .info-switch-title{font-weight:500}
+    .info-switch-hint{margin-left:8px;font-size:12px;color:var(--muted)}
+    .label-hint{font-weight:400}
+    .input-unit{position:relative}
+    .input-unit input{padding-right:56px}
+    .input-unit span{position:absolute;top:50%;right:14px;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+    .segmented{display:inline-flex;flex-wrap:wrap;gap:2px;margin-top:12px;padding:4px;border-radius:22px;background:var(--bg)}
+    .segmented button{min-height:38px;padding:0 14px;border:none;border-radius:999px;background:transparent;font:inherit;font-size:13px;font-weight:500;color:var(--muted-strong);cursor:pointer}
+    .segmented button:hover{color:var(--text)}
+    .segmented button.is-active{background:var(--text);color:var(--on-accent);font-weight:600}
+    .segmented button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+    .info-rates{padding:18px 22px;border-radius:26px;background:var(--pastel-blue);color:var(--summary-ink)}
+    .info-rates-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px}
+    .info-rates-head span{font-size:12px;color:var(--summary-muted)}
+    .info-rate{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid var(--summary-line)}
+    .info-rate:last-child{border-bottom:none}
+    .info-rate-text{display:flex;flex-direction:column;margin:0;font-family:var(--font-body);font-weight:400;cursor:pointer}
+    .info-rate-label{font-size:14px;color:var(--summary-ink)}
+    .info-rate-hint{font-size:12px;color:var(--summary-muted)}
+    .info-rate-field{display:flex;align-items:baseline;gap:6px;padding:4px 12px;border-radius:12px;background:var(--summary-tile)}
+    .info-rate-field:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+    .info-rate-field input{width:76px;min-height:36px;padding:0;border:none;border-radius:0;background:transparent;box-shadow:none;text-align:right;font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+    .info-rate-field input:focus{box-shadow:none}
+    .info-rate-field span{font-size:12px;color:var(--summary-muted)}
+    .info-costs-total{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+    .info-cost{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;border-bottom:1px solid var(--line)}
+    .info-cost label{display:flex;flex-direction:column;margin:0;font-family:var(--font-body);font-size:14px;font-weight:400;color:var(--text)}
+    .info-cost-hint{font-size:12px;color:var(--muted)}
+    .info-cost input{width:120px;flex-shrink:0;text-align:right;font-variant-numeric:tabular-nums}
+    .info-sub{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+    .info-add{margin-top:12px}
+    /* Kompakte tallfelt: uten pilknapper (vises på Mac, ikke på iPad) */
+    .info-rate-field input,.info-cost input,.info-sub input,.input-unit input{-moz-appearance:textfield}
+    .info-rate-field input::-webkit-inner-spin-button,.info-cost input::-webkit-inner-spin-button,.info-sub input::-webkit-inner-spin-button,.input-unit input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    @media (max-width:1000px){ .info-layout{grid-template-columns:minmax(0,1fr)} }
+    @media (max-width:640px){
+      .info-grid,.info-grid--3{grid-template-columns:minmax(0,1fr)}
+      .info-switch-hint{display:block;margin-left:0}
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TILPASS POST — timer, materialer og pris for én post
+       ══════════════════════════════════════════════════════ */
+    .modal.modal--wide{max-width:880px}
+    .post-editor{display:flex;flex-direction:column;gap:12px}
+    .post-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .post-editor-eyebrow{font-size:12px;color:var(--muted)}
+    .post-editor-title{margin:2px 0 0;font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:-.02em}
+    .post-editor-head-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .post-editor-close{width:44px;height:44px;border:none;border-radius:999px;background:var(--bg);font-size:22px;line-height:1;color:var(--muted-strong);cursor:pointer}
+    .post-editor-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .post-editor-box{display:flex;flex-direction:column;padding:2px 16px;border-radius:16px;background:var(--pastel-blue);color:var(--summary-ink)}
+    .post-editor-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px;border-bottom:1px solid var(--summary-line)}
+    .post-editor-row:last-child{border-bottom:none}
+    .post-editor-row--group{padding-left:10px;box-shadow:inset 3px 0 0 var(--group-color)}
+    .post-editor-row-title{font-size:14px;font-weight:600}
+    .post-editor-row-hint{font-size:12px;color:var(--summary-muted)}
+    .post-editor-amount{font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+    .post-editor-sumrow{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--summary-line);font-size:13px;font-weight:600}
+    .hours-stepper{display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:var(--summary-tile)}
+    .hours-stepper:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+    .hours-stepper button{width:40px;height:40px;border:none;border-radius:10px;background:var(--card);font-size:20px;color:var(--text);cursor:pointer}
+    .hours-stepper input{width:84px;min-height:40px;padding:0;border:none;background:transparent;box-shadow:none;text-align:center;font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+    .hours-stepper input:focus{box-shadow:none}
+    .hours-stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .post-editor-search{display:flex;align-items:center;gap:8px;min-height:46px;margin:0;padding:0 14px;border-radius:999px;background:var(--bg);font-family:var(--font-body);font-size:14px;font-weight:400;color:var(--muted);cursor:text}
+    .post-editor-search:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+    .post-editor-search input{flex:1;min-width:0;padding:0;border:none;background:transparent;box-shadow:none}
+    .post-editor-search input:focus{box-shadow:none}
+    .post-editor-results{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+    .post-editor-result{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px}
+    .post-editor-result-text{flex:1;min-width:0}
+    .post-editor-result-name{font-size:13px;font-weight:600}
+    .post-editor-result-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+    .post-editor-fav{width:40px;height:40px;border:none;border-radius:10px;background:transparent;font-size:18px;color:var(--line-strong);cursor:pointer}
+    .post-editor-fav.is-active{color:var(--yellow)}
+    .post-editor-empty{padding:12px;text-align:center;font-size:13px;color:var(--muted)}
+    .post-mat-head{display:grid;grid-template-columns:minmax(0,1fr) 64px 60px 76px 72px 72px 80px 36px;gap:6px;padding:8px 10px;border-radius:12px;background:var(--bg-warm);font-size:12px;font-weight:600;color:var(--muted)}
+    .post-mat-head span:nth-child(2),.post-mat-head span:nth-child(4),.post-mat-head span:nth-child(7){text-align:right}
+    .calc-mat-modal-row.is-unpriced{background:var(--yellow-soft)}
+    .calc-mat-modal-row.has-group{box-shadow:inset 3px 0 0 var(--group-color)}
+    .calc-mat-modal-row input,.calc-mat-modal-row select{min-height:40px;padding:6px 8px;border:1px solid transparent;border-radius:10px;background:transparent;font-size:14px;box-shadow:none}
+    .calc-mat-modal-row input:hover,.calc-mat-modal-row select:hover{border-color:var(--line)}
+    .calc-mat-modal-row input:focus,.calc-mat-modal-row select:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--accent-soft)}
+    .calc-mat-modal-row .cmr-name input{font-weight:500}
+    .calc-mat-modal-row .cmr-qty input,.calc-mat-modal-row .cmr-cost input{text-align:right;-moz-appearance:textfield}
+    .calc-mat-modal-row .cmr-qty input::-webkit-inner-spin-button,.calc-mat-modal-row .cmr-cost input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .cmr-meta{padding-left:8px;font-size:11px;color:var(--muted)}
+    .cmr-sum{text-align:right;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .cmr-del{width:36px;height:36px;border:none;border-radius:10px;background:transparent;font-size:18px;color:var(--muted);cursor:pointer}
+    .cmr-del:hover{background:var(--red-soft);color:var(--red)}
+    .post-editor-add{display:flex;flex-wrap:wrap;gap:8px}
+    /* Bunnlinjen blir stående nederst i vinduet mens man ruller i materialene */
+    .post-editor-foot{position:sticky;bottom:-28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:4px -28px -28px;padding:14px 28px;border-top:1px solid var(--line);background:var(--card)}
+    .post-editor-totals{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;font-size:13px;color:var(--muted)}
+    .post-editor-totals strong{font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+    .post-editor-actions{display:flex;gap:8px}
+    @media (max-width:700px){
+      .post-mat-head{display:none}
+      .calc-mat-modal-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "qty unit cost" "waste markup sum";gap:6px 8px;margin-bottom:6px;padding:10px;border-bottom:none;border-radius:14px;background:var(--card-hover)}
+      .calc-mat-modal-row .cmr-name{grid-area:name}
+      .calc-mat-modal-row .cmr-qty{grid-area:qty}
+      .calc-mat-modal-row .cmr-unit{grid-area:unit}
+      .calc-mat-modal-row .cmr-cost{grid-area:cost}
+      .calc-mat-modal-row .cmr-waste{grid-area:waste}
+      .calc-mat-modal-row .cmr-markup{grid-area:markup}
+      .calc-mat-modal-row .cmr-sum{grid-area:sum;align-self:end;line-height:40px}
+      .calc-mat-modal-row .cmr-del{grid-area:del;justify-self:end}
+      .calc-mat-modal-row [data-label]::before{content:attr(data-label);display:block;margin:0 0 2px 8px;font-size:11px;font-weight:600;color:var(--muted)}
+      .calc-mat-modal-row input,.calc-mat-modal-row select{width:100%;border-color:var(--line);background:var(--card)}
+      .post-editor-head{flex-wrap:wrap}
+      .post-editor-actions{width:100%}
+      .post-editor-actions .btn{flex:1}
+    }
+
+    .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
     /* ══════════════════════════════════════════════════════
        TILBUDSVISNING — Editor (redigeringsruten)
        ══════════════════════════════════════════════════════ */
-    .offer-editor{position:relative;height:calc(100vh - 130px);display:flex;flex-direction:column;background:var(--bg)}
-
-    .offer-editor-toolbar{
-      display:flex;align-items:center;gap:18px;
-      padding:14px 28px;border-bottom:1px solid var(--line);
-      background:var(--card);position:sticky;top:0;z-index:5;
-    }
-    .offer-editor-toolbar .toolbar-eyebrow{
-      font-family:var(--font-display);font-size:10px;
-      color:var(--muted);font-weight:700;
-      text-transform:uppercase;letter-spacing:.14em;
-    }
-    .offer-editor-toolbar .toolbar-title{
-      font-family:var(--font-display);font-size:18px;font-weight:700;
-      letter-spacing:-.02em;color:var(--text);margin-top:2px;line-height:1.1;
-    }
-    .offer-editor-toolbar .toolbar-spacer{flex:1}
-    .offer-editor-toolbar .toolbar-actions{display:flex;gap:8px;align-items:center}
-
-    .offer-editor-body{position:relative;flex:1;overflow:hidden}
-    .offer-editor-scroll{
-      height:100%;overflow-y:auto;
-      padding:32px 240px 96px 36px;
-      display:flex;flex-direction:column;gap:40px;
-    }
-
-    .offer-editor-thumb{
-      position:absolute;top:28px;right:28px;z-index:4;
-      display:flex;flex-direction:column;align-items:center;gap:8px;
-    }
-    .offer-editor-thumb .thumb-label{
-      font-family:var(--font-display);font-size:10px;color:var(--muted);
-      font-weight:700;text-transform:uppercase;letter-spacing:.14em;
-    }
-    .offer-editor-thumb .thumb-frame{
-      width:170px;height:240px;overflow:hidden;
-      border-radius:4px;border:1px solid var(--line-strong);
-      box-shadow:var(--shadow-lg);cursor:pointer;position:relative;
-      transition:transform var(--dur-normal) var(--ease), box-shadow var(--dur-normal) var(--ease);
-    }
-    .offer-editor-thumb .thumb-frame:hover{transform:translateY(-2px);box-shadow:var(--shadow-xl)}
-    .offer-editor-thumb .thumb-frame::after{
-      content:'Åpne full visning';
-      position:absolute;bottom:0;left:0;right:0;
-      background:linear-gradient(to top,rgba(22,39,54,.92) 60%,rgba(22,39,54,0));
-      color:#fff;font-size:10px;font-weight:600;text-align:center;
-      padding:14px 6px 8px;letter-spacing:.04em;
-      opacity:0;transition:opacity var(--dur-normal) var(--ease);
-    }
-    .offer-editor-thumb .thumb-frame:hover::after{opacity:1}
+    /* Redigering til venstre, prisoverslaget slik det sendes til høyre */
+    .offer-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+    .offer-editor-main{display:flex;flex-direction:column;gap:24px;min-width:0}
+    .offer-preview-panel{position:sticky;top:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+    .offer-preview-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 10px}
+    .offer-preview-title{font-size:13px;color:var(--muted)}
+    .offer-preview-actions{display:flex;gap:8px}
+    .offer-preview-frame{height:calc(100vh - 200px);min-height:320px;overflow-y:auto;padding:12px;border-radius:14px;background:var(--preview-backdrop)}
+    .offer-preview-paper{margin:0 auto;overflow:hidden;background:var(--card);box-shadow:var(--shadow-sm)}
 
     /* Sone-headers */
-    .offer-zone{display:flex;flex-direction:column;gap:16px}
-    .offer-zone-head{display:flex;align-items:baseline;gap:16px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-    .offer-zone-head h2{
-      font-family:var(--font-display);
-      font-size:24px;font-weight:700;letter-spacing:-.02em;
-      color:var(--text);line-height:1.15;
-    }
-    .offer-zone-head .zone-hint{font-size:12px;color:var(--muted);font-weight:500;line-height:1.4}
+    .offer-zone{display:flex;flex-direction:column;gap:12px}
+    .offer-zone-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding:0 2px}
+    .offer-zone-head h2{margin:0;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-strong)}
+    .offer-zone-head .zone-hint{font-size:12px;color:var(--muted);line-height:1.4}
 
-    /* Kort */
-    .offer-card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:22px 24px;
-      box-shadow:var(--shadow-sm);
-    }
-    .offer-card-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}
-    .offer-card-title{
-      font-family:var(--font-display);
-      font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em;
-    }
+    /* Kortene (.offer-card) deles med Prisoverslag-fanen og er definert der */
     .offer-card-hint{font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5}
     .offer-card-list{display:flex;flex-direction:column;gap:2px}
+    .offer-card-list--grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
+    .offer-card-list--grid .offer-check-group-label{grid-column:1/-1}
 
     /* Custom checkbox + radio */
     .offer-check-group-label{
@@ -955,37 +1100,34 @@
     .offer-check input[type=checkbox]:checked,
     .offer-check input[type=radio]:checked{background:var(--accent);border-color:var(--accent)}
     .offer-check input[type=checkbox]:checked{
-      background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' stroke='%23162736' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' stroke='%23FFFFFF' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;background-position:center;background-size:14px 14px;
     }
     .offer-check input[type=radio]:checked::after{
       content:'';position:absolute;left:50%;top:50%;
-      width:7px;height:7px;border-radius:50%;background:#162736;
+      width:7px;height:7px;border-radius:50%;background:var(--on-accent);
       transform:translate(-50%,-50%);
     }
     .offer-check input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
     /* "Vis" toggle i kort-head — samme checkbox, annen label-stil */
-    .offer-toggle{
-      display:inline-flex;align-items:center;gap:9px;cursor:pointer;
-      font-family:var(--font-display);font-size:10px;color:var(--muted);
-      font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+    .offer-toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0;font-family:var(--font-body);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer}
+
+    /* Bryter (av/på) — «Vis» i prisoverslaget og «Bebodd bolig» i Info */
+    .switch{
+      appearance:none;-webkit-appearance:none;flex-shrink:0;position:relative;
+      width:40px;height:24px;padding:0;margin:0;border:none;border-radius:999px;
+      background:var(--line-strong);cursor:pointer;transition:background var(--dur-normal) var(--ease);
     }
-    .offer-toggle input[type=checkbox]{
-      appearance:none;-webkit-appearance:none;
-      width:32px;height:18px;border-radius:999px;
-      background:var(--line);border:none;margin:0;cursor:pointer;
-      position:relative;transition:background var(--dur-normal) var(--ease);
-    }
-    .offer-toggle input[type=checkbox]::after{
-      content:'';position:absolute;top:2px;left:2px;
-      width:14px;height:14px;border-radius:50%;background:#fff;
-      box-shadow:0 1px 2px rgba(22,39,54,.2);
+    .switch::after{
+      content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+      background:var(--card);box-shadow:0 1px 2px rgba(22,39,54,.2);
       transition:transform var(--dur-normal) var(--ease-spring);
     }
-    .offer-toggle input[type=checkbox]:checked{background:var(--accent)}
-    .offer-toggle input[type=checkbox]:checked::after{transform:translateX(14px)}
-    .offer-toggle input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .switch:checked{background:var(--accent)}
+    .switch:checked::after{transform:translateX(16px)}
+    .switch:focus{box-shadow:none}
+    .switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
     /* Inputs & textareas */
     .offer-input,.offer-textarea{
@@ -1028,39 +1170,13 @@
     .offer-add-line:hover{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}
 
     /* Pris-type "rich radio card" */
-    .offer-pricetype-group{display:flex;flex-direction:column;gap:10px}
-    .offer-pricetype-option{
-      display:flex;align-items:flex-start;gap:14px;
-      padding:14px 16px;
-      border:1.5px solid var(--line);
-      border-radius:var(--radius-sm);
-      background:var(--card);cursor:pointer;user-select:none;
-      transition:border-color var(--dur-normal) var(--ease),background var(--dur-normal) var(--ease),box-shadow var(--dur-normal) var(--ease);
-    }
-    .offer-pricetype-option:hover{border-color:var(--line-strong);background:var(--card-hover)}
-    .offer-pricetype-option input[type=radio]{
-      appearance:none;-webkit-appearance:none;
-      width:18px;height:18px;flex-shrink:0;margin:3px 0 0;
-      border:1.5px solid var(--line-strong);border-radius:50%;
-      background:var(--card);cursor:pointer;position:relative;
-      transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
-    }
-    .offer-pricetype-option input[type=radio]:checked{background:var(--accent);border-color:var(--accent)}
-    .offer-pricetype-option input[type=radio]:checked::after{
-      content:'';position:absolute;left:50%;top:50%;
-      width:7px;height:7px;border-radius:50%;background:#162736;
-      transform:translate(-50%,-50%);
-    }
-    .offer-pricetype-option.selected{
-      border-color:var(--accent);background:var(--accent-soft);
-      box-shadow:0 0 0 1px var(--accent) inset;
-    }
-    .offer-pricetype-option .pt-body{display:flex;flex-direction:column;gap:3px}
-    .offer-pricetype-option .pt-title{
-      font-family:var(--font-display);font-size:14px;font-weight:700;
-      color:var(--text);letter-spacing:-.01em;line-height:1.3;
-    }
-    .offer-pricetype-option .pt-desc{font-size:12.5px;color:var(--muted);line-height:1.45}
+    .segmented-option{position:relative;display:flex;align-items:center;min-height:38px;margin:0;padding:0 14px;border-radius:999px;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--muted-strong);cursor:pointer}
+    .segmented-option input{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+    .segmented-option.is-active{background:var(--text);color:var(--on-accent);font-weight:600}
+    .segmented-option:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+    .offer-pricetype-hint{margin:10px 0 0}
+    .offer-days-row input{-moz-appearance:textfield}
+    .offer-days-row input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
     /* Beregnet tid */
     .offer-days-total{font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.5}
@@ -1090,10 +1206,14 @@
     .offer-postmode-list{display:flex;flex-direction:column;gap:4px}
     #customPostEditor:not(:empty){margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
 
-    /* Responsive — hide thumbnail on narrow */
-    @media (max-width:980px){
-      .offer-editor-scroll{padding:24px 24px 80px}
-      .offer-editor-thumb{display:none}
+    /* Smal skjerm: én kolonne, prisoverslaget øverst i et lavere vindu */
+    @media (max-width:1000px){
+      .offer-editor{grid-template-columns:minmax(0,1fr)}
+      .offer-preview-panel{position:static;order:-1}
+      .offer-preview-frame{height:340px}
+    }
+    @media (max-width:480px){
+      .offer-card-list--grid{grid-template-columns:minmax(0,1fr)}
     }
 
     /* ── Warning Boxes ── */
@@ -1192,41 +1312,6 @@
     .home-logout:hover{color:var(--muted-strong)}
 
     /* ══════════════════════════════════════════════════════
-       DASHBOARD HEADER
-       ══════════════════════════════════════════════════════ */
-    .dash-header{
-      background:var(--card);
-      margin:-32px -28px 32px;
-      padding:32px 32px 28px;
-      border-bottom:1px solid var(--line);
-      border-radius:0;
-      position:relative;
-    }
-    /* Accent line at top */
-    .dash-header::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,var(--accent),var(--accent-muted),transparent 80%);
-    }
-    .dash-header .topbar{margin:0;position:relative;z-index:1}
-    .dash-header .title{color:var(--text);font-size:24px}
-    .dash-header .subtitle{color:var(--muted)}
-    .dash-header .subtitle span{color:var(--green)!important}
-    .dash-header .actions{margin-top:16px}
-    .dash-header .btn.primary{background:var(--accent);color:#162736}
-    .dash-header .btn.primary:hover{background:var(--accent-hover);box-shadow:0 3px 14px var(--accent-glow)}
-
-    /* ── Dashboard entrance animation ────────────────────── */
-    @keyframes dash-rise{
-      from{opacity:0;transform:translateY(12px)}
-      to{opacity:1;transform:translateY(0)}
-    }
-    .dash-animate{animation:dash-rise .45s var(--ease-out) both}
-    .dash-animate:nth-child(1){animation-delay:.04s}
-    .dash-animate:nth-child(2){animation-delay:.08s}
-    .dash-animate:nth-child(3){animation-delay:.12s}
-    .dash-animate:nth-child(4){animation-delay:.16s}
-
-    /* ══════════════════════════════════════════════════════
        RESPONSIVE
        ══════════════════════════════════════════════════════ */
     @media (max-width:900px){
@@ -1237,8 +1322,6 @@
       .diff-grid{grid-template-columns:repeat(2,1fr)}
       .op-row-top{grid-template-columns:1fr 80px auto auto}
       .op-row-factors{grid-template-columns:1fr 1fr}
-      .calc-stat-grid,.calc-totals-grid{grid-template-columns:1fr}
-      .calc-price-grid{grid-template-columns:1fr}
       /* Materialtabellen i Kalkulasjon-fanen — 9 faste kolonner (navn, netto,
          enhet, brutto, pris, svinn%, paslag%, total, slett) klemmes til
          uleselighet på mobil (tall og prosent kuttes midt i teksten). Bryter
@@ -1247,51 +1330,32 @@
          styres med nth-child siden radene genereres i fast rekkefølge. */
       .calc-mat-table{font-size:13px;border:none}
       .calc-mat-table thead{display:none}
-      .calc-mat-table tbody{display:block}
-      .calc-mat-table tr{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-        padding:12px;
-        margin-bottom:10px;
-        border:1.5px solid var(--line);
-        border-radius:var(--radius-sm);
-        background:var(--card);
-      }
-      .calc-mat-table tbody tr:last-child{margin-bottom:0}
+      .calc-mat-table tbody{display:flex;flex-direction:column;gap:8px}
+      .calc-mat-table tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px;padding:10px 12px;border-radius:14px;background:var(--card-hover)}
       .calc-mat-table td{padding:0;border-bottom:none;vertical-align:top}
-      .calc-mat-table td.cmt-name{grid-column:1/-1}
-      .calc-mat-table td.cmt-brutto{grid-column:1/-1;text-align:left;padding:0 2px}
-      .calc-mat-table td.cmt-brutto::before{content:attr(data-label) ": "}
-      .calc-mat-table td.cmt-del{grid-column:1/-1;display:flex;justify-content:flex-end}
-      .calc-mat-table td.cmt-qty,.calc-mat-table td.cmt-unit,
-      .calc-mat-table td.cmt-cost,.calc-mat-table td.cmt-waste,
-      .calc-mat-table td.cmt-markup,.calc-mat-table td.cmt-total{text-align:left}
-      .calc-mat-table [data-label]:not(.cmt-brutto)::before{
-        content:attr(data-label);
-        display:block;font-size:10px;font-weight:700;color:var(--muted);
-        text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;
-      }
-      .calc-mat-table .mat-name-input{min-width:0;font-size:14px}
-      .calc-mat-table input,.calc-mat-table select{width:100%;min-height:44px;font-size:14px}
+      .calc-mat-table td.cmt-name{grid-column:1/3;grid-row:1}
+      .calc-mat-table td.cmt-del{grid-column:3;grid-row:1;justify-self:end}
+      .calc-mat-table [data-label]::before{content:attr(data-label);display:block;margin:0 0 2px 8px;font-size:11px;font-weight:600;line-height:1.4;color:var(--muted)}
+      .calc-mat-table td.cmt-brutto{padding:0;line-height:44px;font-size:14px;text-align:left}
+      .calc-mat-table td.cmt-brutto::before{line-height:1.4}
+      .calc-mat-table td.cmt-brutto{text-indent:8px}
+      .calc-mat-table td.cmt-brutto::before{text-indent:0}
+      .calc-mat-table .mat-name-input{min-width:0}
+      .calc-mat-table input,.calc-mat-table select{width:100%;min-height:44px;border-color:var(--line);background:var(--card)}
       .calc-mat-table .mat-num-input,.calc-mat-table .mat-num-input--narrow,.calc-mat-table .mat-unit-select{width:100%;text-align:left}
-      .calc-mat-table .mat-total{text-align:right;font-size:16px}
-      .calc-mat-table .mat-delete{min-height:36px;padding:8px 14px;font-size:12px}
+      .calc-mat-table td.cmt-total{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;padding:6px 8px 0;border-top:1px dashed var(--line);font-size:15px}
+      .calc-mat-table td.cmt-total::before{margin:0;font-size:12px}
       .indirect-panel .row-3{grid-template-columns:1fr 1fr}
-      .offer-total-grid,.offer-detail-grid,.offer-bottom-stats{grid-template-columns:1fr}
       .home-inner{padding:28px 20px}
       .home-modules{grid-template-columns:1fr}
       .home-module{flex-direction:row;padding:18px 20px;gap:14px}
       .home-module-icon{width:42px;height:42px;border-radius:11px;font-size:20px}
-      .dash-header{margin:-32px -28px 28px;padding:24px 20px 20px}
     }
     @media (max-width:480px){
       .diff-grid{grid-template-columns:1fr 1fr}
       .op-row-top{grid-template-columns:1fr;gap:6px}
       .op-row-top .btn{width:100%}
       .op-row-factors{grid-template-columns:1fr}
-      .calc-actions{flex-direction:column}
-      .tab-btn{font-size:12px;padding:9px 8px}
     }
 
     /* ── Reduced motion ──────────────────────────────────── */
@@ -1382,7 +1446,7 @@
        kalkulatoren lukkes helt. DOM-en til modalen (utfylte felt + resultat)
        røres ikke mens den er minimert, se minimizeMatCalc()/restoreMatCalc(). */
     .mc-minimized-pill{
-      position:fixed;right:20px;bottom:24px;z-index:1150;
+      position:fixed;right:20px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1150;
       display:flex;align-items:center;gap:10px;
       padding:10px 18px 10px 14px;border:1.5px solid var(--line);border-radius:999px;
       background:var(--card);box-shadow:var(--shadow-xl);
@@ -1396,7 +1460,7 @@
     .mc-minimized-hint{font-size:11px;color:var(--muted)}
     @keyframes mcPillIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @media (max-width:900px){
-      .mc-minimized-pill{right:12px;bottom:calc(56px + env(safe-area-inset-bottom,0px) + 12px)}
+      .mc-minimized-pill{right:12px}
     }
 
     /* Sidebar + content layout */
@@ -1416,7 +1480,7 @@
       transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
     }
     .mc-nav-item:hover{background:var(--card)}
-    .mc-nav-item-active{background:var(--accent);color:#162736;font-weight:700;box-shadow:0 1px 4px var(--accent-glow)}
+    .mc-nav-item-active{background:var(--accent);color:var(--on-accent);font-weight:700;box-shadow:0 1px 4px var(--accent-glow)}
     .mc-nav-item-active:hover{background:var(--accent)}
     .mc-nav-icon{font-size:14px;line-height:1;flex-shrink:0}
     .mc-body{padding:20px 24px 24px;overflow-y:auto;flex:1;min-width:0}
@@ -1433,7 +1497,7 @@
     }
     .mc-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
     .mc-field input[type="number"],.mc-field select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;font-weight:600;background:var(--bg-warm);color:var(--text);transition:border-color var(--dur-normal) var(--ease),background var(--dur-normal) var(--ease)}
-    .mc-field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237D99AA' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px}
+    .mc-field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236F8196' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px 8px}
     .mc-field input:focus,.mc-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);outline:none}
     .mc-field select:hover,.mc-field input[type="number"]:hover{border-color:var(--line-strong);background:var(--card-hover)}
     .mc-checkbox{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;margin-top:4px;padding:10px 12px;background:var(--bg-warm);border:1.5px solid var(--line);border-radius:var(--radius-xs);transition:border-color var(--dur-normal) var(--ease)}
@@ -1563,139 +1627,25 @@
       .gc-copy-btn{padding:8px 14px;font-size:13px;min-height:44px}
     }
 
-    /* ══════════════════════════════════════════════════════
-       SIDEBAR
-       ══════════════════════════════════════════════════════ */
-    .sidebar{
-      position:fixed;top:0;left:0;bottom:0;
-      width:240px;
-      background:var(--card);
-      border-right:1px solid var(--line);
-      display:flex;flex-direction:column;
-      z-index:800;
-      box-shadow:var(--shadow);
-    }
-    .sidebar-brand{
-      display:flex;align-items:center;gap:10px;
-      padding:20px 18px 16px;
-    }
-    .sidebar-logo{
-      display:flex;align-items:center;justify-content:center;
-      width:36px;height:36px;
-      background:var(--accent);
-      border-radius:10px;
-      font-family:var(--font-display);
-      font-size:16px;font-weight:800;
-      color:#162736;
-      box-shadow:0 4px 14px var(--accent-glow);
-      flex-shrink:0;
-    }
-    .sidebar-title{
-      font-family:var(--font-display);
-      font-size:15px;font-weight:700;
-      color:var(--text);
-      letter-spacing:-.02em;
-    }
-    .sidebar-nav{
-      display:flex;flex-direction:column;gap:2px;
-      padding:0 10px;
-    }
-    .sidebar-item{
-      display:flex;align-items:center;gap:10px;
-      padding:10px 12px;
-      border:none;background:transparent;
-      border-radius:var(--radius-xs);
-      font-family:var(--font-display);
-      font-size:13px;font-weight:600;
-      color:var(--muted-strong);
-      cursor:pointer;
-      transition:background var(--dur-normal) var(--ease),color var(--dur-normal) var(--ease);
-      width:100%;text-align:left;
-    }
-    .sidebar-item:hover{background:var(--bg-warm);color:var(--text)}
-    .sidebar-item.active{
-      background:var(--accent-soft);
-      color:var(--text);
-      font-weight:700;
-    }
-    .sidebar-item--muted{color:var(--muted);font-weight:500}
-    .sidebar-item--muted:hover{color:var(--red)}
-    .sidebar-icon{
-      display:flex;align-items:center;justify-content:center;
-      width:20px;height:20px;flex-shrink:0;
-      color:inherit;
-    }
-    .sidebar-sep{
-      height:1px;
-      background:var(--line);
-      margin:10px 18px;
-    }
-    .sidebar-footer{
-      margin-top:auto;
-      padding:12px 10px 16px;
-      border-top:1px solid var(--line);
-    }
-    .sidebar-sync{
-      padding:6px 12px;
-      font-size:11px;font-weight:600;
-      color:var(--green);
-      margin-bottom:4px;
-    }
-
-    /* Sidebar pushes content on desktop */
-    @media (min-width:901px){
-      .sidebar ~ .app,
-      .sidebar ~ #settingsView{margin-left:240px}
-    }
     @media (max-width:900px){
-      /* Skjul sidebar, bruk bunnmeny istedenfor */
-      #appSidebar{display:none!important}
-
       /* Kompakt mobil-spacing */
       body{font-size:15px}
       html{background:var(--bg)}
-      .app,#settingsView{padding:20px 16px calc(80px + env(safe-area-inset-bottom,0px))!important;margin-left:0!important}
+      .app,#settingsView{padding:20px 16px calc(112px + env(safe-area-inset-bottom,0px))!important}
       .card{padding:16px}
       .title{font-size:22px}
       .topbar{gap:10px;margin-bottom:16px}
       /* Avkrysningsbokser/brytere unntas — de strekkes ellers til 44px høye
          klumper. Trykkflaten legges i stedet på etiketten rundt dem. */
       input:not([type=checkbox]):not([type=radio]),select,textarea,button{min-height:44px}
-      .offer-toggle{min-height:44px}
       input[type="number"],input[type="text"],select{font-size:16px}
-      .tab-btn{min-height:44px}
 
       /* Makker/befaring/dokumentasjon views — fjern sidebar offset */
-      #makkView,#befaringView,#docsView{left:0!important;bottom:calc(56px + env(safe-area-inset-bottom,0px))!important}
-      #docsView>div{padding:20px 16px calc(80px + env(safe-area-inset-bottom,0px))!important}
+      #docsView>div{padding:20px 16px calc(112px + env(safe-area-inset-bottom,0px))!important}
       #docsProjectListBody .card,#docsProjectDetailBody .card{transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
       #docsProjectListBody .card:active{background:var(--card-hover);transform:scale(.99)}
 
 
-      /* Oversiktslister (prosjekter/kunder) — på desktop står infoblokk og
-         handlinger (Åpne/Rediger/Slett) side om side i én rad. På smal
-         mobilskjerm klemte det statusvelgeren så hardt at teksten ble
-         kuttet midt i ordet ("Pågår" → "På"), og knappene havnet i en trang
-         stabel til høyre i stedet for å være tydelig trykkbare. Stables i
-         stedet: info øverst i full bredde, handlinger som en fullbredde
-         knapperad under — hver rad blir et tydelig, lett-å-treffe kort. */
-      .ov-list{gap:8px}
-      .ov-list .item{
-        flex-direction:column;
-        align-items:stretch;
-        gap:10px;
-        padding:14px 16px;
-        transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease);
-      }
-      .ov-list .item:active{background:var(--card-hover);transform:scale(.99)}
-      .ov-list .item h4{font-size:15px}
-      .ov-list .item .inline-actions{width:100%}
-      .ov-list .item .inline-actions .ov-btn{flex:1;min-height:44px}
-      .ov-item-meta{flex-wrap:wrap;row-gap:8px}
-      /* Selects arver width:100% globalt (se input/select/textarea-regelen),
-         som her fikk statusvelgeren til å sluke hele radbredden og dytte
-         prisen ned på egen linje. Størrelses den heller etter innhold. */
-      .ov-status-select{width:auto;flex:0 0 auto;min-width:0}
 
 
       /* Dokumentasjon-galleri — større, mer trykkvennlig kort. Tommel opp i
@@ -1731,426 +1681,137 @@
          resten pares opp under. Mikro-etiketter (data-label) vises kun her,
          siden feltene på desktop allerede er selvforklarende via kolonne-
          overskriftene "Ant. • Enhet • Innpris • Svinn% • Påslag%" over lista. */
-      .calc-mat-modal-row{
-        grid-template-columns:1fr 1fr;
-        grid-template-areas:"name name" "qty unit" "cost waste" "markup del";
-        gap:8px;
-      }
-      .calc-mat-modal-row .cmr-name{grid-area:name}
-      .calc-mat-modal-row .cmr-qty{grid-area:qty}
-      .calc-mat-modal-row .cmr-unit{grid-area:unit}
-      .calc-mat-modal-row .cmr-cost{grid-area:cost}
-      .calc-mat-modal-row .cmr-waste{grid-area:waste}
-      .calc-mat-modal-row .cmr-markup{grid-area:markup}
-      .calc-mat-modal-row .cmr-del{grid-area:del;justify-self:end;align-self:center;width:auto;padding:6px 14px}
-      .calc-mat-modal-row [data-label]{display:flex;flex-direction:column;gap:2px}
-      .calc-mat-modal-row [data-label]::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
     }
 
     /* ══════════════════════════════════════════════════════
-       OVERVIEW / DASHBOARD (ov-*)
-       Inspired by Vapi metric craft + TheyDo whitespace
+       FORSIDEN — hilsen, tre nøkkelkort, prosjektkort og kunder
        ══════════════════════════════════════════════════════ */
+    .dash-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+    .dash-date{font-size:14px;color:var(--muted)}
+    .dash-title{margin:2px 0 0;font-family:var(--font-display);font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+    .dash-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .dash-search{display:flex;align-items:center;gap:8px;width:260px;max-width:100%;min-height:46px;padding:0 16px;border-radius:999px;background:var(--card);box-shadow:var(--shadow-sm);color:var(--muted);cursor:text}
+    .dash-search input{flex:1;min-width:0;padding:0;border:none;background:transparent;font:inherit;font-size:14px;color:var(--text);box-shadow:none}
+    .dash-search input:focus{outline:none}
+    .dash-search:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+    .dash-new{min-height:46px;padding:0 20px}
 
-    /* ── Header ── */
-    .ov-header{
-      display:flex;justify-content:space-between;align-items:flex-end;
-      margin-bottom:36px;gap:16px;
-    }
-    .ov-title{
-      font-family:var(--font-display);
-      font-size:36px;font-weight:800;
-      letter-spacing:-.04em;
-      color:var(--text);
-      line-height:1.1;
-    }
-    .ov-sub{
-      color:var(--muted);
-      font-size:14px;
-      margin-top:8px;
-      line-height:1.5;
-      font-weight:400;
-    }
-    .ov-header-actions{
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-    }
+    .dash-cards{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,3fr) minmax(0,3fr);gap:16px;margin-bottom:28px}
+    .dash-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:20px 22px;border-radius:26px}
+    .dash-card--contracts{background:var(--pastel-blue);color:var(--summary-ink)}
+    .dash-card--followup{background:var(--pastel-mint);color:var(--pastel-mint-ink)}
+    .dash-card--winrate{align-items:center;justify-content:center;gap:8px;text-align:center;background:var(--pastel-lilac);color:var(--pastel-lilac-ink)}
+    .dash-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .dash-card-label{margin:0;font-size:13px;font-weight:500;color:var(--summary-muted)}
+    .dash-card-title{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600}
+    .dash-card-count{font-size:26px;font-weight:300;line-height:1}
+    .dash-card-note{margin:0;font-size:12px;opacity:.85}
+    .dash-big{margin-top:2px;font-size:40px;font-weight:300;letter-spacing:-.04em;line-height:1.05;color:var(--text);font-variant-numeric:tabular-nums}
+    .dash-big span{font-size:18px}
+    .dash-pill{padding:6px 12px;border-radius:999px;background:var(--summary-panel);font-size:13px;font-weight:600;color:var(--pastel-blue-ink);white-space:nowrap}
+    .dash-progress{display:flex;flex-direction:column;gap:6px}
+    .dash-progress-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--summary-muted);font-variant-numeric:tabular-nums}
+    .dash-progress-head span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-progress-bar{height:8px;border-radius:99px;overflow:hidden;background:var(--summary-panel)}
+    .dash-progress-bar span{display:block;height:100%;border-radius:99px;background:var(--accent)}
+    .dash-progress.is-over .dash-progress-head span:last-child{color:var(--warn-ink)}
+    .dash-progress.is-over .dash-progress-bar span{background:var(--warn-icon)}
+    .dash-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .dash-tile{min-width:0;padding:9px 12px;border-radius:14px;background:var(--summary-panel)}
+    .dash-tile-label,.dash-tile-note{font-size:11px;color:var(--summary-muted)}
+    .dash-tile-value{font-size:18px;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .dash-tile-note.is-good{color:var(--good-ink)}
+    .dash-tile-note.is-warn{color:var(--warn-ink)}
 
-    /* ── Buttons ── */
-    .ov-btn{
-      appearance:none;border:none;
-      border-radius:var(--radius-xs);
-      padding:9px 14px;
-      font-family:var(--font-display);
-      font-weight:600;font-size:13px;
-      cursor:pointer;
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      line-height:1.4;
-      transition:background var(--dur-normal) var(--ease),
-                 color var(--dur-normal) var(--ease),
-                 border-color var(--dur-normal) var(--ease),
-                 box-shadow var(--dur-normal) var(--ease),
-                 transform var(--dur-fast) var(--ease);
-    }
-    .ov-btn:active{transform:scale(.97)}
-    .ov-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .dash-followups{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+    .dash-followup{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 4px;border-radius:16px;background:var(--summary-tile)}
+    .dash-followup-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;justify-content:center;padding:4px 10px;border:none;border-radius:12px;background:transparent;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+    .dash-followup-main:focus-visible{outline:2px solid var(--pastel-mint-ink);outline-offset:-2px}
+    .dash-followup-name{max-width:100%;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-followup-age{font-size:12px;color:var(--pastel-mint-ink)}
+    .dash-icon-btn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:44px;height:44px;border-radius:12px;background:var(--teal);color:var(--on-accent)}
+    .dash-icon-btn:focus-visible{outline:2px solid var(--pastel-mint-ink);outline-offset:2px}
+    .dash-link{align-self:flex-start;min-height:44px;padding:0 4px;border:none;background:transparent;font:inherit;font-size:13px;font-weight:600;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
-    .ov-btn--subtle{
-      background:var(--card);
-      color:var(--muted-strong);
-      border:1.5px solid var(--line);
-    }
-    .ov-btn--subtle:hover{
-      background:var(--card-hover);
-      border-color:var(--line-strong);
-      box-shadow:var(--shadow-sm);
-    }
+    .dash-ring{position:relative;width:112px;height:112px}
+    .dash-ring svg{width:100%;height:100%}
+    .dash-ring-track,.dash-ring-fill{fill:none;stroke-width:10}
+    .dash-ring-track{stroke:var(--summary-panel)}
+    .dash-ring-fill{stroke:var(--win-ring);stroke-linecap:round}
+    .dash-ring-value{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:500}
 
-    .ov-btn--add{
-      background:var(--accent);
-      color:#162736;
-      border:1.5px solid transparent;
-    }
-    .ov-btn--add:hover{
-      background:var(--accent-hover);
-      box-shadow:0 4px 18px var(--accent-glow);
-    }
+    .dash-section{margin-bottom:28px}
+    .dash-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .dash-section-title{margin:0;font-family:var(--font-display);font-size:18px;font-weight:600}
+    .dash-count{margin-left:6px;font-size:14px;font-weight:500;color:var(--muted)}
+    .dash-filter{width:auto;min-height:40px;padding:0 34px 0 14px;border-radius:999px;font-size:13px}
+    .dash-show-all{margin-top:6px;color:var(--muted-strong)}
+    .dash-empty{grid-column:1/-1;padding:20px;border:1.5px dashed var(--line-strong);border-radius:var(--radius-sm);text-align:center;font-size:14px;color:var(--muted)}
 
-    .ov-btn--ghost{
-      background:transparent;
-      color:var(--muted-strong);
-      border:1.5px solid var(--line);
-    }
-    .ov-btn--ghost:hover{
-      background:var(--bg-warm);
-      border-color:var(--line-strong);
-    }
+    .dash-projects{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .dash-project{display:flex;flex-direction:column;gap:14px;min-width:0;padding:18px;border:none;border-radius:22px;background:var(--card);box-shadow:var(--shadow-sm);font:inherit;text-align:left;color:var(--text);cursor:pointer;transition:transform var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
+    .dash-project:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+    .dash-project:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .dash-project-top,.dash-project-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .dash-project-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .dash-project-name{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-project-customer{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-project-amount{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .dash-avatar{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:13px;font-size:14px;font-weight:700}
+    .dash-avatar--blue{background:var(--pastel-blue);color:var(--pastel-blue-ink)}
+    .dash-avatar--mint{background:var(--pastel-mint);color:var(--pastel-mint-ink)}
+    .dash-avatar--peach{background:var(--pastel-peach);color:var(--pastel-peach-ink)}
+    .dash-avatar--lilac{background:var(--pastel-lilac);color:var(--pastel-lilac-ink)}
+    .dash-status{font-size:12px;font-weight:600}
+    .dash-status--draft{color:var(--muted)}
+    .dash-status--sent{color:var(--good-ink)}
+    .dash-status--won,.dash-status--active{color:var(--pastel-blue-ink)}
+    .dash-status--done{color:var(--pastel-lilac-ink)}
+    .dash-status--lost{color:var(--red)}
+    .dash-steps{display:flex;gap:4px;flex-shrink:0}
+    .dash-steps span{width:6px;height:6px;border-radius:9px;background:var(--line-strong)}
+    .dash-steps span.is-current{width:14px}
+    .dash-steps--draft span.is-done,.dash-steps--draft span.is-current{background:var(--muted)}
+    .dash-steps--sent span.is-done,.dash-steps--sent span.is-current{background:var(--teal)}
+    .dash-steps--won span.is-done,.dash-steps--won span.is-current,.dash-steps--active span.is-done,.dash-steps--active span.is-current{background:var(--accent)}
+    .dash-steps--done span.is-done,.dash-steps--done span.is-current{background:var(--pastel-lilac-ink)}
 
-    .ov-btn--open{
-      background:var(--card);
-      color:var(--text);
-      border:1.5px solid var(--line);
-      font-weight:700;
-    }
-    .ov-btn--open:hover{
-      background:var(--accent-soft);
-      border-color:var(--accent-muted);
-      box-shadow:var(--shadow-sm);
-    }
-    .ov-btn--open svg{
-      margin-left:2px;
-      transition:transform var(--dur-normal) var(--ease);
-    }
-    .ov-btn--open:hover svg{transform:translateX(2px)}
+    .dash-customers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .dash-customer{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:12px 12px 12px 16px;border-radius:var(--radius-sm);background:var(--card);box-shadow:var(--shadow-sm)}
+    .dash-customer-text{min-width:0}
+    .dash-customer-name{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-customer-contact{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dash-customer-actions{display:flex;gap:6px;flex-shrink:0}
 
-    .ov-btn--danger{
-      background:var(--red-soft);
-      color:var(--red);
-      border:1.5px solid rgba(220,38,38,.12);
-    }
-    .ov-btn--danger:hover{
-      background:rgba(220,38,38,.1);
-      border-color:rgba(220,38,38,.2);
-    }
+    .followup-sheet-meta{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--muted)}
+    .followup-sheet-actions{display:flex;flex-direction:column;gap:8px}
+    .followup-sheet-actions .btn{justify-content:center;min-height:46px;text-decoration:none}
 
-    /* ── Bento Metrics Grid ── */
-    .ov-bento{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:16px;
-      margin-bottom:36px;
+    /* iPad stående og delt skjerm: kortene stables, prosjektene i færre kolonner */
+    @media (max-width:1100px){
+      .dash-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .dash-card--contracts{grid-column:1/-1}
+      .dash-projects{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .dash-customers{grid-template-columns:minmax(0,1fr)}
     }
-    .ov-stat{
-      position:relative;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:28px 24px 24px;
-      box-shadow:var(--shadow-sm);
-      display:flex;flex-direction:column;gap:20px;
-      overflow:hidden;
-      transition:box-shadow var(--dur-normal) var(--ease),
-                 transform var(--dur-normal) var(--ease),
-                 border-color var(--dur-normal) var(--ease);
+    @media (max-width:760px){
+      .dash-projects{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .dash-search{flex:1;width:auto}
+      .dash-head-actions{width:100%}
     }
-    .ov-stat:hover{
-      box-shadow:var(--shadow);
-      transform:translateY(-2px);
-      border-color:var(--line-strong);
-    }
-
-    /* Decorative background shape per card */
-    .ov-stat::before{
-      content:'';
-      position:absolute;
-      top:-20px;right:-20px;
-      width:100px;height:100px;
-      border-radius:50%;
-      opacity:.06;
-      pointer-events:none;
-      transition:opacity var(--dur-normal) var(--ease);
-    }
-    .ov-stat:hover::before{opacity:.1}
-
-    .ov-stat:nth-child(1)::before{background:var(--blue);width:120px;height:120px}
-    .ov-stat:nth-child(2)::before{background:var(--teal);top:auto;bottom:-30px;right:-10px;width:90px;height:90px}
-    .ov-stat:nth-child(3)::before{background:var(--accent);top:-10px;right:auto;left:-20px;width:80px;height:80px}
-    .ov-stat:nth-child(4)::before{background:var(--green);width:110px;height:110px;top:-15px}
-
-    /* Top row: icon + label */
-    .ov-stat-top{
-      display:flex;align-items:center;gap:10px;
-    }
-
-    .ov-stat-icon{
-      display:flex;align-items:center;justify-content:center;
-      width:40px;height:40px;border-radius:10px;
-      flex-shrink:0;
-    }
-    .ov-stat-icon--blue{background:var(--blue-soft);color:var(--blue)}
-    .ov-stat-icon--teal{background:var(--teal-soft);color:var(--teal)}
-    .ov-stat-icon--amber{background:var(--yellow-soft);color:var(--accent-hover)}
-    .ov-stat-icon--green{background:var(--green-soft);color:var(--green)}
-
-    .ov-stat-data{display:flex;flex-direction:column;gap:2px;min-width:0}
-    .ov-stat-num{
-      font-family:var(--font-display);
-      font-size:40px;font-weight:800;
-      letter-spacing:-.04em;
-      line-height:1;
-      color:var(--text);
-    }
-    .ov-stat-label{
-      font-family:var(--font-display);
-      font-size:12px;font-weight:600;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.05em;
-    }
-    .ov-stat-hint{
-      font-size:11px;color:var(--muted);
-      font-weight:400;
-      margin-top:2px;
-    }
-
-    /* Accent stripe at bottom — thinner, more refined */
-    .ov-stat-accent{
-      position:absolute;bottom:0;left:0;right:0;height:2px;
-    }
-    .ov-stat-accent--blue{background:linear-gradient(90deg,var(--blue),var(--cyan))}
-    .ov-stat-accent--teal{background:linear-gradient(90deg,var(--teal),var(--cyan))}
-    .ov-stat-accent--amber{background:linear-gradient(90deg,var(--accent),var(--orange))}
-    .ov-stat-accent--green{background:linear-gradient(90deg,var(--green),var(--teal))}
-
-    /* Feature stat (win rate ring) — larger ring, centered */
-    .ov-stat--feature{
-      display:flex;flex-direction:column;gap:16px;
-      align-items:flex-start;
-    }
-    .ov-stat--feature .ov-stat-top{
-      width:100%;
-    }
-    .ov-stat-ring{
-      position:relative;
-      width:72px;height:72px;
-      flex-shrink:0;
-    }
-    .ov-ring-svg{
-      width:100%;height:100%;
-    }
-    .ov-ring-value{
-      position:absolute;inset:0;
-      display:flex;align-items:center;justify-content:center;
-      font-family:var(--font-display);
-      font-size:19px;font-weight:800;
-      color:var(--text);
-    }
-
-    /* ── Entrance animation ── */
-    @keyframes ov-rise{
-      from{opacity:0;transform:translateY(16px)}
-      to{opacity:1;transform:translateY(0)}
-    }
-    .ov-anim{
-      animation:ov-rise .5s var(--ease-out) both;
-      animation-delay:calc(var(--i,0) * .07s);
-    }
-    @media(prefers-reduced-motion:reduce){
-      .ov-anim{animation:none}
-    }
-
-    /* ── Panels (Projects / Customers) ── */
-    .ov-panels{
-      display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:20px;
-    }
-    .ov-panel{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:28px;
-      box-shadow:var(--shadow-sm);
-    }
-    .ov-panel-head{
-      margin-bottom:20px;
-    }
-    /* Følg opp: tilbud uten svar — markert med aksentkant så det fanger blikket */
-    .ov-followup{margin-bottom:20px;border-left:4px solid var(--accent)}
-    .ov-followup[hidden]{display:none}
-    .ov-followup .ov-list{max-height:none}
-    .ov-followup-info{flex:1;min-width:0}
-    .ov-followup-name{
-      appearance:none;border:none;background:none;padding:0;cursor:pointer;
-      font:inherit;color:var(--text);text-align:left;min-height:0!important;
-    }
-    .ov-followup-name:hover{text-decoration:underline}
-    .ov-followup-age{font-size:12px!important;color:var(--muted-strong)!important;margin-top:2px!important}
-    .ov-followup-item .inline-actions{flex-wrap:wrap;align-items:center}
-    .ov-followup-item .ov-btn{white-space:nowrap}
-    .ov-followup-item .ov-status-select{width:auto;flex:0 0 auto}
-    .ov-followup-item a.ov-btn{text-decoration:none}
-    .ov-panel-title-row{
-      display:flex;align-items:baseline;justify-content:space-between;
-      margin-bottom:14px;
-    }
-    .ov-panel-title{
-      font-family:var(--font-display);
-      font-size:18px;font-weight:700;
-      letter-spacing:-.02em;
-      color:var(--text);
-    }
-    .ov-panel-count{
-      font-size:12px;font-weight:600;
-      color:var(--muted);
-      background:var(--bg-warm);
-      padding:3px 10px;
-      border-radius:999px;
-    }
-    .ov-panel-actions{
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-    }
-    .ov-filter-row{
-      display:flex;gap:8px;align-items:center;
-      flex:1;min-width:0;
-    }
-
-    /* ── Search ── */
-    .ov-search-wrap{
-      position:relative;
-      flex:1;min-width:140px;
-    }
-    .ov-search-icon{
-      position:absolute;left:12px;top:50%;
-      transform:translateY(-50%);
-      color:var(--muted);
-      pointer-events:none;
-    }
-    .ov-search{
-      width:100%;
-      padding:9px 14px 9px 36px;
-      background:var(--bg);
-      border:1.5px solid var(--line);
-      border-radius:var(--radius-xs);
-      font-size:13px;font-family:var(--font-body);
-      color:var(--text);
-      outline:none;
-      transition:border-color var(--dur-normal) var(--ease),
-                 box-shadow var(--dur-normal) var(--ease),
-                 background var(--dur-normal) var(--ease);
-    }
-    .ov-search:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px var(--accent-soft);
-      background:var(--card);
-    }
-    .ov-search::placeholder{color:var(--muted)}
-
-    /* ── Status Filter ── */
-    .ov-status-filter{
-      flex:none;width:auto;
-      padding:6px 28px 6px 10px;
-      background:var(--bg);
-      border:1.5px solid var(--line);
-      border-radius:var(--radius-xs);
-      font-size:13px;font-weight:600;
-      font-family:var(--font-display);
-      color:var(--text);
-      cursor:pointer;
-      outline:none;
-      appearance:none;-webkit-appearance:none;
-      white-space:nowrap;
-      background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237D99AA' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 10px center;
-      background-size:12px 8px;
-      transition:border-color var(--dur-normal) var(--ease),
-                 box-shadow var(--dur-normal) var(--ease);
-    }
-    .ov-status-filter:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px var(--accent-soft);
-    }
-
-    /* ── List Items (inside ov-panel) ── */
-    .ov-list{
-      display:flex;flex-direction:column;gap:4px;
-      max-height:420px;
-      overflow-y:auto;
-    }
-    .ov-list .item{
-      border-radius:var(--radius-sm);
-      padding:16px 18px;
-      border:1px solid transparent;
-      background:transparent;
-    }
-    .ov-list .item:hover{
-      border-color:var(--line);
-      background:var(--bg);
-      box-shadow:none;
-    }
-    .ov-list .item h4{
-      font-size:14px;
-      font-weight:600;
-    }
-
-    /* ── Item meta row (status + price) ── */
-    .ov-item-meta{
-      display:flex;align-items:center;gap:10px;
-      margin-top:8px;
-    }
-    .ov-status-select{
-      padding:5px 24px 5px 10px;
-      border-radius:999px;
-      font-family:var(--font-display);
-      font-size:11px;font-weight:600;
-      border:1px solid var(--line);
-      background:var(--bg-warm);
-      color:var(--muted-strong);
-      cursor:pointer;
-      outline:none;
-      appearance:none;-webkit-appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg width='8' height='6' viewBox='0 0 8 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%237D99AA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 8px center;
-      background-size:8px 6px;
-      transition:border-color var(--dur-normal) var(--ease);
-    }
-    .ov-status-select:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px var(--accent-soft);
-    }
-    /* Status colors on the select */
-    .ov-status-select.status-Utkast{background:var(--blue-soft);color:var(--steel);border-color:rgba(102,196,255,.2)}
-    .ov-status-select.status-Sendt{background:var(--yellow-soft);color:var(--accent-hover);border-color:rgba(240,168,64,.15)}
-    .ov-status-select.status-Vunnet,.ov-status-select.status-Pågår{background:var(--green-soft);color:var(--green);border-color:rgba(22,163,74,.12)}
-    .ov-status-select.status-Tapt{background:var(--red-soft);color:var(--red);border-color:rgba(220,38,38,.12)}
-    .ov-status-select.status-Ferdig{background:var(--bg-warm);color:var(--muted-strong);border-color:var(--line)}
-
-    .ov-price-tag{
-      font-family:var(--font-display);
-      font-size:13px;font-weight:700;
-      color:var(--accent-hover);
-      white-space:nowrap;
+    @media (max-width:480px){
+      .dash-title{font-size:28px}
+      .dash-big{font-size:34px}
+      .dash-cards{grid-template-columns:minmax(0,1fr)}
+      .dash-projects{grid-template-columns:minmax(0,1fr)}
+      .dash-head-actions{flex-direction:column;align-items:stretch}
+      /* Flisene blir rader: etikett og merknad til venstre, tallet til høyre */
+      .dash-tiles{grid-template-columns:minmax(0,1fr);gap:6px}
+      .dash-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px}
+      .dash-tile-label{grid-column:1;grid-row:1}
+      .dash-tile-note{grid-column:1;grid-row:2}
+      .dash-tile-value{grid-column:2;grid-row:1 / span 2}
+      .dash-customer{flex-wrap:wrap}
     }
 
     /* ══════════════════════════════════════════════════════
@@ -2212,121 +1873,95 @@
     .pf-retry-actions{display:flex;gap:6px}
 
     /* ══════════════════════════════════════════════════════
-       RESPONSIVE ADDITIONS
+       DOKK — hovedmeny og prosjektfaner
+       Flytende nederst på midten i alle bredder (også delt skjerm),
+       så navigasjonen alltid står på samme sted.
        ══════════════════════════════════════════════════════ */
-    @media (max-width:900px){
-      .ov-header{flex-direction:column;align-items:flex-start;gap:12px}
-      .ov-bento{grid-template-columns:1fr 1fr;gap:12px}
-      .ov-stat{padding:22px 20px 20px}
-      .ov-stat-icon{width:36px;height:36px;border-radius:10px}
-      .ov-stat-num{font-size:28px}
-      .ov-stat-ring{width:56px;height:56px}
-      .ov-ring-value{font-size:14px}
-      .ov-panels{grid-template-columns:1fr}
-      .ov-panel-actions{flex-direction:column;align-items:stretch}
-      .ov-filter-row{flex-direction:row;min-width:0}
-      .ov-search-wrap{min-width:0}
-      .sidebar{width:220px}
-    }
-    @media (max-width:480px){
-      .ov-title{font-size:28px}
-      .ov-bento{grid-template-columns:1fr;gap:10px}
-      .ov-stat{padding:18px 16px 16px;gap:14px;flex-direction:row;align-items:center}
-      .ov-stat::before{display:none}
-      .ov-stat-top{flex:0 0 auto}
-      .ov-stat-data{flex:1}
-      .ov-stat-num{font-size:24px}
-      .ov-stat-icon{width:34px;height:34px;border-radius:10px}
-      .ov-stat-ring{width:48px;height:48px}
-      .ov-ring-value{font-size:13px}
-      .ov-stat--feature{flex-direction:row;align-items:center}
-      .ov-stat--feature .ov-stat-ring{order:-1}
-      /* Desktopregelen over setter width:100% for kolonne-layout — nullstill
-         den her, ellers tar ikon+etikett hele radbredden og dytter ringen/
-         hint-teksten utenfor skjermen. */
-      .ov-stat--feature .ov-stat-top{width:auto}
-      .ov-header-actions{flex-direction:column;align-items:stretch}
-      .ov-panel{padding:18px}
-      .ov-list{max-height:320px}
-    }
-
-    /* ══════════════════════════════════════════════════════
-       BOTTOM BAR (mobil < 900px)
-       ══════════════════════════════════════════════════════ */
-    .bottom-bar{
-      position:fixed;bottom:0;left:0;right:0;
-      display:none;justify-content:space-around;align-items:stretch;
-      background:var(--card);
-      border-top:1px solid var(--line);
-      box-shadow:0 -1px 8px rgba(22,39,54,.06);
+    .dock{
+      position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+      transform:translateX(-50%);
+      display:flex;align-items:center;gap:4px;
+      max-width:calc(100vw - 24px);
+      padding:6px;border-radius:24px;
+      background:var(--dock-bg);
+      box-shadow:var(--dock-shadow);
       z-index:900;
-      padding-bottom:env(safe-area-inset-bottom,0px);
-      height:calc(56px + env(safe-area-inset-bottom,0px));
-      /* Uten egen compositing-layer flimrer/blir position:fixed midlertidig
-         gjennomsiktig på iOS Safari under momentum-scroll (kjent WebKit-bug). */
-      transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
-      will-change:transform;
-      backface-visibility:hidden;-webkit-backface-visibility:hidden;
     }
-    .bottom-bar-tab{
-      flex:1;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:2px;
+    .dock--main{display:none}
+    body.is-signed-in:not(.in-project) .dock--main{display:flex}
+    .dock-item{
+      position:relative;
+      display:flex;align-items:center;gap:8px;
+      min-height:48px;padding:0 16px;border-radius:18px;
       border:none;background:transparent;
-      color:var(--muted);font-size:10px;font-weight:600;
-      font-family:var(--font-display);
-      cursor:pointer;padding:6px 0;
-      min-height:44px;
-      transition:color var(--dur-fast) var(--ease);
+      color:var(--dock-ink);font-family:var(--font-body);font-size:14px;font-weight:500;
+      text-decoration:none;white-space:nowrap;cursor:pointer;
+      transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
       -webkit-tap-highlight-color:transparent;
     }
-    .bottom-bar-tab svg{width:22px;height:22px}
-    .bottom-bar-tab.active{color:var(--accent-hover)}
-    .bottom-bar-tab:active{transform:scale(.92)}
+    .dock-item:hover{color:var(--dock-ink-hover)}
+    .dock-item:focus-visible{outline:2px solid var(--pastel-blue);outline-offset:2px}
+    .dock-item.active{background:var(--pastel-blue);color:var(--text);font-weight:600}
+    .dock-item svg{flex-shrink:0}
+    .dock-sep{width:1px;align-self:stretch;margin:10px 4px;background:var(--dock-line)}
+    .dock-item--send{background:var(--pastel-mint);color:var(--pastel-mint-ink);font-weight:600}
+    .dock-item--send:hover{color:var(--pastel-mint-ink)}
+    .dock-label-short{display:none}
 
-    /* Vises kun innlogget, på smal skjerm og utenfor prosjekter — inne i et
-       prosjekt navigeres det med fanene øverst (samme plass i alle bredder). */
-    @media (max-width:900px){body.is-signed-in:not(.in-project) .bottom-bar{display:flex}}
-    @media (max-width:900px){
-      body.in-project .app{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
+    /* Synk-status som prikk på Mer-knappen (farger styrt av body[data-sync]) */
+    .dock-sync-dot{position:absolute;top:11px;left:28px;width:8px;height:8px;border-radius:50%;background:transparent}
+    body[data-sync="ok"] .dock-sync-dot{background:var(--sync-ok)}
+    body[data-sync="saving"] .dock-sync-dot{background:var(--sync-saving)}
+    body[data-sync="offline"] .dock-sync-dot{background:var(--sync-offline)}
+    body[data-sync="error"] .dock-sync-dot{background:var(--sync-error)}
+
+    @media (max-width:640px){
+      .dock{gap:2px;padding:5px;border-radius:22px}
+      .dock-item{padding:0 12px;font-size:13px}
+      .dock-label-long{display:none}
+      .dock-label-short{display:inline}
+      /* Hovedmenyen: ikon over tekst, så fem valg får plass i smale vinduer */
+      .dock--main .dock-item{flex-direction:column;justify-content:center;gap:2px;min-width:58px;padding:6px 8px;font-size:11px}
+      .dock--main .dock-sync-dot{left:auto;right:16px;top:7px}
     }
 
-    /* ── Mer-sheet (bottom sheet) ────────────────────────── */
+    /* ── «Mer»-kort over dokken ──────────────────────────── */
     .mer-sheet-backdrop{
       position:fixed;inset:0;
-      background:rgba(22,39,54,.3);
+      background:var(--scrim);
       z-index:950;
-      opacity:0;transition:opacity .25s var(--ease);
+      opacity:0;transition:opacity .2s var(--ease);
     }
     .mer-sheet-backdrop.visible{opacity:1}
     .mer-sheet-content{
-      position:fixed;bottom:0;left:0;right:0;
-      background:var(--card);
-      border-radius:var(--radius) var(--radius) 0 0;
-      padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));
+      position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));
+      width:min(360px,calc(100vw - 24px));
+      transform:translate(-50%,12px);opacity:0;
+      background:var(--card);border-radius:var(--radius);padding:8px;
+      box-shadow:var(--shadow-xl);
       z-index:951;
-      transform:translateY(100%);
-      transition:transform .25s cubic-bezier(.32,.72,0,1);
+      transition:transform .2s var(--ease),opacity .2s var(--ease);
     }
-    .mer-sheet-content.visible{transform:translateY(0)}
-    .mer-sheet-handle{
-      width:36px;height:4px;
-      background:var(--line-strong);
-      border-radius:2px;margin:0 auto 12px;
-    }
+    .mer-sheet-content.visible{transform:translate(-50%,0);opacity:1}
     .mer-sheet-item{
       display:flex;align-items:center;gap:12px;
-      width:100%;padding:14px 12px;
-      border:none;background:transparent;
-      font-size:15px;font-weight:600;color:var(--text);
-      font-family:var(--font-display);
-      border-radius:var(--radius-xs);
-      cursor:pointer;min-height:44px;
+      width:100%;padding:12px 14px;min-height:48px;
+      border:none;background:transparent;border-radius:14px;
+      font-family:var(--font-body);font-size:15px;font-weight:500;color:var(--text);
+      text-align:left;text-decoration:none;cursor:pointer;
       -webkit-tap-highlight-color:transparent;
     }
-    .mer-sheet-item:active{background:var(--bg-warm)}
-    .mer-sheet-item--danger,.mer-sheet-logout{color:var(--red)}
-    .mer-sheet-item--info,.mer-sheet-sync{color:var(--green);cursor:default}
+    .mer-sheet-item:hover,.mer-sheet-item:active{background:var(--bg-warm)}
     .mer-sheet-item svg{width:20px;height:20px;flex-shrink:0}
+    .mer-sheet-logout{color:var(--red)}
+    .mer-sheet-sync{cursor:default;color:var(--muted);font-size:14px}
+    .mer-sheet-sync:hover{background:transparent}
+    body[data-sync="ok"] #syncIndicator{color:var(--green)}
+    body[data-sync="offline"] #syncIndicator{color:var(--yellow)}
+    body[data-sync="error"] #syncIndicator{color:var(--red)}
+
+    /* Makker og Dokumentasjon er egne fullskjermsvisninger — gi plass til dokken */
+    #makkView{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
 
     /* ── Tre-prikk overflow-meny ─────────────────────────── */
     .topbar-overflow-wrap{position:relative}

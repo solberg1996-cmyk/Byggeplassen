@@ -29,6 +29,7 @@ No build tools, package manager, linter, or test framework. This is a static van
 
 - No build step — CDN imports and vanilla JS for simplicity
 - Supabase handles auth, database, and sync — no custom backend
+- Prisoverslagets sum regnes ett sted: `computeOfferDocumentTotal` (calcEngine.js). Dokumentet og sammendraget på Prisoverslag-fanen bruker begge den — ikke regn totalen på nytt andre steder
 - Norwegian language throughout UI and commit messages
 
 ## Domain Knowledge

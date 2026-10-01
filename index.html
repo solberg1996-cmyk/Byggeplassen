@@ -16,83 +16,24 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200;12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <nav id="appSidebar" class="sidebar" style="display:none">
-    <div class="sidebar-brand">
-      <div class="sidebar-logo">B</div>
-      <div class="sidebar-title">Byggeplassen</div>
-    </div>
-    <div class="sidebar-nav">
-      <button class="sidebar-item active" data-view="kalkyle" onclick="sidebarNav('kalkyle')">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
-        <span>Kalkulasjon / Prisoverslag</span>
-      </button>
-      <button class="sidebar-item" data-view="dokumentasjon" onclick="sidebarNav('dokumentasjon')">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-        <span>Dokumentasjon</span>
-      </button>
-      <button class="sidebar-item" data-view="makker" onclick="sidebarNav('makker')">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
-        <span>Makker</span>
-      </button>
-      <a class="sidebar-item" href="befaring/index.html" style="text-decoration:none">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
-        <span>Befaring</span>
-      </a>
-    </div>
-    <div class="sidebar-sep"></div>
-    <div class="sidebar-nav">
-      <button class="sidebar-item" onclick="openMatCalc()">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h1"/><path d="M15 10h1"/><path d="M8 14h1"/><path d="M15 14h1"/><path d="M8 18h1"/><path d="M15 18h1"/></svg></span>
-        <span>Materialkalk</span>
-      </button>
-      <button class="sidebar-item" id="settingsBtn">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
-        <span>Innstillinger</span>
-      </button>
-    </div>
-    <div class="sidebar-footer">
-      <div class="sidebar-sync" id="syncIndicator">Synkronisert</div>
-      <button class="sidebar-item sidebar-item--muted" onclick="_sb.auth.signOut()">
-        <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-        <span>Logg ut</span>
-      </button>
-    </div>
-  </nav>
 
-  <!-- Bunnmeny (mobil) — 5-delt hovednavigasjon: Hjem/Kalkyle/Dokumentasjon/
-       Makker/Mer. NB: "Hjem" og "Kalkyle" ruter foreløpig begge til dagens
-       Oversikt-visning (se bottomNav() i app.js) — egne skjermer bygges i
-       et senere steg. Ruting er lagt til nå, innhold følger etter. -->
-  <nav id="bottomBar" class="bottom-bar" aria-label="Hovedmeny">
-    <button class="bottom-bar-tab active" data-tab="hjem" onclick="bottomNav('hjem')" aria-label="Hjem">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Hjem</span>
-    </button>
-    <button class="bottom-bar-tab" data-tab="kalkyle" onclick="bottomNav('kalkyle')" aria-label="Kalkyle">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-      <span>Kalkyle</span>
-    </button>
-    <button class="bottom-bar-tab" data-tab="dokumentasjon" onclick="bottomNav('dokumentasjon')" aria-label="Dokumentasjon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      <span>Dokumentasjon</span>
-    </button>
-    <button class="bottom-bar-tab" data-tab="makker" onclick="bottomNav('makker')" aria-label="Makker">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span>Makker</span>
-    </button>
-    <button class="bottom-bar-tab" data-tab="mer" onclick="bottomNav('mer')" aria-label="Mer">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-      <span>Mer</span>
-    </button>
+  <!-- Dokk (hovedmeny) — samme plass i alle bredder. Skjules inne i prosjekter,
+       der prosjektets egen dokk med fanene tar over (se renderProjectView). -->
+  <nav id="bottomBar" class="dock dock--main" aria-label="Hovedmeny">
+    <button class="dock-item active" data-view="kalkyle" onclick="bottomNav('kalkyle')" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6 8 6v8a2 2 0 01-2 2H6a2 2 0 01-2-2z"/></svg><span>Oversikt</span></button>
+    <button class="dock-item" data-view="dokumentasjon" onclick="bottomNav('dokumentasjon')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2.5"/><circle cx="12" cy="12.5" r="3.5"/></svg><span class="dock-label-long">Dokumentasjon</span><span class="dock-label-short">Bilder</span></button>
+    <button class="dock-item" data-view="makker" onclick="bottomNav('makker')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0112 0v1"/><path d="M16 3.5a4 4 0 010 7.5"/><path d="M22 21v-1a6 6 0 00-4-5.6"/></svg><span>Makker</span></button>
+    <a class="dock-item" href="befaring/index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Befaring</span></a>
+    <button class="dock-item dock-item--more" onclick="bottomNav('mer')" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span>Mer</span><span class="dock-sync-dot" aria-hidden="true"></span></button>
   </nav>
 
   <!-- Mer-sheet (mobil) -->
   <div id="merSheetBackdrop" class="mer-sheet-backdrop" style="display:none" onclick="closeMerSheet()"></div>
-  <div id="merSheetContent" class="mer-sheet-content" style="display:none">
-    <div class="mer-sheet-handle"></div>
+  <div id="merSheetContent" class="mer-sheet-content" role="dialog" aria-label="Mer" style="display:none">
     <button class="mer-sheet-item" onclick="closeMerSheet();sidebarNav('kalkyle');setTimeout(function(){var el=document.getElementById('customerList');if(el)el.scrollIntoView({behavior:'smooth'});},50)">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Kunder
@@ -101,17 +42,13 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h1"/><path d="M15 10h1"/></svg>
       Materialkalkulator
     </button>
-    <a class="mer-sheet-item" href="befaring/index.html" style="text-decoration:none">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      Befaring
-    </a>
-    <button class="mer-sheet-item" onclick="closeMerSheet();document.getElementById('settingsBtn').click()">
+    <button class="mer-sheet-item" id="settingsBtn" onclick="closeMerSheet()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       Innstillinger
     </button>
     <div class="mer-sheet-item mer-sheet-sync">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-      <span id="merSyncStatus">Synkronisert</span>
+      <span id="syncIndicator" role="status">Synkronisert</span>
     </div>
     <button class="mer-sheet-item mer-sheet-logout" onclick="closeMerSheet();_sb.auth.signOut()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -122,153 +59,66 @@
 
   <div class="app">
     <div id="dashboardView">
-      <!-- Header row -->
-      <div class="ov-header">
+      <header class="dash-head">
         <div>
-          <h1 class="ov-title">Oversikt</h1>
-          <p class="ov-sub" id="dashGreeting">Dine prosjekter og kunder</p>
+          <div class="dash-date" id="dashDate"></div>
+          <h1 class="dash-title" id="dashGreeting">Oversikt</h1>
         </div>
-        <div class="ov-header-actions">
-          <button class="ov-btn ov-btn--subtle" id="importBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Importer
-          </button>
-          <button class="ov-btn ov-btn--subtle" id="backupBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Eksporter
-          </button>
-          <input type="file" id="importFile" class="hidden" accept="application/json" />
+        <div class="dash-head-actions">
+          <label class="dash-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="dashSearch" type="search" placeholder="Søk prosjekt eller kunde" aria-label="Søk prosjekt eller kunde" />
+          </label>
+          <button class="btn primary dash-new" id="newProjectBtn">+ Nytt prosjekt</button>
         </div>
+      </header>
+
+      <div class="dash-cards">
+        <section class="dash-card dash-card--contracts" id="dashContracts" aria-labelledby="dashContractsTitle"></section>
+        <section class="dash-card dash-card--followup" id="followUpPanel" aria-labelledby="followUpTitle"></section>
+        <section class="dash-card dash-card--winrate" id="dashWinRate" aria-labelledby="dashWinTitle"></section>
       </div>
 
-      <!-- Bento metrics grid -->
-      <div class="ov-bento">
-        <div class="ov-stat ov-anim" style="--i:0">
-          <div class="ov-stat-top">
-            <div class="ov-stat-icon ov-stat-icon--blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-            </div>
-            <span class="ov-stat-label">Prosjekter</span>
-          </div>
-          <div class="ov-stat-data">
-            <span class="ov-stat-num" id="metricProjects">0</span>
-          </div>
-          <div class="ov-stat-accent ov-stat-accent--blue"></div>
+      <section class="dash-section" aria-labelledby="dashProjectsTitle">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title" id="dashProjectsTitle">Prosjekter <span class="dash-count" id="projectCountLabel"></span></h2>
+          <select class="dash-filter" id="projectStatusFilter" aria-label="Filtrer på status">
+            <option value="">Alle statuser</option>
+            <option value="Utkast">Utkast</option>
+            <option value="Sendt">Sendt</option>
+            <option value="Vunnet">Vunnet</option>
+            <option value="Pågår">Pågår</option>
+            <option value="Tapt">Tapt</option>
+            <option value="Ferdig">Ferdig</option>
+          </select>
         </div>
-        <div class="ov-stat ov-anim" style="--i:1">
-          <div class="ov-stat-top">
-            <div class="ov-stat-icon ov-stat-icon--teal">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            </div>
-            <span class="ov-stat-label">Kunder</span>
-          </div>
-          <div class="ov-stat-data">
-            <span class="ov-stat-num" id="metricCustomers">0</span>
-          </div>
-          <div class="ov-stat-accent ov-stat-accent--teal"></div>
-        </div>
-        <div class="ov-stat ov-anim" style="--i:2">
-          <div class="ov-stat-top">
-            <div class="ov-stat-icon ov-stat-icon--amber">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            </div>
-            <span class="ov-stat-label">Prisoverslag sendt</span>
-          </div>
-          <div class="ov-stat-data">
-            <span class="ov-stat-num" id="metricSent">0</span>
-          </div>
-          <div class="ov-stat-accent ov-stat-accent--amber"></div>
-        </div>
-        <div class="ov-stat ov-stat--feature ov-anim" style="--i:3">
-          <div class="ov-stat-top">
-            <div class="ov-stat-icon ov-stat-icon--green">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            </div>
-            <span class="ov-stat-label">Vinnerate</span>
-          </div>
-          <div class="ov-stat-ring">
-            <svg class="ov-ring-svg" viewBox="0 0 80 80" aria-hidden="true">
-              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--line)" stroke-width="5"/>
-              <circle id="winRateRing" cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 213.6" transform="rotate(-90 40 40)" style="transition:stroke-dasharray .6s var(--ease-out)"/>
-            </svg>
-            <span class="ov-ring-value" id="metricWinRate">0%</span>
-          </div>
-          <div class="ov-stat-data">
-            <span class="ov-stat-hint">Vunnet av avgjorte prisoverslag</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tilbud som bør følges opp (vises kun når det finnes noen) -->
-      <section id="followUpPanel" class="ov-panel ov-followup" hidden aria-labelledby="followUpTitle">
-        <div class="ov-panel-head">
-          <div class="ov-panel-title-row">
-            <h2 class="ov-panel-title" id="followUpTitle">Følg opp</h2>
-            <span class="ov-panel-count" id="followUpCount"></span>
-          </div>
-        </div>
-        <div id="followUpList" class="ov-list"></div>
+        <div class="dash-projects" id="projectList"></div>
+        <button class="dash-link dash-show-all" id="dashShowAll" onclick="toggleAllProjects()" hidden>Se alle</button>
       </section>
 
-      <!-- Two-column lists -->
-      <div class="ov-panels">
-        <section class="ov-panel ov-anim" style="--i:4">
-          <div class="ov-panel-head">
-            <div class="ov-panel-title-row">
-              <h2 class="ov-panel-title">Prosjekter</h2>
-              <span class="ov-panel-count" id="projectCountLabel">0 prosjekter</span>
-            </div>
-            <div class="ov-panel-actions">
-              <div class="ov-filter-row">
-                <div class="ov-search-wrap">
-                  <svg class="ov-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                  <input class="ov-search" id="projectSearch" placeholder="Søk prosjekt..." aria-label="Søk prosjekter" />
-                </div>
-                <select class="ov-status-filter" id="projectStatusFilter" aria-label="Filtrer på status">
-                  <option value="">Alle statuser</option>
-                  <option value="Utkast">Utkast</option>
-                  <option value="Sendt">Sendt</option>
-                  <option value="Vunnet">Vunnet</option>
-                  <option value="Pågår">Pågår</option>
-                  <option value="Tapt">Tapt</option>
-                  <option value="Ferdig">Ferdig</option>
-                </select>
-              </div>
-              <button class="ov-btn ov-btn--add" id="newProjectBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Nytt prosjekt
-              </button>
-            </div>
-          </div>
-          <div id="projectList" class="ov-list"></div>
-        </section>
-        <section class="ov-panel ov-anim" style="--i:5">
-          <div class="ov-panel-head">
-            <div class="ov-panel-title-row">
-              <h2 class="ov-panel-title">Kunder</h2>
-              <span class="ov-panel-count" id="customerCountLabel">0 kunder</span>
-            </div>
-            <div class="ov-panel-actions">
-              <div class="ov-search-wrap">
-                <svg class="ov-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input class="ov-search" id="customerSearch" placeholder="Søk kunde..." aria-label="Søk kunder" />
-              </div>
-              <button class="ov-btn ov-btn--add" id="newCustomerBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Ny kunde
-              </button>
-            </div>
-          </div>
-          <div id="customerList" class="ov-list"></div>
-        </section>
-      </div>
+      <section class="dash-section" aria-labelledby="dashCustomersTitle">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title" id="dashCustomersTitle">Kunder <span class="dash-count" id="customerCountLabel"></span></h2>
+          <button class="btn small soft" id="newCustomerBtn">+ Ny kunde</button>
+        </div>
+        <div class="dash-customers" id="customerList"></div>
+      </section>
     </div>
 
     <div id="projectView" class="hidden">
       <header class="project-header">
-        <div class="project-header-row">
-          <button class="project-back" id="backToDashboard">← Prosjekter</button>
-          <div class="project-header-actions">
+        <div class="project-identity">
+          <button class="project-back" id="backToDashboard" aria-label="Tilbake til prosjekter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="dash-avatar project-avatar" id="projectAvatar" aria-hidden="true"></span>
+          <div class="project-heading">
+            <h1 class="project-title" id="projectTitle">Prosjekt</h1>
+            <div class="project-meta">
+              <span class="project-meta-text" id="projectSubtitle"></span>
+              <span id="projectTopPills"></span>
+            </div>
+          </div>
+        </div>
+        <div class="project-header-actions">
             <div class="toggle-group" role="group" aria-label="Vis priser">
               <button id="toggleEx" class="active">Eks mva</button>
               <button id="toggleInc">Inkl mva</button>
@@ -281,12 +131,6 @@
                 <button class="topbar-dropdown-item topbar-dropdown-item--danger" id="deleteProjectBtn" role="menuitem">Slett prosjekt</button>
               </div>
             </div>
-          </div>
-        </div>
-        <h1 class="title project-title" id="projectTitle">Prosjekt</h1>
-        <div class="project-meta">
-          <span id="projectTopPills"></span>
-          <span class="project-meta-text" id="projectSubtitle"></span>
         </div>
       </header>
       <div id="stepsContainer"></div>
@@ -297,7 +141,7 @@
   <div id="loginView" style="display:none;position:fixed;inset:0;background:var(--panel);z-index:1000;align-items:center;justify-content:center">
     <div style="background:var(--card);border-radius:18px;padding:40px;width:100%;max-width:400px;box-shadow:0 1px 3px rgba(28,25,23,.06),0 8px 24px rgba(28,25,23,.06),0 20px 50px rgba(28,25,23,.04)">
       <div style="text-align:center;margin-bottom:32px">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--accent);border-radius:14px;font-family:var(--font-display);font-size:24px;font-weight:800;color:#162736;box-shadow:0 6px 20px var(--accent-glow);margin-bottom:14px">B</div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--accent);border-radius:14px;font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--on-accent);box-shadow:0 6px 20px var(--accent-glow);margin-bottom:14px">B</div>
         <div style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text)">Byggeplassen</div>
         <div style="font-size:13px;color:var(--muted);margin-top:6px">Logg inn for å fortsette</div>
       </div>
@@ -306,7 +150,7 @@
       <input id="loginEmail" type="email" placeholder="din@epost.no" style="width:100%;margin:6px 0 16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;background:var(--bg)" />
       <label style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Passord</label>
       <input id="loginPassword" type="password" placeholder="..." style="width:100%;margin:6px 0 24px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--radius-xs);font-size:14px;background:var(--bg)" onkeydown="if(event.key==='Enter')doLogin()" />
-      <button onclick="doLogin()" id="loginBtn" style="width:100%;padding:14px;background:var(--accent);color:#162736;border:none;border-radius:var(--radius-xs);font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s,box-shadow .2s">Logg inn</button>
+      <button onclick="doLogin()" id="loginBtn" style="width:100%;padding:14px;background:var(--text);color:#FFFFFF;border:none;border-radius:999px;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s,box-shadow .2s">Logg inn</button>
       <div style="text-align:center;margin-top:16px">
         <button onclick="showSignup()" style="border:none;background:none;color:var(--accent);font-family:var(--font-display);font-size:13px;cursor:pointer;font-weight:600">Ny bruker? Opprett konto</button>
       </div>
@@ -357,12 +201,12 @@
   </div>
 
   <!-- MAKKER VIEW -->
-  <div id="makkView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:230px;background:#f5f7fb;z-index:50;overflow-y:auto">
+  <div id="makkView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:#f5f7fb;z-index:50;overflow-y:auto">
     <div id="makkContent"></div>
   </div>
 
   <!-- BEFARING VIEW -->
-  <div id="befaringView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:230px;background:var(--bg);z-index:50;align-items:center;justify-content:center">
+  <div id="befaringView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:var(--bg);z-index:50;align-items:center;justify-content:center">
     <div style="text-align:center">
       <div style="margin-bottom:14px;color:var(--muted)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
       <div style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:8px">Befaring</div>
@@ -371,8 +215,8 @@
   </div>
 
   <!-- DOKUMENTASJON VIEW -->
-  <div id="docsView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:230px;background:var(--bg);z-index:50;overflow-y:auto">
-    <div style="max-width:720px;margin:0 auto;padding:32px 20px 96px">
+  <div id="docsView" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:var(--bg);z-index:50;overflow-y:auto">
+    <div style="max-width:720px;margin:0 auto;padding:32px 20px calc(120px + env(safe-area-inset-bottom,0px))">
       <div id="docsProjectList">
         <div class="topbar">
           <div>
@@ -509,6 +353,20 @@
           <div><label>Påslag materialer (%)</label><input id="sDefMatMarkup" type="number" /></div>
         </div>
         <div class="footer-note">Disse brukes automatisk på alle nye prosjekter.</div>
+        <div class="row-3" style="margin-top:14px">
+          <div><label for="sDefMarginGoal">Marginmål (%)</label><input id="sDefMarginGoal" type="number" min="0" max="90" inputmode="numeric" /></div>
+        </div>
+        <div class="footer-note">Standard for alle prosjekter. Kan endres per prosjekt under Info → Satser. Brukes til margin og rabattrom.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div class="section-title">Sikkerhetskopi</div></div>
+        <div class="toolbar">
+          <button class="btn secondary" id="backupBtn">Eksporter</button>
+          <button class="btn secondary" id="importBtn">Importer</button>
+          <input type="file" id="importFile" class="hidden" accept="application/json" aria-label="Velg sikkerhetskopi" />
+        </div>
+        <div class="footer-note">Last ned alle prosjekter og kunder som en fil, eller hent inn en tidligere sikkerhetskopi.</div>
       </div>
 
       <div class="card">

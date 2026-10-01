@@ -416,7 +416,7 @@ function compute(project){
   const totalMargin=totalSaleEx?(totalProfit/totalSaleEx*100):0;
 
   const totalWorkHours=Math.max(0, totalHours - rigHoursExplicit);
-  return {hoursTotal,laborCost,laborSaleEx,matCost,matSaleEx,extrasBase,rigEx,rigHours:rigHoursExplicit,costPrice,saleEx,saleInc,vat:saleEx*0.25,profit,margin,db:margin,
+  return {hoursTotal,laborCost,laborSaleEx,matCost,matSaleEx,extrasBase,rigEx,rigCost,rigHours:rigHoursExplicit,costPrice,saleEx,saleInc,vat:saleEx*0.25,profit,margin,db:margin,
     totalMatCost,totalMatSaleEx,totalHours,totalWorkHours,totalLaborSaleEx,totalLaborCost,totalCostPrice,totalSaleEx,totalProfit,totalMargin};
 }
 
@@ -473,6 +473,223 @@ function getCustomPostPrice(p, cp, isTotalOnly){
 }
 
 
+// ── PRISOVERSLAGETS SUM OG SAMMENDRAG ────────────────────────
+
+const EXTRA_POST_IDS={ rig:'__rigg', waste:'__waste', scaffolding:'__scaffolding', drawings:'__drawings', rental:'__rental', misc:'__misc' };
+// Over dette blir «rabattrom» meningsløst (kostnaden deles på nær null).
+const MAX_MARGIN_GOAL_PCT=90;
+
+function isMaterialWithoutPrice(m){
+  return !!m && !(Number(m.cost)>0);
+}
+
+// Prosjektkostnader (rigg/drift, UE, leie m.m.) som egne linjer i prisoverslaget.
+// Stillas prises via stillas-operasjonen når den finnes, så feltet telles da ikke.
+function getExtraPosts(p){
+  var posts=[];
+  var extras=p.extras||{};
+  var cv=compute(p);
+  var rental=Number(extras.rental)||0;
+  var waste=Number(extras.waste)||0;
+  var harStillasOp=(p.operations||[]).some(function(op){ return op && op.type==='stillas'; });
+  var scaffolding=harStillasOp ? 0 : (Number(extras.scaffolding)||0);
+  var drawings=Number(extras.drawings)||0;
+  var misc=Number(extras.misc)||0;
+  var rigEx=cv.rigEx||0;
+  var subTotal=(extras.subcontractors||[]).reduce(function(s,x){return s+(Number(x.amount)||0);},0);
+
+  if(subTotal>0){
+    (extras.subcontractors||[]).forEach(function(s){
+      if(Number(s.amount)>0) posts.push({id:'__sub_'+s.id,name:s.trade,amount:Number(s.amount)});
+    });
+  }
+  if(rental>0) posts.push({id:EXTRA_POST_IDS.rental,name:'Leie av utstyr',amount:rental});
+  if(waste>0) posts.push({id:EXTRA_POST_IDS.waste,name:'Avfall / deponi',amount:waste});
+  if(scaffolding>0) posts.push({id:EXTRA_POST_IDS.scaffolding,name:'Stillas',amount:scaffolding});
+  if(drawings>0) posts.push({id:EXTRA_POST_IDS.drawings,name:'Tegninger / byggesøknad',amount:drawings});
+  if(misc>0) posts.push({id:EXTRA_POST_IDS.misc,name:'Diverse',amount:misc});
+  if(rigEx>0) posts.push({id:EXTRA_POST_IDS.rig,name:'Rigg og Drift',amount:rigEx});
+  return posts;
+}
+
+function isExtraPostChecked(os, extraPost){
+  return os.extraPostsChecked[extraPost.id]!==false;
+}
+
+// Summen kunden ser i prisoverslaget, eks. mva. Samme regler som dokumentet
+// for hver postvisning, så Prisoverslag-fanen og PDF-en alltid viser samme tall.
+function computeOfferDocumentTotal(p, os){
+  const cv=compute(p);
+  const sumPositive=values=>values.filter(v=>v>0).reduce((s,v)=>s+v,0);
+  if(os.postMode==='simple') return sumPositive([cv.totalLaborSaleEx, cv.totalMatSaleEx, cv.extrasBase+cv.rigEx]);
+  let total=0;
+  if(os.postMode==='custom'){
+    (os.customPosts||[]).forEach(cp=>{ total+=getCustomPostPrice(p,cp,true); });
+  } else if(p.offerPosts&&p.offerPosts.length){
+    p.offerPosts.filter(post=>!isChangeOrder(post)&&isPostInTotal(post)).forEach(post=>{ total+=Number(post.price)||0; });
+  } else {
+    total+=sumPositive([cv.totalLaborSaleEx, cv.totalMatSaleEx]);
+  }
+  getExtraPosts(p).forEach(ep=>{ if(isExtraPostChecked(os,ep)) total+=ep.amount; });
+  return total;
+}
+
+// Tallene i sammendraget på Prisoverslag-fanen. Totalen er dokumentets sum, og
+// fordelingen regnes fra de samme postene og prosjektkostnadene, så delene
+// alltid summerer til totalen.
+function computeOfferSummary(p, os, marginGoalPct){
+  const totalEx=computeOfferDocumentTotal(p, os);
+  const mix=os.postMode==='simple' ? getSimpleOfferMix(p) : getPostOfferMix(p, os);
+  const profitEx=totalEx-mix.costEx;
+  const goalShare=Math.min(Math.max(Number(marginGoalPct)||0,0),MAX_MARGIN_GOAL_PCT)/100;
+  return {
+    totalEx,
+    parts:mix.parts,
+    hours:mix.hours,
+    costEx:mix.costEx,
+    profitEx,
+    marginPct:totalEx ? profitEx/totalEx*100 : 0,
+    earningsPerHour:mix.hours ? profitEx/mix.hours : 0,
+    // Hvor mye prisen kan settes ned før marginen går under målet
+    // (negativt: hvor mye som mangler for å nå det).
+    discountRoomEx:totalEx-mix.costEx/(1-goalShare),
+    uncalculatedPostCount:mix.uncalculatedPostCount,
+    options:getOfferOptionTotals(p, os),
+    changeOrders:getChangeOrderSummary(p)
+  };
+}
+
+function getSimpleOfferMix(p){
+  const cv=compute(p);
+  const waste=Number((p.extras||{}).waste)||0;
+  return {
+    parts:{labor:cv.totalLaborSaleEx, material:cv.totalMatSaleEx, fixed:0, rig:cv.rigEx, waste, other:cv.extrasBase-waste},
+    hours:cv.totalHours,
+    costEx:cv.totalCostPrice,
+    uncalculatedPostCount:0
+  };
+}
+
+function getPostOfferMix(p, os){
+  const cv=compute(p);
+  const parts={labor:0, material:0, fixed:0, rig:0, waste:0, other:0};
+  let hours=cv.rigHours, costEx=cv.rigCost, uncalculatedPostCount=0;
+  const fallbackInternalRate=Number((p.work||{}).internalCost)||0;
+  getDocumentPricedPosts(p, os).forEach(item=>{
+    const split=item.post ? splitOfferPost(item.post, fallbackInternalRate) : splitUncalculatedPrice(item.price);
+    parts.labor+=split.labor; parts.material+=split.material; parts.fixed+=split.fixed;
+    hours+=split.hours; costEx+=split.costEx;
+    if(!split.isCalculated) uncalculatedPostCount++;
+  });
+  if(!(p.offerPosts&&p.offerPosts.length)&&os.postMode!=='custom'){
+    parts.labor+=Math.max(cv.totalLaborSaleEx,0); parts.material+=Math.max(cv.totalMatSaleEx,0);
+    hours+=cv.totalWorkHours; costEx+=cv.totalLaborCost+cv.totalMatCost;
+  }
+  // Prosjektkostnadene koster det samme selv om de er tatt ut av dokumentet.
+  getExtraPosts(p).forEach(ep=>{
+    if(ep.id!==EXTRA_POST_IDS.rig) costEx+=ep.amount;
+    if(!isExtraPostChecked(os,ep)) return;
+    if(ep.id===EXTRA_POST_IDS.rig) parts.rig+=ep.amount;
+    else if(ep.id===EXTRA_POST_IDS.waste) parts.waste+=ep.amount;
+    else parts.other+=ep.amount;
+  });
+  return {parts, hours, costEx, uncalculatedPostCount};
+}
+
+// Postene som utgjør postdelen av dokumentets sum, i samme utvalg som
+// computeOfferDocumentTotal: sammenslåtte grupper eller alle poster som er med.
+function getDocumentPricedPosts(p, os){
+  const posts=p.offerPosts||[];
+  if(os.postMode==='custom'){
+    return (os.customPosts||[]).flatMap(cp=>{
+      const ids=cp.sourceIds||[];
+      if(!ids.length) return [{post:null, price:Number(cp.price)||0}];
+      return posts.filter(post=>post&&ids.includes(post.id)&&isPostInTotal(post)).map(post=>({post, price:Number(post.price)||0}));
+    });
+  }
+  return posts.filter(post=>!isChangeOrder(post)&&isPostInTotal(post)).map(post=>({post, price:Number(post.price)||0}));
+}
+
+// Deler en posts pris i arbeid og materialer. Poster uten kalkyle (manuell
+// fastpris) har ukjent kostnad og regnes uten fortjeneste.
+function splitOfferPost(post, fallbackInternalRate){
+  const price=Number(post.price)||0;
+  const sc=post.snapshotCompute||{};
+  const snapshotHours=Number(sc.hoursTotal)||0;
+  const hours=Number(post.hours)||snapshotHours;
+  const material=Number(sc.matSaleEx)||0;
+  if(!hours&&!material) return splitUncalculatedPrice(price);
+  const internalRate=snapshotHours ? (Number(sc.laborCost)||0)/snapshotHours : fallbackInternalRate;
+  return {labor:price-material, material, fixed:0, hours, costEx:hours*internalRate+(Number(sc.matCost)||0), isCalculated:true};
+}
+
+function splitUncalculatedPrice(price){
+  return {labor:0, material:0, fixed:price, hours:0, costEx:price, isCalculated:false};
+}
+
+// Hva prisoverslaget blir om kunden velger en opsjon (rigg-% følger med).
+function getOfferOptionTotals(p, os){
+  return (p.offerPosts||[]).filter(post=>post&&post.type==='option'&&!post.enabled).map(option=>{
+    const withOption={...p, offerPosts:p.offerPosts.map(post=>post===option ? {...post, enabled:true} : post)};
+    return {id:option.id, name:option.name||'Opsjon', totalEx:computeOfferDocumentTotal(withOption, os)};
+  });
+}
+
+function getChangeOrderSummary(p){
+  const totals=computeChangeOrdersTotal(p);
+  const approved=(p.offerPosts||[])
+    .filter(post=>isChangeOrder(post)&&(post.changeOrder||{}).status===ChangeOrderStatus.Approved)
+    .map(post=>({id:post.id, number:(post.changeOrder||{}).number, name:post.name||'Tillegg', priceEx:Number(post.price)||0}));
+  return {approved, approvedEx:totals.approved, pendingCount:totals.pendingCount, pendingEx:totals.pending};
+}
+
+// Sjekkliste før prisoverslaget sendes. Hvert punkt har tekst både for ok og
+// for mangel, så status aldri bare vises med farge.
+function getOfferReadiness(p, os, customer){
+  const posts=(p.offerPosts||[]).filter(post=>post&&!isChangeOrder(post));
+  const missingPrices=posts.reduce((n,post)=>n+(post.snapshotMaterials||[]).filter(isMaterialWithoutPrice).length,0);
+  const pricedExtraIds=getPricedExtraIds(p, os);
+  const hasRig=pricedExtraIds.includes(EXTRA_POST_IDS.rig);
+  const conflicts=getNotIncludedConflicts(p, os, pricedExtraIds);
+  const hasEmail=!!(customer&&String(customer.email||'').trim());
+  return [
+    {id:'materialPrices', isOk:!missingPrices,
+      text:!missingPrices ? 'Alle materialer har pris' : missingPrices+(missingPrices===1?' materiale mangler pris':' materialer mangler pris')},
+    {id:'rig', isOk:hasRig, text:hasRig ? 'Rigg og drift er med' : 'Rigg og drift er ikke med'},
+    {id:'notIncluded', isOk:!conflicts.length,
+      text:!conflicts.length ? '«Ikke medregnet» stemmer med prisen' : capitalize(joinWithAnd(conflicts))+' er priset, men står under «Ikke medregnet»'},
+    {id:'customerEmail', isOk:hasEmail, text:hasEmail ? 'Kunden har e-post' : (customer ? 'Kunden mangler e-post' : 'Ingen kunde er valgt')}
+  ];
+}
+
+// Prosjektkostnadene som faktisk står i dokumentet. Enkel visning slår dem
+// sammen uten avkrysning; de andre visningene følger avkrysningen.
+function getPricedExtraIds(p, os){
+  const extras=getExtraPosts(p);
+  return (os.postMode==='simple' ? extras : extras.filter(ep=>isExtraPostChecked(os,ep))).map(ep=>ep.id);
+}
+
+// Punkter som både er priset og står som «ikke medregnet» — kunden får da
+// motstridende beskjed.
+function getNotIncludedConflicts(p, os, pricedExtraIds){
+  const notIncluded=os.ikkemedregnet||{};
+  const hasScaffoldingOperation=(p.operations||[]).some(op=>op&&op.type==='stillas');
+  const conflicts=[];
+  if(notIncluded.avfall&&pricedExtraIds.includes(EXTRA_POST_IDS.waste)) conflicts.push('avfall');
+  if(notIncluded.stillas&&(hasScaffoldingOperation||pricedExtraIds.includes(EXTRA_POST_IDS.scaffolding))) conflicts.push('stillas');
+  if(notIncluded.byggesoknad&&pricedExtraIds.includes(EXTRA_POST_IDS.drawings)) conflicts.push('byggesøknad');
+  return conflicts;
+}
+
+function joinWithAnd(words){
+  return words.length>1 ? words.slice(0,-1).join(', ')+' og '+words[words.length-1] : (words[0]||'');
+}
+
+function capitalize(text){
+  return text.charAt(0).toUpperCase()+text.slice(1);
+}
+
+
 // ── TILBUDSOPPFØLGING ────────────────────────────────────────
 
 const FOLLOW_UP_AFTER_DAYS=7;
@@ -504,9 +721,45 @@ function getOfferFollowUps(projects, now){
 // Andel vunnet av avgjorte tilbud (vunnet + tapt). Tilbud som venter på svar
 // teller ikke, ellers ville raten falle hver gang et nytt tilbud sendes.
 function computeWinRate(projects){
+  const {won, decided}=countDecidedOffers(projects);
+  return decided?Math.round(won/decided*100):0;
+}
+
+function countDecidedOffers(projects){
   const won=(projects||[]).filter(p=>WON_STATUSES.includes(p.status)).length;
   const lost=(projects||[]).filter(p=>p.status==='Tapt').length;
-  return won+lost?Math.round(won/(won+lost)*100):0;
+  return {won, decided:won+lost};
+}
+
+// Kontraktssummen: prisoverslaget pluss godkjente tillegg.
+function computeContractSum(p, os){
+  return computeOfferDocumentTotal(p, os)+computeChangeOrdersTotal(p).approved;
+}
+
+// Nøkkeltallene på forsiden. offerStateFor(p) gir prisoverslagets
+// innstillinger, så summene er de samme som i dokumentene.
+function computeDashboardSummary(projects, offerStateFor, marginGoalPct){
+  const list=projects||[];
+  const inProgress=list.filter(p=>p.status==='Pågår');
+  const won=list.filter(p=>p.status==='Vunnet');
+  const sent=list.filter(p=>p.status==='Sendt');
+  const open=sent.concat(won, inProgress);
+  const summaries=new Map(open.map(p=>[p, computeOfferSummary(p, offerStateFor(p), marginGoalPct)]));
+  const sum=(items, fn)=>items.reduce((s,item)=>s+fn(item),0);
+  const openTotalEx=sum(open, p=>summaries.get(p).totalEx);
+  return {
+    contractsEx:sum(won.concat(inProgress), p=>computeContractSum(p, offerStateFor(p))),
+    inProgressCount:inProgress.length,
+    wonCount:won.length,
+    sentEx:sum(sent, p=>summaries.get(p).totalEx),
+    sentCount:sent.length,
+    // Vektet snitt over åpne prisoverslag: samlet fortjeneste delt på samlet pris.
+    marginPct:openTotalEx ? sum(open, p=>summaries.get(p).profitEx)/openTotalEx*100 : null,
+    optionsEx:sum(open, p=>(p.offerPosts||[]).filter(post=>post&&post.type==='option'&&!post.enabled).reduce((s,post)=>s+(Number(post.price)||0),0)),
+    hoursProgress:inProgress
+      .map(p=>({id:p.id, name:p.name||'Uten navn', actualHours:Number((p.work||{}).actualHours)||0, estimatedHours:summaries.get(p).hours}))
+      .filter(item=>item.estimatedHours>0)
+  };
 }
 
 
@@ -527,6 +780,10 @@ function blankOperation() {
 
 
 // ── WARNINGS ─────────────────────────────────────────────────
+
+// Varsler med kode vises også i sammendraget på Prisoverslag-fanen, som
+// filtrerer dem bort fra varsellisten så de ikke står to ganger.
+const WarningCode={ Margin:'margin', MaterialPrice:'materialPrice' };
 
 function generateWarnings(project, computeResult) {
   if (!project) return [];
@@ -577,9 +834,9 @@ function generateWarnings(project, computeResult) {
   }
 
   if (c.totalSaleEx > 0 && margin < 10) {
-    w.push({ severity: 'danger', text: 'Margin under 10% (' + Math.round(margin) + '%) — hoy risiko for tap.' });
+    w.push({ severity: 'danger', code: WarningCode.Margin, text: 'Margin under 10% (' + Math.round(margin) + '%) — hoy risiko for tap.' });
   } else if (c.totalSaleEx > 0 && margin < 20) {
-    w.push({ severity: 'warning', text: 'Margin under 20% (' + Math.round(margin) + '%) — vurder om prisene dekker uforutsett.' });
+    w.push({ severity: 'warning', code: WarningCode.Margin, text: 'Margin under 20% (' + Math.round(margin) + '%) — vurder om prisene dekker uforutsett.' });
   }
 
   var allMats = materials.concat(
@@ -587,9 +844,9 @@ function generateWarnings(project, computeResult) {
       return acc.concat((post && post.snapshotMaterials) || []);
     }, [])
   );
-  var utenPris = allMats.filter(function(m) { return m && (!m.cost || m.cost === 0); });
+  var utenPris = allMats.filter(isMaterialWithoutPrice);
   if (utenPris.length > 0) {
-    w.push({ severity: 'warning', text: utenPris.length + ' materiale(r) mangler pris — prisoverslaget kan bli for lavt.' });
+    w.push({ severity: 'warning', code: WarningCode.MaterialPrice, text: utenPris.length + ' materiale(r) mangler pris — prisoverslaget kan bli for lavt.' });
   }
 
   var totalHours = c.totalHours || 0;
@@ -602,7 +859,7 @@ function generateWarnings(project, computeResult) {
   }
 
   if (indirect.avstandKm > 60) {
-    w.push({ severity: 'warning', text: 'Lang reisevei (' + ind.avstandKm + ' km) — vurder om kjoring dekkes i prisoverslaget.' });
+    w.push({ severity: 'warning', text: 'Lang reisevei (' + indirect.avstandKm + ' km) — vurder om kjoring dekkes i prisoverslaget.' });
   }
 
   if (!offerPosts.length && materials.length > 0) {

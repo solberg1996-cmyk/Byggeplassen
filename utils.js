@@ -46,7 +46,19 @@
     // Satt når lokale endringer ikke er bekreftet lagret i skyen (f.eks. uten
     // dekning på byggeplassen). Lokal versjon vinner da over skyversjonen.
     const PENDING_SYNC_KEY = 'kalkyleapp_pendingSync';
-    const defaultSettings = { timeRate:850, internalCost:450, materialMarkup:20, vatMode:'ex' };
+    // Marginmålet brukes i sammendraget på Prisoverslag-fanen (margin og rabattrom).
+    const DEFAULT_MARGIN_GOAL_PCT = 30;
+    const defaultSettings = { timeRate:850, internalCost:450, materialMarkup:20, vatMode:'ex', marginGoal:DEFAULT_MARGIN_GOAL_PCT };
+    // Bebodd bolig gir mer tid på arbeidet (støvtetting, tildekking, rydding
+    // underveis). Prosenten kan endres per prosjekt under Info → Satser.
+    const DEFAULT_OCCUPIED_PCT = 25;
+    const MAX_OCCUPIED_PCT = 100;
+    function getOccupiedPct(p){
+      const value=p&&p.settings?p.settings.occupiedPct:null;
+      return value==null||value==='' ? DEFAULT_OCCUPIED_PCT : Math.max(0, Number(value)||0);
+    }
+    // Prosjektets eget marginmål (Info → Satser) går foran standarden i Innstillinger.
+    function getMarginGoal(p){ return Number(p&&p.settings&&p.settings.marginGoal)||Number(state.settings.marginGoal)||DEFAULT_MARGIN_GOAL_PCT; }
     const defaultCompany = { name:'', address:'', zip:'', city:'', phone:'', email:'', website:'', orgNr:'', vatRegistered:true, logo:'', color:'#2e75b6', extraInfo:'' };
     // Bump denne når det er en oppdatering brukerne bør varsles om (se maybeShowChangelog i app.js)
     const APP_UPDATE_VERSION = '2026-08-16-tilbud';
@@ -152,11 +164,15 @@
     const $ = sel => document.querySelector(sel);
 
     function uid(){ return Math.random().toString(36).slice(2,10); }
-    function currency(n){ return `${Math.round(Number(n)||0).toLocaleString('nb-NO')} kr`; }
+    function currency(n){ return `${formatNumber(n)} kr`; }
+    function formatNumber(n){ return Math.round(Number(n)||0).toLocaleString('nb-NO'); }
+    function formatHours(h){ return (Math.round((Number(h)||0)*10)/10).toLocaleString('nb-NO'); }
     function percent(n){ return `${Math.round((Number(n)||0)*10)/10}%`; }
     function safe(v){ return v==null ? '' : String(v); }
 
     function vatFactor(p){ return (p && p.settings && p.settings.vatMode==='inc') ? 1.25 : 1; }
+    function getVatLabel(p){ return vatFactor(p)===1 ? 'eks. mva' : 'inkl. mva'; }
+    const CHEVRON_DOWN_ICON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     function displayVatValue(p, v){ return Math.round((Number(v)||0)*vatFactor(p)*100)/100; }
     function parseVatInput(p, v){ const n=Number(v)||0; return vatFactor(p)===1.25?(n/1.25):n; }
 
@@ -180,8 +196,15 @@
       localStorage.setItem(PENDING_SYNC_KEY,'1');
       if(_syncTimeout) clearTimeout(_syncTimeout);
       _syncTimeout=setTimeout(saveToCloud, 2000);
+      setSyncStatus('saving','Lagrer …');
+    }
+
+    // Synk-status: tekst i «Mer»-kortet og farget prikk på Mer-knappen i dokken
+    // (fargene i CSS, styrt av body[data-sync]).
+    function setSyncStatus(status,text){
+      document.body.dataset.sync=status;
       const el=document.getElementById('syncIndicator');
-      if(el){ el.textContent='Lagrer...'; el.style.color='#888'; }
+      if(el) el.textContent=text;
     }
 
     function exportData(){
@@ -211,7 +234,7 @@
     function getCustomer(id){ return state.customers.find(c=>c.id===id); }
     function getProject(id){ return state.projects.find(p=>p.id===id); }
 
-    function showModal(html){ $('#modalHost').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><div class="modal">${html}</div></div>`; }
+    function showModal(html,className){ $('#modalHost').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><div class="modal${className?' '+className:''}">${html}</div></div>`; }
     function closeModal(){ $('#modalHost').innerHTML=''; }
     function backdropClose(e){ if(e.target.classList.contains('modal-backdrop')) closeModal(); }
     function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
