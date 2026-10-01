@@ -210,6 +210,7 @@
     }
 
     function openSettings(){
+      document.querySelector('.app').style.display='none';
       $('#dashboardView').classList.add('hidden');
       $('#projectView').classList.add('hidden');
       $('#settingsView').classList.remove('hidden');
@@ -220,6 +221,7 @@
       $('#sDefTimeRate').value=state.settings.timeRate||850;
       $('#sDefInternalCost').value=state.settings.internalCost||450;
       $('#sDefMatMarkup').value=state.settings.materialMarkup||20;
+      $('#sDefMarginGoal').value=state.settings.marginGoal||DEFAULT_MARGIN_GOAL_PCT;
       // Color picker
       var currentColor = co.color || '#2e75b6';
       var colorEl = $('#cColor');
@@ -230,6 +232,14 @@
       renderPkgManager();
       renderOfferTemplateManager();
       renderEmailTemplateManager();
+    }
+
+    // Tilbake til der brukeren kom fra — prosjektet hvis ett var åpent, ellers Dashboard
+    function closeSettings(){
+      $('#settingsView').classList.add('hidden');
+      document.querySelector('.app').style.display='';
+      if(currentProjectId&&getProject(currentProjectId)){ $('#projectView').classList.remove('hidden'); renderProjectView(); }
+      else { $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
     }
 
     function updateColorPreview(hex){
@@ -575,11 +585,9 @@
       state.settings.timeRate=Number($('#sDefTimeRate')?.value)||850;
       state.settings.internalCost=Number($('#sDefInternalCost')?.value)||450;
       state.settings.materialMarkup=Number($('#sDefMatMarkup')?.value)||20;
+      state.settings.marginGoal=Math.min(Math.max(Number($('#sDefMarginGoal')?.value)||DEFAULT_MARGIN_GOAL_PCT,0),MAX_MARGIN_GOAL_PCT);
       // Apply accent color to app
       document.documentElement.style.setProperty('--blue', state.company.color);
       saveState();
-      // Tilbake til der brukeren kom fra — prosjektet hvis ett var åpent, ellers Dashboard
-      $('#settingsView').classList.add('hidden');
-      if(currentProjectId&&getProject(currentProjectId)){ $('#projectView').classList.remove('hidden'); renderProjectView(); }
-      else { $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
+      closeSettings();
     }

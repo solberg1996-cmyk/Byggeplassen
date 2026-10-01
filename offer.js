@@ -32,6 +32,13 @@
         terminology: OFFER_TERMINOLOGY // nye prosjekter har allerede prisoverslag-tekster
       };
     }
+    // Prisoverslagets innstillinger for summer og sammendrag. Leser uten å
+    // opprette p.offerState — det skjer først i Forhåndsvisning, der
+    // arbeidsomfanget fylles ut fra postene.
+    function readOfferState(p){
+      return {...defaultOfferState(), ...(p.offerState||{})};
+    }
+
     // Faste valg under «Ikke medregnet» — samme liste brukes i redigering og
     // i tilbudsdokumentet. Standardvalg for nye tilbud settes i defaultOfferState;
     // eksisterende tilbud beholder sine valg.
@@ -59,59 +66,57 @@
     // redigeringer muterer prosjektet direkte og lagres via saveState.
     var _offerState = defaultOfferState();
     var _offerSaveTimer = null;
+    var _previewResizeObserver = null;
+    const OFFER_DOC_WIDTH = 794;
 
+    // Forhåndsvisning: redigeringen til venstre, prisoverslaget slik det sendes
+    // til høyre — samme dokument som PDF-en, bare skalert ned.
     function renderTabPreview(p){
-      const scale=0.214, docW=794, docH=1123;
       const pid=escapeAttr(p.id);
       return '<div class="offer-editor">'
-        +'<div class="offer-editor-toolbar">'
-          +'<div>'
-            +'<div class="toolbar-eyebrow">Prisoverslag</div>'
-            +'<div class="toolbar-title">Forhåndsvisning</div>'
-          +'</div>'
-          +'<div class="toolbar-spacer"></div>'
-          +'<div class="toolbar-actions">'
-            +'<button class="btn secondary" onclick="currentProjectId=\''+pid+'\';downloadOfferPDF()">Last ned HTML</button>'
-            +'<button class="btn primary" onclick="currentProjectId=\''+pid+'\';sendOfferNow()">Send prisoverslag</button>'
-          +'</div>'
-        +'</div>'
-        +'<div class="offer-editor-body">'
-          +'<div class="offer-editor-scroll" id="offerEditorPane"></div>'
-          +'<div class="offer-editor-thumb">'
-            +'<div class="thumb-label">Forhåndsvisning</div>'
-            +'<div class="thumb-frame" title="Klikk for full visning" onclick="currentProjectId=\''+pid+'\';openOfferFullPreview()">'
-              +'<div id="offerPreviewDoc" style="width:'+docW+'px;height:'+docH+'px;background:#fff;transform:scale('+scale+');transform-origin:top left;overflow:hidden;pointer-events:none"></div>'
+        +'<div class="offer-editor-main" id="offerEditorPane"></div>'
+        +'<aside class="offer-preview-panel" aria-label="Prisoverslaget slik det sendes">'
+          +'<div class="offer-preview-head">'
+            +'<span class="offer-preview-title">Slik prisoverslaget sendes</span>'
+            +'<div class="offer-preview-actions">'
+              +'<button class="btn small secondary" onclick="currentProjectId=\''+pid+'\';downloadOfferPDF()">Last ned HTML</button>'
+              +'<button class="btn small soft" onclick="currentProjectId=\''+pid+'\';openOfferFullPreview()">Full visning</button>'
             +'</div>'
           +'</div>'
-        +'</div>'
+          +'<div class="offer-preview-frame" id="offerPreviewFrame">'
+            +'<div class="offer-preview-paper" id="offerPreviewPaper">'
+              +'<div id="offerPreviewDoc" style="width:'+OFFER_DOC_WIDTH+'px;background:#fff;transform-origin:top left;pointer-events:none"></div>'
+            +'</div>'
+          +'</div>'
+        +'</aside>'
       +'</div>';
     }
 
-    function getExtraPosts(p){
-      // Generate virtual posts from extras
-      var posts=[];
-      var cv=compute(p);
-      var subTotal=(p.extras.subcontractors||[]).reduce(function(s,x){return s+(Number(x.amount)||0);},0);
-      var rental=Number(p.extras.rental)||0;
-      var waste=Number(p.extras.waste)||0;
-      var harStillasOp=(p.operations||[]).some(function(op){ return op && op.type==='stillas'; });
-      var scaffolding=harStillasOp ? 0 : (Number(p.extras.scaffolding)||0);
-      var drawings=Number(p.extras.drawings)||0;
-      var misc=Number(p.extras.misc)||0;
-      var rigEx=cv.rigEx||0;
+    // Dokumentet er A4-bredt (794 px) og skaleres ned til forhåndsvisningen.
+    // transform endrer ikke layout, så arket får skalert bredde og høyde selv.
+    function fitOfferPreview(){
+      const frame=document.getElementById('offerPreviewFrame');
+      const paper=document.getElementById('offerPreviewPaper');
+      const doc=document.getElementById('offerPreviewDoc');
+      if(!frame||!paper||!doc) return;
+      const frameStyle=getComputedStyle(frame);
+      const available=frame.clientWidth-parseFloat(frameStyle.paddingLeft)-parseFloat(frameStyle.paddingRight);
+      const scale=Math.min(available/OFFER_DOC_WIDTH,1);
+      doc.style.transform='scale('+scale+')';
+      paper.style.width=Math.floor(OFFER_DOC_WIDTH*scale)+'px';
+      paper.style.height=Math.ceil(doc.offsetHeight*scale)+'px';
+    }
 
-      if(subTotal>0){
-        (p.extras.subcontractors||[]).forEach(function(s){
-          if(Number(s.amount)>0) posts.push({id:'__sub_'+s.id,name:s.trade,amount:Number(s.amount)});
-        });
-      }
-      if(rental>0) posts.push({id:'__rental',name:'Leie av utstyr',amount:rental});
-      if(waste>0) posts.push({id:'__waste',name:'Avfall / deponi',amount:waste});
-      if(scaffolding>0) posts.push({id:'__scaffolding',name:'Stillas',amount:scaffolding});
-      if(drawings>0) posts.push({id:'__drawings',name:'Tegninger / byggesøknad',amount:drawings});
-      if(misc>0) posts.push({id:'__misc',name:'Diverse',amount:misc});
-      if(rigEx>0) posts.push({id:'__rigg',name:'Rigg og Drift',amount:rigEx});
-      return posts;
+    // Skalerer på nytt når vinduet endrer bredde (delt skjerm) eller
+    // dokumentet endrer høyde (f.eks. når logoen er lastet).
+    function watchOfferPreviewSize(){
+      if(_previewResizeObserver) _previewResizeObserver.disconnect();
+      const frame=document.getElementById('offerPreviewFrame');
+      const doc=document.getElementById('offerPreviewDoc');
+      if(!frame||!doc||!window.ResizeObserver) return;
+      _previewResizeObserver=new ResizeObserver(fitOfferPreview);
+      _previewResizeObserver.observe(frame);
+      _previewResizeObserver.observe(doc);
     }
 
     function rebuildExtraPosts(p){
@@ -133,9 +138,8 @@
 
       function visToggle(key){
         return '<label class="offer-toggle" title="Vis i prisoverslaget">'
-          +'<input type="checkbox" '+(os.sections[key]?'checked':'')
-          +' onchange="_offerState.sections.'+key+'=this.checked;renderOfferPreview()" />'
-          +'Vis</label>';
+          +'Vis<input type="checkbox" role="switch" class="switch" '+(os.sections[key]?'checked':'')
+          +' onchange="_offerState.sections.'+key+'=this.checked;renderOfferPreview()" /></label>';
       }
 
 
@@ -149,8 +153,8 @@
       }
       const imSelected=IKKE_MEDREGNET_ITEMS.filter(function(item){return os.ikkemedregnet[item.key];});
       const imOthers=IKKE_MEDREGNET_ITEMS.filter(function(item){return !os.ikkemedregnet[item.key];});
-      const imChecks=(imSelected.length?'<div class="offer-check-group-label">Med i prisoverslaget</div>'+imSelected.map(imCheckRow).join(''):'')
-        +(imOthers.length?'<div class="offer-check-group-label">Andre valg</div>'+imOthers.map(imCheckRow).join(''):'');
+      const imChecks=(imSelected.length?'<div class="offer-check-group-label">Med i prisoverslaget · '+imSelected.length+'</div>'+imSelected.map(imCheckRow).join(''):'')
+        +(imOthers.length?'<div class="offer-check-group-label">Andre valg · '+imOthers.length+'</div>'+imOthers.map(imCheckRow).join(''):'');
       const imCustom=os.ikkemedregnet.custom.map(function(t,i){
         return '<div class="offer-line-row">'
           +'<input class="offer-input small" value="'+escapeAttr(t)+'" placeholder="Legg til punkt..."'
@@ -173,17 +177,23 @@
           +'</div>';
       }).join('');
 
-      // Pris-type radio cards
-      function priceOpt(value,title,desc){
-        const sel=os.prisType===value;
-        return '<label class="offer-pricetype-option'+(sel?' selected':'')+'">'
-          +'<input type="radio" name="prisType" value="'+value+'" '+(sel?'checked':'')
-          +' onchange="_offerState.prisType=this.value;renderOfferEditorPane();renderOfferPreview()" />'
-          +'<div class="pt-body">'
-            +'<div class="pt-title">'+title+'</div>'
-            +'<div class="pt-desc">'+desc+'</div>'
-          +'</div></label>';
-      }
+      // Pristype som valgknapper, med forklaring til valget under
+      const priceTypes=[
+        {value:'medgaatt', title:'Medgått tid', desc:'Arbeidet utføres etter medgått tid og materialer'},
+        {value:'fastpris', title:'Fastpris', desc:'Arbeidet utføres til avtalt fastpris'},
+        {value:'begge', title:'Kombinasjon', desc:'Utføres etter medgått tid og fastpris'}
+      ];
+      const selectedPriceType=priceTypes.find(function(t){return t.value===os.prisType;})||priceTypes[0];
+      const priceTypeControl='<div class="segmented" role="radiogroup" aria-label="Pris og betaling">'
+        +priceTypes.map(function(t){
+          const isSelected=t===selectedPriceType;
+          return '<label class="segmented-option'+(isSelected?' is-active':'')+'">'
+            +'<input type="radio" name="prisType" value="'+t.value+'" '+(isSelected?'checked':'')
+            +' onchange="_offerState.prisType=this.value;renderOfferEditorPane();renderOfferPreview()" />'
+            +'<span>'+t.title+'</span></label>';
+        }).join('')
+        +'</div>'
+        +'<div class="offer-card-hint offer-pricetype-hint">'+selectedPriceType.desc+'</div>';
 
       // Ekstra poster (Tilleggsposter)
       function renderExtrasCard(){
@@ -248,7 +258,7 @@
               +'<div class="offer-card-title">Ikke medregnet</div>'
               +visToggle('ikkemedregnet')
             +'</div>'
-            +'<div class="offer-card-list">'+imChecks+'</div>'
+            +'<div class="offer-card-list offer-card-list--grid">'+imChecks+'</div>'
             +imCustom
             +'<button class="offer-add-line" onclick="_offerState.ikkemedregnet.custom.push(\'\');renderOfferEditorPane();renderOfferPreview()">+ Legg til linje</button>'
           +'</div>'
@@ -289,11 +299,7 @@
               +'<div class="offer-card-title">Pris og betaling</div>'
               +visToggle('prisogbetaling')
             +'</div>'
-            +'<div class="offer-pricetype-group">'
-              +priceOpt('medgaatt','Etter medgått tid','Arbeidet utføres etter medgått tid og materialer')
-              +priceOpt('fastpris','Fastpris','Arbeidet utføres til avtalt fastpris')
-              +priceOpt('begge','Kombinasjon','Utføres etter medgått tid og fastpris')
-            +'</div>'
+            +priceTypeControl
           +'</div>'
 
           // Beregnet tid
@@ -416,6 +422,16 @@
     }
 
 
+    // Dokumentet vises i appen (forhåndsvisning og utskrift til PDF), der appens
+    // generelle regler for th og .title tidligere har gitt det skrift og farger.
+    // Her låses de til nøyaktig slik PDF-en har sett ut, så et nytt app-design
+    // aldri endrer dokumentet. Brukes ikke i «Last ned HTML» (uten app-CSS).
+    function getOfferAppLockCSS(){
+      var displayFont="'Bricolage Grotesque','DM Sans',system-ui,sans-serif";
+      return '.title{font-family:'+displayFont+';color:#162736;letter-spacing:-.03em;line-height:1.15}'
+        +'.mt .hr th{font-family:'+displayFont+';text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #DDE6EC;vertical-align:top}';
+    }
+
     // Logo, firmainfo og kundeboks — felles for tilbud og endringsmelding.
     function buildOfferLetterheadHtml(p){
       const co=state.company||{};
@@ -463,15 +479,15 @@
       }
 
       // Build price rows
-      var priceRows='', totalEx=0;
+      var priceRows='';
       if(os.postMode==='simple'){
         var lEx=cv.totalLaborSaleEx, mEx=cv.totalMatSaleEx, eEx=cv.extrasBase+cv.rigEx;
-        if(lEx>0){priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx)+'</td></tr>';totalEx+=lEx;}
-        if(mEx>0){priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx)+'</td></tr>';totalEx+=mEx;}
-        if(eEx>0){priceRows+='<tr><td class="dc"><b>Rigg og Drift</b></td><td class="ac">'+fmt(eEx)+'</td></tr>';totalEx+=eEx;}
+        if(lEx>0) priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx)+'</td></tr>';
+        if(mEx>0) priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx)+'</td></tr>';
+        if(eEx>0) priceRows+='<tr><td class="dc"><b>Rigg og Drift</b></td><td class="ac">'+fmt(eEx)+'</td></tr>';
       } else {
         if(os.postMode==='custom'){
-          os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(getCustomPostPrice(p,cp))+'</td></tr>';totalEx+=getCustomPostPrice(p,cp,true);});
+          os.customPosts.forEach(function(cp){priceRows+='<tr><td class="dc"><b>'+esc(cp.name||'')+'</b></td><td class="ac">'+fmt(getCustomPostPrice(p,cp))+'</td></tr>';});
         } else if(p.offerPosts&&p.offerPosts.length){
           p.offerPosts.filter(function(post){return !isChangeOrder(post);}).forEach(function(post){
             // Calc posts: show "Tømrerarbeid + Materialer" instead of timer info
@@ -488,22 +504,21 @@
             var isIncluded=isPostInTotal(post);
             var optBadge=post.type==='option'?'<span style="font-size:9pt;color:#a96800;font-weight:600;margin-left:6px">'+(isIncluded?'(Opsjon)':'(Opsjon – ikke med i totalsum)')+'</span>':'';
             priceRows+='<tr><td class="dc"><b>'+esc(post.name||'')+optBadge+'</b>'+(desc?'<br><span style="font-size:10pt;color:#555">'+esc(desc)+'</span>':'')+'</td><td class="ac">'+fmt(post.price||0)+'</td></tr>';
-            if(isIncluded) totalEx+=Number(post.price)||0;
           });
         } else {
           var lEx2=cv.totalLaborSaleEx,mEx2=cv.totalMatSaleEx;
-          if(lEx2>0){priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx2)+'</td></tr>';totalEx+=lEx2;}
-          if(mEx2>0){priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx2)+'</td></tr>';totalEx+=mEx2;}
+          if(lEx2>0) priceRows+='<tr><td class="dc"><b>Tømrerarbeider</b></td><td class="ac">'+fmt(lEx2)+'</td></tr>';
+          if(mEx2>0) priceRows+='<tr><td class="dc"><b>Materialer</b></td><td class="ac">'+fmt(mEx2)+'</td></tr>';
         }
         // Prosjektkostnader (rigg/drift, underentreprenører, leie, m.m.) — vises
         // for 'all' og 'custom', ikke 'simple' (som allerede slår dem sammen over).
         getExtraPosts(p).forEach(function(ep){
-          if(os.extraPostsChecked[ep.id]!==false){
+          if(isExtraPostChecked(os,ep)){
             priceRows+='<tr><td class="dc"><b>'+esc(ep.name)+'</b></td><td class="ac">'+fmt(ep.amount)+'</td></tr>';
-            totalEx+=ep.amount;
           }
         });
       }
+      var totalEx=computeOfferDocumentTotal(p, os);
       var mva=Math.round(totalEx*0.25);
       var totalInc=Math.round(totalEx*1.25);
 
@@ -568,7 +583,7 @@
 
       // Scopet til forhåndsvisningen — ellers overstyrer dokumentets .title,
       // .hdr osv. appens egne klasser (f.eks. prosjekttittelen).
-      var html='<style>'+scopeOfferCSS(css,'#offerPreviewDoc')+'</style>'
+      var html='<style>'+scopeOfferCSS(css+getOfferAppLockCSS(),'#offerPreviewDoc')+'</style>'
         +buildOfferLetterheadHtml(p)
         +'<div class="title">PRISOVERSLAG</div>'
         +'<table class="mt"><thead><tr class="hr"><th class="dc">BESKRIVELSE</th><th class="ac">SUM eks mva</th></tr></thead><tbody>'
@@ -584,4 +599,5 @@
 
       var doc=document.getElementById('offerPreviewDoc');
       if(doc) doc.innerHTML=html;
+      fitOfferPreview();
     }

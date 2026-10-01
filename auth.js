@@ -20,14 +20,13 @@
           _sbUser=session.user;
           if(isNewSignIn){ await syncOnSignIn(); showApp(); }
         }
-        else if(event==='SIGNED_OUT'){ _sbUser=null; document.body.classList.remove('is-signed-in'); document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; document.getElementById('appSidebar').style.display='none'; }
+        else if(event==='SIGNED_OUT'){ _sbUser=null; document.body.classList.remove('is-signed-in'); document.getElementById('loginView').style.display='flex'; document.querySelector('.app').style.display='none'; }
       });
     }
 
     function showApp(){
       document.getElementById('loginView').style.display='none';
-      document.getElementById('appSidebar').style.display='';
-      // Bunnmenyen vises via CSS (kun innlogget, smal skjerm, utenfor prosjekt).
+      // Dokken vises via CSS (kun innlogget og utenfor prosjekt).
       document.body.classList.add('is-signed-in');
       sidebarNav('kalkyle');
       maybeShowChangelog();
@@ -66,14 +65,17 @@
       document.getElementById('makkView').style.display='none';
       document.getElementById('befaringView').style.display='none';
       document.getElementById('docsView').style.display='none';
+      document.getElementById('settingsView').classList.add('hidden');
       // Update active state
-      document.querySelectorAll('.sidebar-item[data-view]').forEach(function(btn){
-        btn.classList.toggle('active',btn.dataset.view===view);
+      document.querySelectorAll('#bottomBar .dock-item[data-view]').forEach(function(btn){
+        const isActive=btn.dataset.view===view;
+        btn.classList.toggle('active',isActive);
+        if(isActive) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
       });
       // Show selected view
       if(view==='kalkyle'){
         document.querySelector('.app').style.display='';
-        renderDashboard();
+        openDashboard();
       } else if(view==='makker'){
         document.getElementById('makkView').style.display='block';
         _makkerTool=null;
@@ -163,15 +165,8 @@
     });
     window.addEventListener('offline',function(){ updateSyncIndicator(false); });
 
-    // Mer-arket hører til bunnmenyen — lukk det når vinduet blir bredt nok til sidemeny.
-    window.addEventListener('resize',function(){
-      if(!window._isMobile||!window._isMobile()) closeMerSheet();
-    });
-
     function updateSyncIndicator(ok){
-      const el=document.getElementById('syncIndicator');
-      if(!el) return;
-      if(ok){ el.textContent='Synkronisert'; el.style.color='#34c759'; }
-      else if(!navigator.onLine){ el.textContent='Frakoblet – lagret på enheten'; el.style.color='#a96800'; }
-      else { el.textContent='Synkfeil'; el.style.color='#ff3b30'; }
+      if(ok) setSyncStatus('ok','Synkronisert');
+      else if(!navigator.onLine) setSyncStatus('offline','Frakoblet – lagret på enheten');
+      else setSyncStatus('error','Synkfeil – prøver igjen ved neste endring');
     }

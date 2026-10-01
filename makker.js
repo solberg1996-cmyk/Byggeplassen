@@ -558,8 +558,8 @@ function renderKledningTool() {
 
       // Accent top bar with label
       h += '<div style="background:var(--accent);padding:10px 20px;display:flex;align-items:center;justify-content:space-between">'
-        + '<span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:0.5px">Anbefalt</span>'
-        + '<span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)">'
+        + '<span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--on-accent);text-transform:uppercase;letter-spacing:0.5px">Anbefalt</span>'
+        + '<span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--on-accent)">'
         + (a.antallUnderliggere + a.antallOverliggere) + ' bord totalt</span>'
         + '</div>';
 

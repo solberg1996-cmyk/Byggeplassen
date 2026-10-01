@@ -441,37 +441,7 @@
         result.materialsWithPrices.push(newMat);
         const tbody=document.getElementById('calcMaterialsTableBody');
         if(tbody){
-          const newRow=document.createElement('tr');
-          newRow.style.borderBottom='1px solid #eef2ff';
-          newRow.dataset.matId=newMat.matId;
-          newRow.innerHTML=`<td style="padding:8px;min-width:200px;position:relative">
-            <input type="text" class="calcMatName" data-mat-id="${newMat.matId}" value="${escapeAttr(name)}" placeholder="Søk materiale..." style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer" onclick="openPriceSearchForCalc('${newMat.matId}')" readonly />
-          </td>
-          <td style="text-align:center;padding:8px">
-            <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-          </td>
-          <td style="text-align:center;padding:8px">
-            <select class="calcMatUnit" data-mat-id="${newMat.matId}" class="calcMatUnit" onchange="recalcCalcMaterials()">
-              ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===unit?'selected':'')+'> '+u+'</option>').join('')}
-            </select>
-          </td>
-          <td style="text-align:center;padding:8px;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${newMat.matId}">1.0</td>
-          <td style="text-align:right;padding:8px">
-            <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="${cost.toFixed(2)}" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-          </td>
-          <td style="text-align:center;padding:8px">
-            <input type="number" class="calcMatWaste" data-mat-id="${newMat.matId}" value="0" step="1" min="0" max="100" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-          </td>
-          <td style="text-align:center;padding:8px">
-            <input type="number" class="calcMatMarkup" data-mat-id="${newMat.matId}" value="${calcMarkup}" step="1" min="0" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-          </td>
-          <td style="text-align:right;padding:8px;font-weight:700;min-width:75px">
-            <span class="calcMatRowTotal" data-mat-id="${newMat.matId}" style="color:#0a84ff">kr ${cost.toFixed(0)}</span>
-          </td>
-          <td style="text-align:center;padding:8px">
-            <button class="btn small" style="padding:4px 8px;font-size:10px;background:#ffebee;color:#c62828;border:1px solid #ef5350;border-radius:4px;cursor:pointer" onclick="deleteCalcMaterial('${newMat.matId}')">✕</button>
-          </td>`;
-          tbody.appendChild(newRow);
+          tbody.insertAdjacentHTML('beforeend',renderCalcMaterialRow(newMat));
           recalcCalcMaterials();
         }
       } else {
@@ -665,38 +635,8 @@
       result.materialsWithPrices.push(newMat);
       const tbody=document.getElementById('calcMaterialsTableBody');
       if(tbody){
-        const newRow=document.createElement('tr');
-        newRow.style.borderBottom='1px solid #eef2ff';
-        newRow.dataset.matId=newMat.matId;
-        newRow.innerHTML=`<td style="padding:8px;min-width:200px;position:relative">
-          <input type="text" class="calcMatName" data-mat-id="${newMat.matId}" value="" placeholder="Søk materiale..." style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer" onclick="openPriceSearchForCalc('${newMat.matId}')" readonly />
-        </td>
-        <td style="text-align:center;padding:8px">
-          <input type="number" class="calcMatQty" data-mat-id="${newMat.matId}" value="1" step="0.1" min="0" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:center;padding:8px">
-          <select class="calcMatUnit" data-mat-id="${newMat.matId}" class="calcMatUnit" onchange="recalcCalcMaterials()">
-            ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u==='stk'?'selected':'')+'> '+u+'</option>').join('')}
-          </select>
-        </td>
-        <td style="text-align:center;padding:8px;color:var(--muted);font-size:11px" class="calcMatBrutto" data-mat-id="${newMat.matId}">1.0</td>
-        <td style="text-align:right;padding:8px">
-          <input type="number" class="calcMatCost" data-mat-id="${newMat.matId}" value="0.00" step="0.01" min="0" style="width:65px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:center;padding:8px">
-          <input type="number" class="calcMatWaste" data-mat-id="${newMat.matId}" value="0" step="1" min="0" max="100" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:center;padding:8px">
-          <input type="number" class="calcMatMarkup" data-mat-id="${newMat.matId}" value="${calcMarkup}" step="1" min="0" style="width:50px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;text-align:right" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-        </td>
-        <td style="text-align:right;padding:8px;font-weight:700;min-width:75px">
-          <span class="calcMatRowTotal" data-mat-id="${newMat.matId}" style="color:#0a84ff">kr 0</span>
-        </td>
-        <td style="text-align:center;padding:8px">
-          <button class="btn small" style="padding:4px 8px;font-size:10px;background:#ffebee;color:#c62828;border:1px solid #ef5350;border-radius:4px;cursor:pointer" onclick="deleteCalcMaterial('${newMat.matId}')">✕</button>
-        </td>`;
-        tbody.appendChild(newRow);
-        newRow.querySelector('.calcMatName').focus();
+        tbody.insertAdjacentHTML('beforeend',renderCalcMaterialRow(newMat));
+        tbody.lastElementChild.querySelector('.calcMatName').focus();
       }
     };
 
@@ -763,6 +703,7 @@
           laborId:old.laborId, laborRate:old.laborRate, laborQty:old.laborQty, laborUnit:old.laborUnit});
         const totalSpan=row.querySelector('.calcMatRowTotal');
         if(totalSpan) totalSpan.textContent=currency(totalCost);
+        row.classList.toggle('is-unpriced',!cost);
         const bruttoCell=row.querySelector('.calcMatBrutto');
         if(bruttoCell) bruttoCell.textContent=(waste>0?Math.ceil(qty*(1+waste/100)*10)/10:qty).toFixed(1);
       });
@@ -778,62 +719,28 @@
       const cleanupPct=parseFloat(document.getElementById('calcCleanup')?.value)||3;
       const distance=(factors.distance)||0;
       const occupied=factors.occupied||false;
-      const occupiedFactor=occupied?1.25:1;
       const drivingTimer=Math.round(distance*2*0.5);
       const cleanupTimer=Math.round(directTimer*cleanupPct/100);
       const indirectTimer=rigTimer+planTimer+drivingTimer+cleanupTimer;
-      const totalTimer=directTimer+indirectTimer;
-
-      result.baseTimer=baseTimer;
-      result.directTimer=directTimer;
-      result.indirectTimer=indirectTimer;
-      result.totalTimer=totalTimer;
 
       const p=getProject(currentProjectId);
-      const timeRate=(p?.work.timeRate)||850;
-      const laborSaleEx=Math.round(directTimer*timeRate*occupiedFactor);
+      const labor=computeCalcLabor(p, directTimer, occupied);
+      Object.assign(result,{
+        baseTimer, directTimer, indirectTimer,
+        occupiedPct:labor.occupiedPct, occupiedTimer:labor.occupiedTimer, pricedTimer:labor.pricedTimer,
+        totalTimer:labor.pricedTimer+indirectTimer
+      });
+      const laborSaleEx=labor.laborSaleEx;
       result.laborSaleEx=laborSaleEx;
       const totalSaleEx=laborSaleEx+result.totalMatCost;
-      const laborCost=Math.round(directTimer*(p?.work.internalCost||450));
+      const laborCost=labor.laborCost;
       const totalCost=laborCost+result.totalMatCost;
       const profit=totalSaleEx-totalCost;
       const margin=totalSaleEx>0?Math.round(profit/totalSaleEx*100):0;
       result.profit=profit; result.margin=margin; result.totalSaleEx=totalSaleEx; result.totalCost=totalCost;
 
-      // Oppdater timer-UI
-      const directBox=document.querySelector('.calc-stat-box.blue .stat-value');
-      if(directBox) directBox.textContent=directTimer+'t';
-      const directDetail=document.querySelector('.calc-stat-box.blue .stat-detail');
-      if(directDetail) directDetail.textContent=baseTimer+'t'+(baseTimer!==directTimer?' + justering':'');
-      const indirectBox=document.querySelector('.calc-stat-box.orange .stat-value');
-      if(indirectBox) indirectBox.textContent=indirectTimer+'t';
-      const indirectDetail=document.querySelector('.calc-stat-box.orange .stat-detail');
-      if(indirectDetail) indirectDetail.textContent='Rigg: '+rigTimer+'t + Plan: '+planTimer+'t + Kjoring: '+drivingTimer+'t + Opprydding: '+cleanupTimer+'t';
-      const totalBox=document.querySelector('.calc-total-box.green .total-value');
-      if(totalBox) totalBox.textContent=totalTimer+'t';
-
-      // Oppdater pris-grid (Arbeid / Materialer / Totalt)
-      const priceGrid=document.querySelector('.calc-price-grid');
-      if(priceGrid){
-        const items=priceGrid.querySelectorAll('.calc-price-item .price-value');
-        if(items[0]) items[0].textContent=currency(laborSaleEx);
-        if(items[1]) items[1].textContent=currency(result.totalMatCost);
-        if(items[2]) items[2].textContent=currency(totalSaleEx);
-      }
-      // Oppdater margin/fortjeneste
-      const marginBox=document.querySelector('.calc-total-box.blue-border');
-      if(marginBox){
-        const marginValueEl=marginBox.querySelector('.total-value');
-        const profitEl=marginBox.querySelector('.stat-detail');
-        if(marginValueEl) marginValueEl.textContent=margin+'%';
-        if(profitEl) profitEl.textContent='Fortjeneste: '+currency(profit);
-      }
-      // Oppdater "Bruk Xt" knappen
-      const applyBtn=document.querySelector('.calc-result-card .btn.small.primary');
-      if(applyBtn&&applyBtn.textContent.match(/Bruk \d/)) applyBtn.textContent='Bruk '+totalTimer+'t som prosjekttimer';
-
       result.sentToOffer=false;
-      updateCalcSendButtonUI();
+      renderCalcSummary();
     };
 
 
@@ -1368,149 +1275,155 @@
       persistAndUpdate();
     }
     // ---- CALC POST MODAL ----
+    const MATERIAL_PCT_OPTIONS=[0,5,8,10,12,15,20,25,30];
+    const DEFAULT_POST_MARKUP=20;
+    const SEARCH_ICON='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+
+    // «Tilpass post»: timer, materialer og pris for én post. Tallene i vinduet
+    // kommer fra computeCalcPostDraft — de samme som lagres.
     function renderCalcModal(){
       const p=getProject(currentProjectId);
       const mats=window._cpm||[];
+      const postId=window._cpmPostId;
+      const offerPost=postId&&p?.offerPosts?.find(x=>x.id===postId);
+      const draft=offerPost?computeCalcPostDraft(p,offerPost,mats):null;
+      const laborGrps=offerPost&&offerPost.laborGroups&&offerPost.laborGroups.length?offerPost.laborGroups:null;
 
-      function matTotal(){
-        return mats.reduce((s,m)=>{
-          const base=(Number(m.qty)||1)*(Number(m.cost)||0)*(1+(Number(m.waste)||0)/100);
-          return s+base*(1+(Number(m.markup)||0)/100);
-        },0);
-      }
-
-      const pctOpts=[0,5,8,10,12,15,20,25,30];
-
-      const rows=mats.length ? mats.map((m,i)=>{
-        const rowBg=m.groupColor?(m.groupColor+'18'):(m.cost===0?'var(--yellow-soft)':'var(--bg-warm)');
-        const rowBorder=m.groupColor?(m.groupColor+'40'):(m.cost===0?'rgba(196,162,58,.2)':'var(--line)');
-        return `
-        <div class="calc-mat-modal-row" style="background:${rowBg};border:1px solid ${rowBorder}${m.groupColor?';border-left:3px solid '+m.groupColor:''}">
-          <div class="cmr-name">
-            <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn..." style="font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px;width:100%" onchange="window._cpm[${i}].name=this.value" />
-            ${m.groupName?`<div style="font-size:10px;color:${m.groupColor||'var(--muted)'};margin-top:1px">${escapeHtml(m.groupName)}</div>`:''}
-            ${m.itemNo?`<div style="font-size:11px;color:var(--muted)">${escapeHtml(m.itemNo)}</div>`:''}
-          </div>
-          <div class="cmr-qty" data-label="Antall"><input type="number" value="${m.qty||1}" title="Antall" style="padding:6px;font-size:13px;text-align:center;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" /></div>
-          <div class="cmr-unit" data-label="Enhet"><input value="${escapeHtml(m.unit||'stk')}" title="Enhet" style="padding:6px;font-size:13px;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].unit=this.value" /></div>
-          <div class="cmr-cost" data-label="Innpris"><input type="number" value="${m.cost||0}" title="Innpris" style="padding:6px;font-size:13px;text-align:right;border:1px solid var(--line);border-radius:9px;width:100%" onchange="window._cpm[${i}].cost=Number(this.value);rerenderCalcModal()" /></div>
-          <div class="cmr-waste" data-label="Svinn%"><select title="Svinn %" class="calc-modal-select" onchange="window._cpm[${i}].waste=Number(this.value);rerenderCalcModal()">
-            ${pctOpts.map(v=>`<option value="${v}" ${(m.waste||0)==v?'selected':''}>${v}%</option>`).join('')}
-          </select></div>
-          <div class="cmr-markup" data-label="Påslag%"><select title="Påslag %" class="calc-modal-select" onchange="window._cpm[${i}].markup=Number(this.value);rerenderCalcModal()">
-            ${pctOpts.map(v=>`<option value="${v}" ${(m.markup!=null?m.markup:20)==v?'selected':''}>${v}%</option>`).join('')}
-          </select></div>
-          <button class="cmr-del" style="border:none;background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:12px;width:100%" onclick="window._cpm.splice(${i},1);rerenderCalcModal()">✕</button>
+      const stepper=(id,value,label,onMinus,onPlus,onInput)=>`
+        <div class="hours-stepper">
+          <button type="button" onclick="${onMinus}" aria-label="Færre timer">−</button>
+          <input id="${id}" type="number" min="0" step="any" inputmode="decimal" value="${value}" aria-label="${label}" oninput="${onInput}" onfocus="this.select()" />
+          <button type="button" onclick="${onPlus}" aria-label="Flere timer">+</button>
         </div>`;
-      }).join('')
-        : '<div class="empty">Ingen materialer enda.</div>';
+
+      const hoursHtml=laborGrps
+        ? laborGrps.map((g,gi)=>`
+          <div class="post-editor-row post-editor-row--group" style="--group-color:${escapeAttr(g.groupColor||'')}">
+            <div><div class="post-editor-row-title">Timer ${escapeHtml(g.groupName)}</div></div>
+            ${stepper('laborGroupHours_'+gi, g.hours||0, 'Timer '+escapeAttr(g.groupName), 'adjustLaborGroupHours('+gi+',-1)', 'adjustLaborGroupHours('+gi+',1)', 'setLaborGroupHours('+gi+',this.value)')}
+          </div>`).join('')
+          +`<div class="post-editor-sumrow"><span>Sum timer</span><span id="laborGroupTotalHours">${laborGrps.reduce((s,g)=>s+(g.hours||0),0)}t</span></div>`
+        : (offerPost?`
+          <div class="post-editor-row">
+            <div><div class="post-editor-row-title">Timer</div><div class="post-editor-row-hint">sist lagret: ${formatHours((offerPost.snapshotCompute||{}).hoursTotal||0)} t</div></div>
+            ${stepper('postHoursDisplay', draft.hoursTotal, 'Timer for denne posten', 'adjustModalHours(-1)', 'adjustModalHours(1)', 'setModalHours(this.value)')}
+          </div>`:'');
+
+      const laborHtml=draft?`
+          <div class="post-editor-row">
+            <div><div class="post-editor-row-title">Arbeid</div><div class="post-editor-row-hint" id="postLaborHint">${formatHours(draft.hoursTotal)} t × ${formatNumber(draft.timeRate)} kr/t</div></div>
+            <span class="post-editor-amount" id="postLaborDisplay">${formatNumber(draft.laborSaleEx)}</span>
+          </div>`:'';
 
       const searchResults=window._cpmSearch ? searchPriceCatalog(window._cpmSearch) : [];
-      const searchHtml = window._cpmSearch ? (
-        searchResults.length
-          ? searchResults.map(item=>{
+      const searchHtml=!window._cpmSearch ? '' : `<div class="post-editor-results">${searchResults.length
+        ? searchResults.map(item=>{
             const favName=item.productName||item.name;
             const fav=isCalcFavorite(favName);
-            return `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:5px">
-              <div>
-                <div style="font-weight:700;font-size:13px">${escapeHtml(favName)}</div>
-                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-                <button onclick="toggleCalcModalFavorite('${escapeHtml(item.id)}')" title="${fav?'Fjern favoritt':'Lagre som favoritt'}" aria-label="${fav?'Fjern favoritt':'Lagre som favoritt'}" style="border:none;background:none;cursor:pointer;font-size:18px;line-height:1;padding:6px;color:${fav?'var(--accent)':'var(--muted)'}">${fav?'★':'☆'}</button>
+            return `<div class="post-editor-result">
+                <div class="post-editor-result-text">
+                  <div class="post-editor-result-name">${escapeHtml(favName)}</div>
+                  <div class="post-editor-result-meta">${item.itemNo?'<button class="copy-artnr-btn" onclick="event.stopPropagation();copyArtikkelNummer(\''+escapeHtml(item.itemNo)+'\',this)">'+escapeHtml(item.itemNo)+' <span class="copy-artnr-label">Kopier</span></button>':''}<span>${escapeHtml(item.unit||'-')} • ${currency(item.userPrice||0)}</span></div>
+                </div>
+                <button class="post-editor-fav${fav?' is-active':''}" onclick="toggleCalcModalFavorite('${escapeHtml(item.id)}')" aria-label="${fav?'Fjern favoritt':'Lagre som favoritt'}" aria-pressed="${fav}">★</button>
                 <button class="btn small primary" onclick="addFromCatalogToCalcModal('${escapeHtml(item.id)}')">+ Legg til</button>
-              </div>
-            </div>`;
+              </div>`;
           }).join('')
-          : '<div class="empty" style="padding:10px">Ingen treff.</div>'
-      ) : '';
+        : '<div class="post-editor-empty">Ingen treff.</div>'}</div>`;
 
-      const postId=window._cpmPostId;
-      const offerPost=postId&&getProject(currentProjectId)?.offerPosts?.find(x=>x.id===postId);
-      const calcHours=offerPost?.snapshotCompute?.hoursTotal||0;
-      const currentHours=offerPost?Number(offerPost.hours)||calcHours:0;
-      const laborGrps=offerPost&&offerPost.laborGroups&&offerPost.laborGroups.length?offerPost.laborGroups:null;
-      const laborGroupsHtml=laborGrps?laborGrps.map((g,gi)=>`
-        <div style="background:${g.groupColor+'18'};border:1px solid ${g.groupColor+'40'};border-left:3px solid ${g.groupColor};border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:16px">
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px;color:${g.groupColor}"> Timer ${escapeHtml(g.groupName)}</div>
-            <div style="font-size:12px;color:var(--muted)">Beregnet: ${g.hours||0}t</div>
+      const rows=mats.length ? mats.map((m,i)=>{
+        const markup=m.markup!=null?m.markup:DEFAULT_POST_MARKUP;
+        const rowSale=(Number(m.qty)||1)*(Number(m.cost)||0)*(1+(Number(m.waste)||0)/100)*(1+(Number(markup)||0)/100);
+        const pctSelect=(value,field,label)=>`<select class="calc-modal-select" aria-label="${label}" onchange="window._cpm[${i}].${field}=Number(this.value);rerenderCalcModal()">${MATERIAL_PCT_OPTIONS.map(v=>`<option value="${v}" ${Number(value)==v?'selected':''}>${v} %</option>`).join('')}</select>`;
+        return `
+        <div class="calc-mat-modal-row${m.cost?'':' is-unpriced'}${m.groupColor?' has-group':''}"${m.groupColor?` style="--group-color:${escapeAttr(m.groupColor)}"`:''}>
+          <div class="cmr-name">
+            <input value="${escapeAttr(m.name||'')}" placeholder="Materialenavn …" aria-label="Materiale" onchange="window._cpm[${i}].name=this.value" />
+            ${m.groupName||m.itemNo?`<div class="cmr-meta">${[m.groupName,m.itemNo].filter(Boolean).map(escapeHtml).join(' · ')}</div>`:''}
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-            <button onclick="adjustLaborGroupHours(${gi},1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
-            <input id="laborGroupHours_${gi}" type="number" min="0" step="any" inputmode="decimal" value="${g.hours||0}" title="Skriv inn timer" aria-label="Timer ${escapeAttr(g.groupName)}" oninput="setLaborGroupHours(${gi},this.value)" onfocus="this.select()" style="font-size:28px;font-weight:800;color:${g.groupColor};width:110px;padding:2px 4px;margin:0;text-align:center;border:1px solid transparent;border-radius:8px;background:transparent" />
-            <button onclick="adjustLaborGroupHours(${gi},-1)" style="border:none;background:${g.groupColor+'30'};border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
-          </div>
-          <div style="font-size:12px;color:var(--muted)">timer</div>
-        </div>`).join(''):'';
-
-      const html=`
-        <div class="section-head">
-          <div class="section-title"> Tilpass post</div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <button class="btn small soft" onclick="openMatCalc()">🧮 Materialkalkulator</button>
-            <button class="btn small secondary" onclick="closeModal()">Lukk</button>
-          </div>
-        </div>
-        ${laborGrps?`
-        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Arbeid per gruppe</div>
-        ${laborGroupsHtml}
-        <div style="padding:8px 12px;background:#f5f8ff;border-radius:10px;border:1px solid #dce8ff;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;font-weight:700;color:var(--muted)">Sum timer</span>
-          <span id="laborGroupTotalHours" style="font-size:16px;font-weight:800">${laborGrps.reduce((s,g)=>s+(g.hours||0),0)}t</span>
-        </div>
-        `:(offerPost?`
-        <div style="background:var(--yellow-soft);border:1px solid rgba(196,162,58,.2);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px"> Timer for denne posten</div>
-            <div style="font-size:12px;color:var(--muted)">${calcHours?'Kalkulasjon beregnet: '+calcHours+'t':''}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-            <button onclick="adjustModalHours(1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▲</button>
-            <input id="postHoursDisplay" type="number" min="0" step="any" inputmode="decimal" value="${window._pendingPostHours!=null?window._pendingPostHours:(currentHours||calcHours||0)}" title="Skriv inn timer" aria-label="Timer for denne posten" oninput="setModalHours(this.value)" onfocus="this.select()" style="font-size:28px;font-weight:800;color:#a96800;width:110px;padding:2px 4px;margin:0;text-align:center;border:1px solid transparent;border-radius:8px;background:transparent" />
-            <button onclick="adjustModalHours(-1)" style="border:none;background:#fde68a;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:800;width:100%">▼</button>
-          </div>
-          <div style="font-size:12px;color:var(--muted)">timer<br><span style="font-size:10px">Fra kalkulasjon: ${calcHours||0}t</span></div>
-        </div>`:``)}
-
-
-
-        <div style="background:#f0f7ff;border:1px solid #cde2ff;border-radius:14px;padding:12px;margin-bottom:14px">
-          <label style="margin:0 0 6px"> Søk i prisfil og legg til</label>
-          <input id="calcModalSearch" placeholder="Søk varenummer eller navn..." value="${escapeAttr(window._cpmSearch||'')}"
-            oninput="window._cpmSearch=this.value;rerenderCalcModal()" style="margin:0" />
-          <div style="margin-top:8px;max-height:180px;overflow-y:auto">${searchHtml}</div>
-        </div>
-
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Ant. • Enhet • Innpris • Svinn% • Påslag%</div>
-        <div id="calcMatRows">${rows}</div>
-        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button class="btn small soft" onclick="addBlankToCalcModal()">+ Tom rad</button>
-          <div class="fav-dropdown-wrap" style="position:relative">
-            <button class="btn small soft" onclick="toggleFavDropdown('favDropdownModal')">★ Favoritter</button>
-            <div id="favDropdownModal" class="fav-dropdown hidden"></div>
-          </div>
-          <div class="fav-dropdown-wrap" style="position:relative">
-            <button class="btn small soft" onclick="togglePkgDropdown('pkgDropdownModal')">📦 Pakker</button>
-            <div id="pkgDropdownModal" class="fav-dropdown hidden"></div>
-          </div>
-          <button class="btn small soft" onclick="saveCurrentModalAsPackage()">💾 Lagre som pakke</button>
-        </div>
-
-        <div style="margin-top:14px;padding:12px 16px;background:#f5f8ff;border-radius:14px;border:1px solid #dce8ff;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:13px;font-weight:700;color:var(--muted)">Materialsum (salgsverdi)</div>
-          <div style="font-size:22px;font-weight:800;color:var(--blue)">${currency(matTotal())}</div>
-        </div>
-        <div class="toolbar" style="margin-top:14px">
-          <button class="btn primary" onclick="saveCalcPostMaterials()">Lagre og oppdater prisoverslag</button>
-          <button class="btn secondary" onclick="closeModal()">Avbryt</button>
+          <div class="cmr-qty" data-label="Ant."><input type="number" inputmode="decimal" value="${m.qty||1}" aria-label="Antall" onchange="window._cpm[${i}].qty=Number(this.value);rerenderCalcModal()" /></div>
+          <div class="cmr-unit" data-label="Enhet"><input value="${escapeAttr(m.unit||'stk')}" aria-label="Enhet" onchange="window._cpm[${i}].unit=this.value" /></div>
+          <div class="cmr-cost" data-label="Innpris"><input type="number" inputmode="decimal" value="${m.cost||0}" aria-label="Innpris" onchange="window._cpm[${i}].cost=Number(this.value);rerenderCalcModal()" /></div>
+          <div class="cmr-waste" data-label="Svinn">${pctSelect(m.waste||0,'waste','Svinn %')}</div>
+          <div class="cmr-markup" data-label="Påslag">${pctSelect(markup,'markup','Påslag %')}</div>
+          <div class="cmr-sum" data-label="Sum">${formatNumber(rowSale)}</div>
+          <button class="cmr-del" onclick="window._cpm.splice(${i},1);rerenderCalcModal()" aria-label="Fjern ${escapeAttr(m.name||'materialet')}">×</button>
         </div>`;
+      }).join('')
+        : '<div class="post-editor-empty">Ingen materialer ennå.</div>';
 
-      showModal(html);
-      // Re-focus search if it was active
+      const matSaleEx=draft?draft.matSaleEx:mats.reduce((s,m)=>s+(Number(m.qty)||1)*(Number(m.cost)||0)*(1+(Number(m.waste)||0)/100)*(1+(Number(m.markup!=null?m.markup:DEFAULT_POST_MARKUP)||0)/100),0);
+
+      showModal(`
+        <div class="post-editor">
+          <div class="post-editor-head">
+            <div>
+              <div class="post-editor-eyebrow">Tilpass post</div>
+              <h2 class="post-editor-title">${escapeHtml(offerPost?.name||'Materialer')}</h2>
+            </div>
+            <div class="post-editor-head-actions">
+              <button class="btn small soft" onclick="openMatCalc()">Materialkalkulator</button>
+              <button class="post-editor-close" onclick="closeModal()" aria-label="Lukk">×</button>
+            </div>
+          </div>
+          ${hoursHtml||laborHtml?`<div class="post-editor-box">${hoursHtml}${laborHtml}</div>`:''}
+          <label class="post-editor-search">${SEARCH_ICON}<input id="calcModalSearch" placeholder="Søk i prisfil etter varenummer eller navn …" aria-label="Søk i prisfil" value="${escapeAttr(window._cpmSearch||'')}" oninput="window._cpmSearch=this.value;rerenderCalcModal()" /></label>
+          ${searchHtml}
+          <div class="post-mat-head" aria-hidden="true"><span>Materiale</span><span>Ant.</span><span>Enhet</span><span>Innpris</span><span>Svinn</span><span>Påslag</span><span>Sum</span><span></span></div>
+          <div id="calcMatRows">${rows}</div>
+          <div class="post-editor-add">
+            <button class="btn small soft" onclick="addBlankToCalcModal()">+ Tom rad</button>
+            <div class="fav-dropdown-wrap"><button class="btn small soft" onclick="toggleFavDropdown('favDropdownModal')">Favoritter</button><div id="favDropdownModal" class="fav-dropdown hidden"></div></div>
+            <div class="fav-dropdown-wrap"><button class="btn small soft" onclick="togglePkgDropdown('pkgDropdownModal')">Pakker</button><div id="pkgDropdownModal" class="fav-dropdown hidden"></div></div>
+            <button class="btn small soft" onclick="saveCurrentModalAsPackage()">Lagre som pakke</button>
+          </div>
+          <div class="post-editor-foot">
+            <div class="post-editor-totals">
+              <span>Materialer <strong>${formatNumber(matSaleEx)}</strong></span>
+              ${draft?`<span>Post totalt <strong id="postTotalDisplay">${formatNumber(draft.saleEx)} kr</strong> <small>eks. mva</small></span>`:''}
+            </div>
+            <div class="post-editor-actions">
+              <button class="btn secondary" onclick="closeModal()">Avbryt</button>
+              <button class="btn primary" onclick="saveCalcPostMaterials()">Lagre og oppdater prisoverslag</button>
+            </div>
+          </div>
+        </div>`,'modal--wide');
+      // Behold fokus i søket mens man skriver
       const si=document.getElementById('calcModalSearch');
       if(si && window._cpmSearch){ si.focus(); si.setSelectionRange(si.value.length,si.value.length); }
+    }
+
+    // Tallene «Tilpass post» lagrer: materialer (med svinn og påslag) og timer
+    // fra grupper, fra feltet eller sist lagrede verdi.
+    function computeCalcPostDraft(p, post, mats){
+      let matCost=0, matSaleEx=0;
+      mats.forEach(m=>{
+        const qty=Number(m.qty)||1, cost=Number(m.cost)||0;
+        const waste=Number(m.waste)||0, markup=m.markup!=null?Number(m.markup):DEFAULT_POST_MARKUP;
+        const withWaste=qty*cost*(1+waste/100);
+        matCost+=withWaste;
+        matSaleEx+=withWaste*(1+markup/100);
+      });
+      const timeRate=Number(p.work.timeRate)||850;
+      const internalCost=Number(p.work.internalCost)||0;
+      const hoursTotal=post.laborGroups&&post.laborGroups.length
+        ? post.laborGroups.reduce((s,g)=>s+(g.hours||0),0)
+        : (window._pendingPostHours!=null ? window._pendingPostHours : ((post.snapshotCompute||{}).hoursTotal||0));
+      const laborSaleEx=hoursTotal*timeRate;
+      const laborCost=hoursTotal*internalCost;
+      return {matCost, matSaleEx, hoursTotal, timeRate, internalCost, laborSaleEx, laborCost, saleEx:laborSaleEx+matSaleEx, costPrice:laborCost+matCost};
+    }
+
+    // Oppdaterer arbeid og post totalt når timene endres, uten å tegne vinduet
+    // på nytt — feltet du skriver i beholder fokus.
+    function refreshCalcModalTotals(){
+      const p=getProject(currentProjectId); if(!p) return;
+      const post=p.offerPosts&&p.offerPosts.find(x=>x.id===window._cpmPostId); if(!post) return;
+      const draft=computeCalcPostDraft(p, post, window._cpm||[]);
+      const setText=(id,text)=>{ const el=document.getElementById(id); if(el) el.textContent=text; };
+      setText('postLaborHint', formatHours(draft.hoursTotal)+' t × '+formatNumber(draft.timeRate)+' kr/t');
+      setText('postLaborDisplay', formatNumber(draft.laborSaleEx));
+      setText('postTotalDisplay', formatNumber(draft.saleEx)+' kr');
     }
 
     function rerenderCalcModal(){ renderCalcModal(); }
@@ -1598,6 +1511,7 @@
       rebuildExtraPosts(p);
       renderOfferEditorPane();
       renderOfferPreview();
+      watchOfferPreviewSize();
     }
 
     function renderCustomPostEditor(){
@@ -1683,7 +1597,7 @@
         +'#offerFullOverlay .offer-print-toolbar{max-width:794px;margin:0 auto 6px;display:flex;gap:10px;justify-content:center}'
         +'#offerFullOverlay .offer-print-hint{max-width:794px;margin:0 auto 14px;text-align:center;color:rgba(255,255,255,.85);font-size:12px}'
         +'#offerFullOverlay .offer-print-page{background:#fff;max-width:794px;margin:0 auto;padding:30px 40px;box-shadow:0 6px 24px rgba(0,0,0,.35);border-radius:4px}'
-        +scopeOfferCSS(getOfferCSS(color),'#offerFullOverlay .offer-print-page')
+        +scopeOfferCSS(getOfferCSS(color)+getOfferAppLockCSS(),'#offerFullOverlay .offer-print-page')
         // force background colors into the PDF — must live OUTSIDE the
         // @media print block, Safari ignores print-color-adjust declared there
         +'#offerFullOverlay,#offerFullOverlay *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
@@ -1773,13 +1687,6 @@
       if(icon) icon.textContent=hidden?'▼':'▶';
     };
 
-        window.updateCalcModalHours=function(val){
-      const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
-      const post=p.offerPosts.find(x=>x.id===window._cpmPostId); if(!post) return;
-      post.hours=Number(val)||0;
-      persistAndUpdate();
-    };
-
         window.addFromCatalogToCalcModal=function(itemId){
       const p=getProject(currentProjectId);
       const item=getCatalogItem(itemId); if(!item) return;
@@ -1831,69 +1738,35 @@
       const type=document.getElementById('calcJobType')?.value;
       const def=calcDefs[type];
       const inputsEl=document.getElementById('calcInputs');
-      const resultsEl=document.getElementById('calcResults');
-      if(!inputsEl||!resultsEl) return;
-      if(!def){ inputsEl.innerHTML=''; resultsEl.innerHTML=''; return; }
+      if(!inputsEl) return;
+      if(!def){ resetCalcWidgetView(); return; }
+      const p=getProject(currentProjectId);
+      inputsEl.hidden=false;
       inputsEl.innerHTML=`
-        <div class="calc-inputs-section">
-          <label>Kompleksitet</label>
-          <div class="diff-grid">
-            ${Object.entries(adjustmentFactors.kompleksitet).map(([k,d])=>`
-              <button class="diff-btn ${k==='normal'?'active':''}" id="diffBtn_${k}"
-                onclick="selectDifficulty('${k}')">
-                <div class="diff-label">${d.label}</div>
-                <div class="diff-factor">${d.pct>0?'+':d.pct<0?'':''} ${Math.round(d.pct*100)}%</div>
-              </button>`).join('')}
-          </div>
-        </div>
-        ${def.materialOptions&&def.materialOptions.length?`
-        <div class="row-3 calc-inputs-section">
-          ${def.materialOptions.map(opt=>`
-            <div>
-              <label>${opt.label}</label>
-              <select id="calcMat_${opt.id}" onchange="runCalcWidget()">
-                ${opt.options.map(o=>`<option value="${o}">${o}</option>`).join('')}
-              </select>
-            </div>`).join('')}
-        </div>`:''}
-        <div class="row-3 calc-inputs-section">
+        <div class="offer-card-head"><h2 class="offer-card-title">Mål og forhold</h2><span class="calc-card-hint">${escapeHtml(def.label)}</span></div>
+        <div class="calc-fields">
           ${def.inputs.map(inp=>`
-            <div>
-              <label>${inp.label}</label>
-              <input type="number" id="calcInput_${inp.id}" value="${inp.default}" oninput="runCalcWidget()" />
-            </div>`).join('')}
+            <div><label for="calcInput_${inp.id}">${inp.label}</label><input type="number" inputmode="decimal" id="calcInput_${inp.id}" value="${inp.default}" oninput="runCalcWidget()" /></div>`).join('')}
+          ${(def.materialOptions||[]).map(opt=>`
+            <div><label for="calcMat_${opt.id}">${opt.label}</label><select id="calcMat_${opt.id}" onchange="runCalcWidget()">${opt.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`).join('')}
         </div>
-        <div class="calc-section-divider">
-          <div class="row-3">
-            <div>
-              <label>Avstand (km)</label>
-              <input type="number" id="calcDistance" value="0" placeholder="0" oninput="runCalcWidget()" />
-            </div>
-            <div>
-              <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-                <input type="checkbox" id="calcOccupied" style="width:auto" onchange="runCalcWidget()" />
-                Bebodd bolig
-              </label>
-            </div>
-          </div>
+        <div class="calc-group-label" id="calcDifficultyLabel">Kompleksitet</div>
+        <div class="diff-grid" role="group" aria-labelledby="calcDifficultyLabel">
+          ${Object.entries(adjustmentFactors.kompleksitet).map(([k,d])=>`
+            <button type="button" class="diff-btn ${k==='normal'?'active':''}" id="diffBtn_${k}" aria-pressed="${k==='normal'}" onclick="selectDifficulty('${k}')">
+              <span class="diff-label">${d.label}</span>
+              <span class="diff-factor">${d.pct>0?'+':''}${Math.round(d.pct*100)} %</span>
+            </button>`).join('')}
         </div>
-        <div class="calc-section-divider">
-          <div class="calc-section-label">Indirekte tid (timer)</div>
-          <div class="row-3">
-            <div>
-              <label>Rigg</label>
-              <input type="number" id="calcRigging" value="0" placeholder="Auto" oninput="runCalcWidget()" />
-            </div>
-            <div>
-              <label>Planlegging</label>
-              <input type="number" id="calcPlanning" value="0" placeholder="Auto" oninput="runCalcWidget()" />
-            </div>
-            <div>
-              <label>Opprydding %</label>
-              <input type="number" id="calcCleanup" value="3" placeholder="3" oninput="runCalcWidget()" />
-            </div>
-          </div>
-          <div class="footer-note" style="margin-top:6px">Blank = automatisk beregning</div>
+        <div class="calc-fields calc-fields--pair">
+          <div><label for="calcDistance">Avstand</label><div class="input-unit"><input type="number" inputmode="decimal" id="calcDistance" value="0" oninput="runCalcWidget()" /><span>km</span></div></div>
+          <label class="info-switch-row calc-occupied" for="calcOccupied"><span><span class="info-switch-title">Bebodd bolig</span><span class="info-switch-hint">+${getOccupiedPct(p)} % tid</span></span><input type="checkbox" role="switch" class="switch" id="calcOccupied" ${p?.bebodd?'checked':''} onchange="runCalcWidget()" /></label>
+        </div>
+        <div class="calc-group-label">Indirekte tid</div>
+        <div class="calc-fields">
+          <div><label for="calcRigging">Rigg</label><div class="input-unit"><input type="number" inputmode="decimal" id="calcRigging" value="0" oninput="runCalcWidget()" /><span>t</span></div></div>
+          <div><label for="calcPlanning">Planlegging</label><div class="input-unit"><input type="number" inputmode="decimal" id="calcPlanning" value="0" oninput="runCalcWidget()" /><span>t</span></div></div>
+          <div><label for="calcCleanup">Opprydding</label><div class="input-unit"><input type="number" inputmode="decimal" id="calcCleanup" value="3" oninput="runCalcWidget()" /><span>%</span></div></div>
         </div>`;
       window._calcDifficulty='normal';
       runCalcWidget();
@@ -1904,8 +1777,8 @@
       Object.keys(adjustmentFactors.kompleksitet).forEach(k=>{
         const btn=document.getElementById('diffBtn_'+k);
         if(!btn) return;
-        if(k===key) btn.classList.add('active');
-        else btn.classList.remove('active');
+        btn.classList.toggle('active',k===key);
+        btn.setAttribute('aria-pressed',String(k===key));
       });
       runCalcWidget();
     };
@@ -1997,8 +1870,7 @@
     window.runCalcWidget=function(){
       const type=document.getElementById('calcJobType')?.value;
       const def=calcDefs[type];
-      const resultsEl=document.getElementById('calcResults');
-      if(!def||!resultsEl) return;
+      if(!def||!document.getElementById('calcMaterials')) return;
 
       // Get input values
       const vals={};
@@ -2016,7 +1888,6 @@
       const factors={tilkomst:'normal', hoyde:'bakke', kompleksitet};
       const distance=parseFloat(document.getElementById('calcDistance')?.value)||0;
       const occupied=document.getElementById('calcOccupied')?.checked||false;
-      const occupiedFactor=occupied?1.25:1;
 
       // Calculate base result — use recipe engine if available
       let result;
@@ -2043,7 +1914,6 @@
       const drivingTimer=Math.round(distance*2*0.5); // 30 min per 10km round trip
       const cleanupTimer=Math.round(directTimer*cleanupPct/100);
       const indirectTimer=rigTimer+planTimer+drivingTimer+cleanupTimer;
-      const totalTimer=directTimer+indirectTimer;
 
       // Get materials with prices (auto-kalkyle: smart matching + markup + waste)
       const priceCatalogMap=window.buildPriceCatalogMap?window.buildPriceCatalogMap():{};
@@ -2061,10 +1931,11 @@
       const totalMatCost=materialsWithPrices.reduce((s,m)=>s+m.totalCost,0);
 
       // Calculate prices
-      const timeRate=(p?.work.timeRate)||850;
-      const laborSaleEx=Math.round(directTimer*timeRate*occupiedFactor);
+      const labor=computeCalcLabor(p, directTimer, occupied);
+      const totalTimer=labor.pricedTimer+indirectTimer;
+      const laborSaleEx=labor.laborSaleEx;
       const totalSaleEx=laborSaleEx+totalMatCost;
-      const laborCost=Math.round(directTimer*(p?.work.internalCost||450));
+      const laborCost=labor.laborCost;
       const totalCost=laborCost+totalMatCost;
       const profit=totalSaleEx-totalCost;
       const margin=totalSaleEx>0?Math.round(profit/totalSaleEx*100):0;
@@ -2076,123 +1947,118 @@
         materialsWithPrices, totalMatCost,
         laborSaleEx, totalSaleEx, profit, margin,
         type, sentToOffer:false, isRecipe,
-        baseTimer, factors:{kompleksitet,distance,occupied}
+        baseTimer, factors:{kompleksitet,distance,occupied},
+        occupiedPct:labor.occupiedPct, occupiedTimer:labor.occupiedTimer, pricedTimer:labor.pricedTimer
       };
 
-      // Build results HTML
-      resultsEl.innerHTML=`
-        <div class="calc-result-card">
-          <div class="calc-result-header">Estimat — ${def.label} — ${result.areal}</div>
-          <div class="calc-result-sub">${result.info||''}</div>
-
-          <div class="calc-stat-grid">
-            <div class="calc-stat-box blue">
-              <div class="stat-label">Direkte timer</div>
-              <div class="stat-value">${directTimer}t</div>
-              <div class="stat-detail">${baseTimer}t${baseTimer!==directTimer?' + justering':''}${ (adjustmentFactors.kompleksitet[kompleksitet]||{}).label?' ('+adjustmentFactors.kompleksitet[kompleksitet].label+')':''}</div>
-            </div>
-            <div class="calc-stat-box orange">
-              <div class="stat-label">Indirekte timer</div>
-              <div class="stat-value">${indirectTimer}t</div>
-              <div class="stat-detail">Rigg: ${rigTimer}t + Plan: ${planTimer}t + Kjoring: ${drivingTimer}t + Opprydding: ${cleanupTimer}t</div>
-            </div>
-          </div>
-
-          <table class="calc-mat-table">
-            <thead><tr><th>Materiale</th><th>Netto</th><th>Enhet</th><th>Brutto</th><th>Pris</th><th>Svinn%</th><th>Paslag%</th><th style="text-align:right">Total</th><th></th></tr></thead>
-            <tbody id="calcMaterialsTableBody">
-              ${materialsWithPrices.map(m=>{
-                const p=getProject(currentProjectId);
-                const calcMarkup=(p?.settings?.materialMarkup)||20;
-                return `<tr data-mat-id="${m.matId}">
-                  <td class="cmt-name">
-                    <input type="text" class="calcMatName mat-name-input" data-mat-id="${m.matId}" value="${escapeHtml(m.name||'')}" placeholder="Sok materiale..." onclick="openPriceSearchForCalc('${m.matId}')" readonly />
-                  </td>
-                  <td class="cmt-qty" data-label="Netto">
-                    <input type="number" class="calcMatQty mat-num-input" data-mat-id="${m.matId}" value="${(m.qty||0).toFixed(1)}" step="0.1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                  </td>
-                  <td class="cmt-unit" data-label="Enhet">
-                    <select class="calcMatUnit mat-unit-select" data-mat-id="${m.matId}" onchange="recalcCalcMaterials()">
-                      ${['stk','lm','m2','m3','pk','rull','sett','kg','l'].map(u=>'<option value="'+u+'" '+(u===(m.unit||'stk')?'selected':'')+'> '+u+'</option>').join('')}
-                    </select>
-                  </td>
-                  <td class="cmt-brutto calcMatBrutto" data-label="Brutto" data-mat-id="${m.matId}">
-                    ${(m.waste>0?Math.ceil((m.qty||0)*(1+m.waste/100)*10)/10:(m.qty||0)).toFixed(1)}
-                  </td>
-                  <td class="cmt-cost" data-label="Pris">
-                    <input type="number" class="calcMatCost mat-num-input" data-mat-id="${m.matId}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                  </td>
-                  <td class="cmt-waste" data-label="Svinn%">
-                    <input type="number" class="calcMatWaste mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.waste||0}" step="1" min="0" max="100" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                  </td>
-                  <td class="cmt-markup" data-label="Påslag%">
-                    <input type="number" class="calcMatMarkup mat-num-input mat-num-input--narrow" data-mat-id="${m.matId}" value="${m.markup!=null?m.markup:calcMarkup}" step="1" min="0" onchange="recalcCalcMaterials()" oninput="recalcCalcMaterials()" />
-                  </td>
-                  <td class="mat-total cmt-total" data-label="Total">
-                    <span class="calcMatRowTotal" data-mat-id="${m.matId}">${currency(calcMatRowTotal(m))}</span>
-                  </td>
-                  <td class="cmt-del">
-                    <button class="mat-delete" onclick="deleteCalcMaterial('${m.matId}')">&#10005;</button>
-                  </td>
-                </tr>`
-              }).join('')}
-            </tbody>
-          </table>
-          <div class="mat-add-row" style="margin-bottom:14px">
-            <button class="calc-add-mat-btn" onclick="addCalcMaterial()" style="flex:1">+ Legg til materiale</button>
-            <div class="fav-dropdown-wrap" style="flex:1;position:relative">
-              <button class="calc-add-mat-btn" onclick="toggleFavDropdown('favDropdownCalc')" style="width:100%">★ Favoritter</button>
-              <div id="favDropdownCalc" class="fav-dropdown hidden"></div>
-            </div>
-            <div class="fav-dropdown-wrap" style="flex:1;position:relative">
-              <button class="calc-add-mat-btn" onclick="togglePkgDropdown('pkgDropdownCalc')" style="width:100%">📦 Pakker</button>
-              <div id="pkgDropdownCalc" class="fav-dropdown hidden"></div>
-            </div>
-          </div>
-
-          ${isRecipe ? buildRecipeView(type, result, def) : ''}
-
-          <div class="calc-price-grid">
-            <div class="calc-price-item">
-              <div class="price-label">Arbeid (eks. mva)</div>
-              <div class="price-value" style="color:var(--blue)">${currency(laborSaleEx)}</div>
-            </div>
-            <div class="calc-price-item">
-              <div class="price-label">Materialer</div>
-              <div class="price-value" style="color:#167a42">${currency(totalMatCost)}</div>
-            </div>
-            <div class="calc-price-item">
-              <div class="price-label">Totalt (eks. mva)</div>
-              <div class="price-value" style="color:#2e7d32">${currency(totalSaleEx)}</div>
-            </div>
-          </div>
-
-          <div class="calc-totals-grid">
-            <div class="calc-total-box green">
-              <div class="total-label">Totalt timer</div>
-              <div class="total-value">${totalTimer}t</div>
-            </div>
-            <div class="calc-total-box blue-border">
-              <div class="total-label">Margin</div>
-              <div class="total-value">${margin}%</div>
-              <div class="stat-detail" style="margin-top:2px">Fortjeneste: ${currency(profit)}</div>
-            </div>
-          </div>
-
-          <div class="calc-actions">
-            ${window._lastCalcResult?.sentToOffer
-              ?`<button class="btn success" disabled style="cursor:not-allowed">Sendt til prisoverslag</button>
-                <button class="btn secondary" onclick="doAddCalcToMaterials()">Legg i materialliste</button>`
-              :`<button class="btn primary" style="background:var(--blue)" onclick="doSendCalcToOffer()">Send til prisoverslag</button>
-                <button class="btn secondary" onclick="doAddCalcToMaterials()">Legg i materialliste</button>`
-            }
-          </div>
-          ${window._lastCalcResult?.sentToOffer
-            ?`<div class="calc-sent-msg">Denne kalkulasjonen er sendt til prisoverslag. Endre inputfelt for a kunne sende en ny kalkulasjon.</div>`
-            :''
-          }
-        </div>`;
+      renderCalcMaterialsCard(def, result, isRecipe, type);
+      renderCalcSummary();
     };
+
+    const CALC_UNITS=['stk','lm','m2','m3','pk','rull','sett','kg','l'];
+
+    // Arbeidstimene i en kalkyle. Bebodd bolig legges til som ekstra timer, så
+    // påslaget følger posten inn i prisoverslaget og blir med når timeprisen
+    // endres eller posten tilpasses.
+    function computeCalcLabor(p, directTimer, occupied){
+      const occupiedPct=occupied?getOccupiedPct(p):0;
+      const occupiedTimer=round1(directTimer*occupiedPct/100);
+      const pricedTimer=round1(directTimer+occupiedTimer);
+      return {
+        occupiedPct, occupiedTimer, pricedTimer,
+        laborSaleEx:Math.round(pricedTimer*((p?.work.timeRate)||850)),
+        laborCost:Math.round(pricedTimer*(p?.work.internalCost||450))
+      };
+    }
+    const CALC_SUMMARY_EMPTY_HTML='<div class="calc-summary-label">Kalkyle</div><p class="calc-summary-empty">Velg en jobb, så regner kalkulatoren ut timer, materialer og pris.</p>';
+
+    function getCalcMarkup(){
+      const p=getProject(currentProjectId);
+      return (p?.settings?.materialMarkup)||20;
+    }
+
+    function renderCalcMaterialsCard(def, result, isRecipe, type){
+      const el=document.getElementById('calcMaterials'); if(!el) return;
+      const mats=window._lastCalcResult.materialsWithPrices;
+      el.hidden=false;
+      el.innerHTML=`
+        <div class="offer-card-head"><h2 class="offer-card-title">Materialer</h2><span class="calc-card-hint">${state.priceCatalog.length?'priser fra prisfilen':'ingen prisfil — skriv inn innpris'} · påslag ${getCalcMarkup()} %</span></div>
+        <div class="calc-mat-scroll">
+          <table class="calc-mat-table">
+            <thead><tr><th>Materiale</th><th class="num">Mengde</th><th>Enhet</th><th class="num">Brutto</th><th class="num">Innpris</th><th class="num">Svinn %</th><th class="num">Påslag %</th><th class="num">Sum</th><th><span class="visually-hidden">Fjern</span></th></tr></thead>
+            <tbody id="calcMaterialsTableBody">${mats.map(renderCalcMaterialRow).join('')}</tbody>
+          </table>
+        </div>
+        <div class="mat-add-row">
+          <button class="btn small soft" onclick="addCalcMaterial()">+ Legg til materiale</button>
+          <div class="fav-dropdown-wrap"><button class="btn small soft" onclick="toggleFavDropdown('favDropdownCalc')">Favoritter</button><div id="favDropdownCalc" class="fav-dropdown hidden"></div></div>
+          <div class="fav-dropdown-wrap"><button class="btn small soft" onclick="togglePkgDropdown('pkgDropdownCalc')">Pakker</button><div id="pkgDropdownCalc" class="fav-dropdown hidden"></div></div>
+        </div>
+        ${isRecipe?buildRecipeView(type, result, def):''}`;
+    }
+
+    // Én materialrad i kalkulatoren — brukes både ved beregning og når en rad legges til.
+    function renderCalcMaterialRow(m){
+      const id=escapeAttr(m.matId);
+      const markup=m.markup!=null?m.markup:getCalcMarkup();
+      const brutto=(m.waste>0?Math.ceil((m.qty||0)*(1+m.waste/100)*10)/10:(m.qty||0)).toFixed(1);
+      return `<tr data-mat-id="${id}"${m.cost?'':' class="is-unpriced"'}>
+          <td class="cmt-name"><input type="text" class="calcMatName mat-name-input" data-mat-id="${id}" value="${escapeAttr(m.name||'')}" placeholder="Søk materiale …" aria-label="Materiale" onclick="openPriceSearchForCalc('${id}')" readonly /></td>
+          <td class="cmt-qty" data-label="Mengde"><input type="number" inputmode="decimal" class="calcMatQty mat-num-input" data-mat-id="${id}" value="${(m.qty||0).toFixed(1)}" step="0.1" min="0" aria-label="Mengde" oninput="recalcCalcMaterials()" /></td>
+          <td class="cmt-unit" data-label="Enhet"><select class="calcMatUnit mat-unit-select" data-mat-id="${id}" aria-label="Enhet" onchange="recalcCalcMaterials()">${CALC_UNITS.map(u=>`<option value="${u}" ${u===(m.unit||'stk')?'selected':''}>${u}</option>`).join('')}</select></td>
+          <td class="cmt-brutto calcMatBrutto" data-label="Brutto" data-mat-id="${id}">${brutto}</td>
+          <td class="cmt-cost" data-label="Innpris"><input type="number" inputmode="decimal" class="calcMatCost mat-num-input" data-mat-id="${id}" value="${(m.cost||0).toFixed(2)}" step="0.01" min="0" aria-label="Innpris" oninput="recalcCalcMaterials()" /></td>
+          <td class="cmt-waste" data-label="Svinn %"><input type="number" inputmode="decimal" class="calcMatWaste mat-num-input mat-num-input--narrow" data-mat-id="${id}" value="${m.waste||0}" step="1" min="0" max="100" aria-label="Svinn %" oninput="recalcCalcMaterials()" /></td>
+          <td class="cmt-markup" data-label="Påslag %"><input type="number" inputmode="decimal" class="calcMatMarkup mat-num-input mat-num-input--narrow" data-mat-id="${id}" value="${markup}" step="1" min="0" aria-label="Påslag %" oninput="recalcCalcMaterials()" /></td>
+          <td class="mat-total cmt-total" data-label="Sum"><span class="calcMatRowTotal" data-mat-id="${id}">${currency(calcMatRowTotal({...m, markup}))}</span></td>
+          <td class="cmt-del"><button class="mat-delete" onclick="deleteCalcMaterial('${id}')" aria-label="Fjern ${escapeAttr(m.name||'materialet')}">×</button></td>
+        </tr>`;
+    }
+
+    // Den blå resultatruten. Tegnes på nytt fra window._lastCalcResult både ved
+    // ny beregning og når en materialrad endres, så tallene alltid henger sammen.
+    function renderCalcSummary(){
+      const el=document.getElementById('calcSummary'); if(!el) return;
+      const r=window._lastCalcResult;
+      if(!r){ el.innerHTML=CALC_SUMMARY_EMPTY_HTML; return; }
+      const def=calcDefs[r.type]||{};
+      const p=getProject(currentProjectId);
+      const timeRate=(p?.work.timeRate)||850;
+      const factors=r.factors||{};
+      const difficulty=(adjustmentFactors.kompleksitet[factors.kompleksitet]||{}).label;
+      const earningsPerHour=r.totalTimer?r.profit/r.totalTimer:0;
+      el.innerHTML=`
+        <div class="calc-summary-label">Kalkyle · ${escapeHtml(def.label||'')}</div>
+        <div class="calc-summary-total">${formatNumber(r.totalSaleEx)} <span>kr</span> <small>eks. mva</small></div>
+        <div class="calc-breakdown">
+          <div><span>Direkte timer${difficulty&&factors.kompleksitet!=='normal'?' · '+escapeHtml(difficulty):''}</span><span>${formatHours(r.directTimer)} t</span></div>
+          ${r.occupiedTimer?`<div><span>Bebodd bolig · +${r.occupiedPct} %</span><span>+${formatHours(r.occupiedTimer)} t</span></div>`:''}
+          <div class="is-muted"><span>Rigg, kjøring, plan og rydding · ikke med i prisen</span><span>${formatHours(r.indirectTimer)} t</span></div>
+          <div class="is-strong"><span>Arbeid · ${formatHours(r.pricedTimer)} t × ${formatNumber(timeRate)}</span><span>${formatNumber(r.laborSaleEx)}</span></div>
+          <div><span>Materialer</span><span>${formatNumber(r.totalMatCost)}</span></div>
+        </div>
+        <div class="calc-tiles">
+          <div class="offer-tile"><div class="offer-tile-label">Du tjener</div><div class="offer-tile-value">${r.totalTimer?formatNumber(earningsPerHour)+'&nbsp;kr/t':'–'}</div><div class="offer-tile-note">over ${formatHours(r.totalTimer)} t</div></div>
+          <div class="offer-tile"><div class="offer-tile-label">Margin</div><div class="offer-tile-value">${r.margin}&nbsp;%</div><div class="offer-tile-note">${formatNumber(r.profit)} i fortjeneste</div></div>
+        </div>
+        <div class="calc-summary-actions">
+          ${r.sentToOffer
+            ?'<button class="btn calc-send" disabled>Sendt til prisoverslag</button><p class="calc-summary-note">Endre et felt for å sende en ny kalkulasjon.</p>'
+            :'<button class="btn calc-send" onclick="doSendCalcToOffer()">Send til prisoverslag som ny post</button>'}
+          <button class="btn small soft" onclick="doAddCalcToMaterials()">Legg i materialliste</button>
+        </div>`;
+    }
+
+    function resetCalcWidgetView(){
+      ['calcJobType','calcJobTypeUtvendig','calcJobTypeInnvendig','calcJobTypeRehab'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value='';
+      });
+      ['calcInputs','calcMaterials'].forEach(id=>{
+        const el=document.getElementById(id); if(el){ el.innerHTML=''; el.hidden=true; }
+      });
+      window._lastCalcResult=null;
+      renderCalcSummary();
+    }
 
     window.doSendCalcToOffer=function(){
       const p=getProject(currentProjectId); if(!p) return;
@@ -2225,7 +2091,7 @@
       const calcName=prompt('Navn på posten i prisoverslaget:',defaultName);
       if(calcName===null) return;
       const totalPrice=result.totalMatCost||0;
-      const calcHours=result.directTimer||0;
+      const calcHours=result.pricedTimer||0;
       const calcLaborSaleEx=Math.round(calcHours*(Number(p.work.timeRate)||850));
       const calcLaborCost=Math.round(calcHours*(Number(p.work.internalCost)||0));
       const calcSaleEx=calcLaborSaleEx+totalPrice;
@@ -2263,20 +2129,7 @@
 
       persistAndRenderProject();
 
-      // Reset calc widget for next calculation (don't hide it)
-      const jobSelect=document.getElementById('calcJobType');
-      if(jobSelect) jobSelect.value='';
-      const jobSelectU=document.getElementById('calcJobTypeUtvendig');
-      if(jobSelectU) jobSelectU.value='';
-      const jobSelectI=document.getElementById('calcJobTypeInnvendig');
-      if(jobSelectI) jobSelectI.value='';
-      const jobSelectR=document.getElementById('calcJobTypeRehab');
-      if(jobSelectR) jobSelectR.value='';
-      const inputsEl=document.getElementById('calcInputs');
-      if(inputsEl) inputsEl.innerHTML='';
-      const resultsEl=document.getElementById('calcResults');
-      if(resultsEl) resultsEl.innerHTML='';
-      window._lastCalcResult=null;
+      resetCalcWidgetView();
     };
 
     window.doAddCalcToMaterials=function(){
@@ -2394,10 +2247,12 @@
       window._pendingPostHours=newVal;
       const el=document.getElementById('postHoursDisplay');
       if(el) el.value=newVal;
+      refreshCalcModalTotals();
     };
 
     window.setModalHours=function(value){
       window._pendingPostHours=Math.max(0, Number(value)||0);
+      refreshCalcModalTotals();
     };
 
     window.adjustLaborGroupHours=function(groupIdx,delta){
@@ -2426,6 +2281,7 @@
       if(!totalEl) return;
       var sum=post.laborGroups.reduce(function(s,lg){return s+(lg.hours||0);},0);
       totalEl.textContent=sum+'t';
+      refreshCalcModalTotals();
     }
 
         window.saveCalcPostMaterials=function(){
@@ -2433,60 +2289,30 @@
       const post=p.offerPosts.find(x=>x.id===window._cpmPostId); if(!post) return;
       const mats=window._cpm.map(m=>({...m}));
       post.snapshotMaterials=mats;
-
-      // Recalculate snapshotCompute from updated materials
-      let matCost=0, matSaleEx=0;
-      mats.forEach(m=>{
-        const qty=Number(m.qty)||1, cost=Number(m.cost)||0;
-        const waste=Number(m.waste)||0, markup=m.markup!=null?Number(m.markup):20;
-        const withWaste=qty*cost*(1+waste/100);
-        matCost+=withWaste;
-        matSaleEx+=withWaste*(1+markup/100);
-      });
-
-      // Use pending hours (from ▲▼ buttons) or fall back to existing
-      const timeRate=Number(p.work.timeRate)||850;
-      const internalCost=Number(p.work.internalCost)||0;
-      const prev=post.snapshotCompute||{};
-
-      // If labor groups exist, sum hours from groups; otherwise use pending/existing
-      let hoursTotal;
+      const draft=computeCalcPostDraft(p, post, mats);
       if(post.laborGroups&&post.laborGroups.length){
-        hoursTotal=post.laborGroups.reduce(function(s,g){return s+(g.hours||0);},0);
-        // Recalc each group's labor values
         post.laborGroups.forEach(function(g){
-          g.laborSaleEx=Math.round((g.hours||0)*timeRate);
-          g.laborCost=Math.round((g.hours||0)*internalCost);
+          g.laborSaleEx=Math.round((g.hours||0)*draft.timeRate);
+          g.laborCost=Math.round((g.hours||0)*draft.internalCost);
         });
-      } else {
-        hoursTotal=window._pendingPostHours!=null
-          ? window._pendingPostHours
-          : (prev.hoursTotal||0);
       }
       window._pendingPostHours=null;
-      // Recalculate labor from hours
-      const laborSaleEx=hoursTotal*timeRate;
-      const laborCost=hoursTotal*internalCost;
-      const saleEx=laborSaleEx+matSaleEx;
-      const costPrice=laborCost+matCost;
-      const profit=saleEx-costPrice;
-      const margin=saleEx?(profit/saleEx*100):0;
-
+      const profit=draft.saleEx-draft.costPrice;
       post.snapshotCompute={
-        hoursTotal,
-        laborSaleEx,
-        laborCost,
-        matSaleEx,
-        matCost,
-        costPrice,
-        saleEx,
-        saleInc:saleEx*1.25,
+        hoursTotal:draft.hoursTotal,
+        laborSaleEx:draft.laborSaleEx,
+        laborCost:draft.laborCost,
+        matSaleEx:draft.matSaleEx,
+        matCost:draft.matCost,
+        costPrice:draft.costPrice,
+        saleEx:draft.saleEx,
+        saleInc:draft.saleEx*1.25,
         profit,
-        margin
+        margin:draft.saleEx?(profit/draft.saleEx*100):0
       };
-      post.hours=hoursTotal; // sync post.hours with snapshot
+      post.hours=draft.hoursTotal; // sync post.hours with snapshot
       // post.price lagres alltid eks. mva — displayVatValue legger på mva ved visning
-      post.price=Math.round(saleEx);
+      post.price=Math.round(draft.saleEx);
 
       window._cpmSearch='';
       closeModal();
@@ -2631,66 +2457,93 @@
       }
     }
 
-        function renderOfferPosts(p){
+    const POST_TYPE_META={
+      calc:{label:'Kalkyle', badge:'calc'},
+      fast:{label:'Fastpris', badge:'fixed'},
+      option:{label:'Opsjon', badge:'option'}
+    };
+
+    // Postene som tabell: Post · Type · Timer · Materialer · Sum. Raden er en
+    // knapp som åpner redigeringen under; avkrysningen for sammenslåing står
+    // utenfor knappen, så interaktive elementer ikke nestes.
+    function renderOfferPosts(p){
       if(!p.offerPosts) p.offerPosts=[];
       const offerPosts=p.offerPosts.filter(post=>!isChangeOrder(post));
-      if(!offerPosts.length) return `<div class="empty">Ingen poster lagt til ennå.</div>`;
-      const vatLbl='eks. mva';
+      if(!offerPosts.length) return `<div class="offer-empty">Ingen poster lagt til ennå.</div>`;
+      const isSelectable=offerPosts.length>=2;
       const selCount=Object.keys(window._mergeSelected||{}).filter(function(id){return window._mergeSelected[id];}).length;
-      const mergeBar=offerPosts.length>=2?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 12px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:10px">
-        <span style="font-size:12px;color:var(--muted);flex:1">Velg poster å slå sammen (${selCount} valgt)</span>
-        <button class="btn small primary" onclick="doMergeSelected()" ${selCount<2?'disabled style="opacity:0.5"':''}>Slå sammen</button>
+      const mergeBar=isSelectable&&selCount?`<div class="offer-merge-bar" role="status">
+        <span>${selCount} valgt${selCount<2?' – velg minst én til':''}</span>
+        <button class="btn small primary" onclick="doMergeSelected()" ${selCount<2?'disabled':''}>Slå sammen</button>
       </div>`:'';
-      return mergeBar+offerPosts.map(post=>{
-        const isOpen=post._open===true; // default closed
-        const typeLabel=post.type==='calc'?'Kalkulasjon':post.type==='option'?'Opsjon':'Fast';
-        const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
+      return `${mergeBar}<div class="offer-table offer-table--posts">
+        <div class="offer-table-head" aria-hidden="true">
+          ${isSelectable?'<span class="offer-row-select"></span>':''}
+          <div class="offer-row-cells"><span>Post</span><span class="offer-col-wide">Type</span><span class="offer-col-wide offer-col-num">Timer</span><span class="offer-col-wide offer-col-num">Materialer</span><span class="offer-col-num">Sum ${getVatLabel(p)}</span><span></span></div>
+        </div>
+        ${offerPosts.map(post=>renderOfferPostItem(p,post,isSelectable)).join('')}
+      </div>`;
+    }
 
-        const header=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;background:${isOpen?'var(--bg-warm)':'var(--card)'};border-radius:${isOpen?'14px 14px 0 0':'14px'}">
-          <input type="checkbox" style="width:auto;flex-shrink:0" ${isMergeSel?'checked':''} onclick="event.stopPropagation();toggleMergeSelect('${post.id}')" title="Velg for sammenslåing" />
-          <div style="flex:1;min-width:0" onclick="toggleOfferPost('${post.id}')">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-weight:800;font-size:14px">${escapeHtml(post.name||'Ny post')}</span>
-              <span style="font-size:11px;color:var(--muted);background:var(--bg-warm);border-radius:4px;padding:1px 6px">${typeLabel}</span>
-              ${post.type==='option'&&post.enabled?'<span style="font-size:11px;background:var(--green-soft);color:var(--green);border-radius:4px;padding:1px 6px;font-weight:700"> Valgt</span>':''}
-            </div>
-            ${post.description&&!isOpen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(post.description)}</div>`:''}
-          </div>
-          <div style="text-align:right;flex-shrink:0" onclick="toggleOfferPost('${post.id}')">
-            <div style="font-size:17px;font-weight:800;color:${post.type==='option'&&!post.enabled?'var(--muted)':'#0a84ff'}">${currency(displayVatValue(p,post.price||0))}</div>
-            <div style="font-size:10px;color:var(--muted)">${isPostInTotal(post)?vatLbl:'ikke med i total'}</div>
-          </div>
-          <div style="color:var(--muted);font-size:13px;margin-left:2px;cursor:pointer" onclick="toggleOfferPost('${post.id}')">${isOpen?'▲':'▼'}</div>
-        </div>`;
+    function renderOfferPostItem(p,post,isSelectable){
+      const isOpen=post._open===true;
+      return `<div class="offer-item${isOpen?' is-open':''}">${renderOfferPostRow(p,post,isSelectable)}${isOpen?renderOfferPostDetail(p,post):''}</div>`;
+    }
 
-        const body=isOpen?`<div style="padding:12px 14px 14px;border-top:1px solid var(--line)">
+    function renderOfferPostRow(p,post,isSelectable){
+      const id=escapeAttr(post.id);
+      const type=POST_TYPE_META[post.type]||POST_TYPE_META.fast;
+      const isIncluded=isPostInTotal(post);
+      const sc=post.snapshotCompute||{};
+      const hours=Number(post.hours)||Number(sc.hoursTotal)||0;
+      const material=Number(sc.matSaleEx)||0;
+      const optionNote=post.type==='option'?(isIncluded?'valgt':'ikke i sum'):'';
+      const compactMeta=[type.label, hours?hours+'\u00a0t':'', material?'mat.\u00a0'+formatNumber(displayVatValue(p,material)):''].filter(Boolean).join(' · ');
+      const isMergeSel=!!(window._mergeSelected&&window._mergeSelected[post.id]);
+      return `<div class="offer-row${isIncluded?'':' is-muted'}" id="offerPostRow_${id}">
+        ${isSelectable?`<label class="offer-row-select"><input type="checkbox" ${isMergeSel?'checked':''} onchange="toggleMergeSelect('${id}')" aria-label="Velg ${escapeAttr(post.name||'posten')} for sammenslåing" /></label>`:''}
+        <button type="button" class="offer-row-cells" aria-expanded="${post._open===true}" onclick="toggleOfferPost('${id}')">
+          <span class="offer-cell-name">
+            <span class="offer-name">${escapeHtml(post.name||'Ny post')}${optionNote?` <span class="offer-name-note">· ${optionNote}</span>`:''}</span>
+            ${post.description?`<span class="offer-cell-desc">${escapeHtml(post.description)}</span>`:''}
+            <span class="offer-cell-compact">${escapeHtml(compactMeta)}</span>
+          </span>
+          <span class="offer-col-wide"><span class="type-badge type-badge--${type.badge}">${type.label}</span></span>
+          <span class="offer-col-wide offer-col-num">${hours||'–'}</span>
+          <span class="offer-col-wide offer-col-num">${material?formatNumber(displayVatValue(p,material)):'–'}</span>
+          <span class="offer-col-num offer-cell-sum">${formatNumber(displayVatValue(p,post.price||0))}</span>
+          <span class="offer-chevron">${CHEVRON_DOWN_ICON}</span>
+        </button>
+      </div>`;
+    }
+
+    function renderOfferPostDetail(p,post){
+      const id=escapeAttr(post.id);
+      return `<div class="offer-row-detail">
           <div class="row-3">
-            <div><label>Navn</label><input value="${escapeAttr(post.name||'')}" onchange="updatePost('${post.id}','name',this.value)" /></div>
-            <div><label>Type</label><select onchange="updatePost('${post.id}','type',this.value)">
+            <div><label for="postName_${id}">Navn</label><input id="postName_${id}" value="${escapeAttr(post.name||'')}" onchange="updatePost('${id}','name',this.value)" /></div>
+            <div><label for="postType_${id}">Type</label><select id="postType_${id}" onchange="updatePost('${id}','type',this.value)">
               <option value="fast" ${post.type==='fast'?'selected':''}>Fastpris</option>
               <option value="calc" ${post.type==='calc'?'selected':''}>Kalkulasjon</option>
               <option value="option" ${post.type==='option'?'selected':''}>Opsjon</option>
             </select></div>
-            <div><label>Pris ${vatLbl}</label>
+            <div>
               ${post.type==='calc'
-                ? `<div style="padding:12px 14px;background:#f5f8ff;border:1px solid #dce8ff;border-radius:14px;font-size:18px;font-weight:800">${currency(displayVatValue(p,post.price||0))} <span style="font-size:11px;color:var(--muted);font-weight:500"></span></div>`
-                : `<input type="number" value="${post.price||0}" onchange="updatePost('${post.id}','price',this.value)" />`
+                ? `<label>Pris ${getVatLabel(p)}</label><div class="offer-price-readonly">${currency(displayVatValue(p,post.price||0))}</div>`
+                : `<label for="postPrice_${id}">Pris ${getVatLabel(p)}</label><input id="postPrice_${id}" type="number" inputmode="decimal" value="${displayVatValue(p,post.price||0)}" onchange="updatePost('${id}','price',this.value)" />`
               }
             </div>
           </div>
           <div class="row" style="margin-top:10px">
-            <div><label>Beskrivelse</label><input value="${escapeAttr(post.description||'')}" onchange="updatePost('${post.id}','description',this.value)" /></div>
+            <div><label for="postDesc_${id}">Beskrivelse</label><input id="postDesc_${id}" value="${escapeAttr(post.description||'')}" onchange="updatePost('${id}','description',this.value)" /></div>
             <div>${renderPostExtra(post)}</div>
           </div>
-          <div class="inline-actions" style="margin-top:10px;justify-content:flex-end">
-            <button class="btn small secondary" onclick="movePost('${post.id}',-1)">↑</button>
-            <button class="btn small secondary" onclick="movePost('${post.id}',1)">↓</button>
-            <button class="btn small danger" onclick="removePost('${post.id}')">Slett</button>
+          <div class="inline-actions offer-row-actions">
+            <button class="btn small secondary" onclick="movePost('${id}',-1)" aria-label="Flytt opp">↑</button>
+            <button class="btn small secondary" onclick="movePost('${id}',1)" aria-label="Flytt ned">↓</button>
+            <button class="btn small danger" onclick="removePost('${id}')">Slett</button>
           </div>
-        </div>`:'';
-
-        return `<div style="border:1.5px solid ${isOpen?'rgba(107,159,204,.25)':'var(--line)'};border-radius:14px;overflow:hidden;background:var(--card);margin-bottom:6px">${header}${body}</div>`;
-      }).join('');
+        </div>`;
     }
 
     // computeOfferPostsTotal() er flyttet til calcEngine.js
@@ -2809,16 +2662,6 @@
 
         function updatePost(id,key,val){ const p=getProject(currentProjectId); if(!p||!p.offerPosts) return; const post=p.offerPosts.find(x=>x.id===id); if(!post) return; post[key]=key==='price'?parseVatInput(p,val):val; if(key!=='type'){ persistAndUpdate(); return; } if(val==='option') post.enabled=false; persistAndRenderProject(); }
 
-    window.updatePostHours=function(id,val){
-      const p=getProject(currentProjectId); if(!p||!p.offerPosts) return;
-      const post=p.offerPosts.find(x=>x.id===id); if(!post) return;
-      post.hours=Number(val)||0;
-      const timeRate=Number(p.work.timeRate)||850;
-      const hrs=post.hours||post.snapshotCompute?.hoursTotal||0;
-      const matSaleEx=post.snapshotCompute?.matSaleEx||0;
-      post.price=Math.round(hrs*timeRate+matSaleEx);
-      saveState(); updateSummary();
-    };
     // Alle posttyper kan få timer via «Tilpass post», og prises da som
     // timer × timepris + materialer. Poster uten timer har manuell pris og
     // røres ikke.
@@ -2936,12 +2779,24 @@
       mergeOfferLines(ids);
     };
 
+    // Prosentfelt i Info → Satser der tomt felt betyr «bruk standarden».
+    function bindOptionalPct(selector, key, max){
+      const p=getProject(currentProjectId); const input=$(selector);
+      if(!p||!input) return;
+      input.addEventListener('input',()=>{
+        const value=input.value.trim();
+        if(value==='') delete p.settings[key];
+        else p.settings[key]=Math.min(Math.max(Number(value)||0,0),max);
+        persistAndUpdate();
+      });
+    }
+
     function bindProjectEvents(){
       const p=getProject(currentProjectId); if(!p) return;
       bindVal('#fName',v=>p.name=v);
       bindVal('#fCustomer',v=>{ p.customerId=v; const cu=getCustomer(v); p.address=cu?(cu.address||''):''; const el=$('#fAddress'); if(el) el.value=p.address; });
       bindVal('#fAddress',v=>p.address=v); bindVal('#fType',v=>p.type=v); bindVal('#fStart',v=>p.startPref=v);
-      bindVal('#fStatus',v=>setProjectStatus(p,v,Date.now())); bindVal('#fDescription',v=>p.description=v); bindVal('#fNote',v=>p.note=v);
+      bindVal('#fDescription',v=>p.description=v); bindVal('#fNote',v=>p.note=v);
       const beb=$('#fBebodd'); if(beb) beb.addEventListener('change',()=>{ p.bebodd=beb.checked; persistAndUpdate(); });
       const sT=$('#sTimeRate'); if(sT) sT.addEventListener('input',()=>{ p.settings.timeRate=parseVatInput(p,sT.value); p.work.timeRate=p.settings.timeRate; recalcOfferPostsLabor(p); const l=$('#wTimeRate'); if(l&&document.activeElement!==l) l.value=displayVatValue(p,p.work.timeRate); persistAndUpdate(); });
       const sI=$('#sInternalCost'); if(sI) sI.addEventListener('input',()=>{ p.settings.internalCost=Number(sI.value)||0; p.work.internalCost=p.settings.internalCost; const l=$('#wInternalCost'); if(l&&document.activeElement!==l) l.value=p.work.internalCost; persistAndUpdate(); });
@@ -2951,6 +2806,8 @@
       bindNumVat('#eWaste',v=>p.extras.waste=v); bindNumVat('#eScaffolding',v=>p.extras.scaffolding=v); bindNumVat('#eDrawings',v=>p.extras.drawings=v);
       // subcontractors handled via onclick
       bindNum('#eRig',v=>p.extras.rigPercent=v);
+      bindOptionalPct('#pMarginGoal','marginGoal',MAX_MARGIN_GOAL_PCT);
+      bindOptionalPct('#pOccupiedPct','occupiedPct',MAX_OCCUPIED_PCT);
       bindNum('#wMatMarkup',v=>p.settings.materialMarkup=v); bindNumVat('#eMisc',v=>p.extras.misc=v);
       bindVal('#oValidity',v=>p.offer.validity=v);
       const pfi=$('#priceFileInput');
@@ -3001,27 +2858,21 @@
       const t=e.target;
       if(t.id==='newCustomerBtn'||t.id==='newCustomerBtn2') openCustomerModal();
       if(t.id==='newProjectBtn'||t.id==='newProjectBtn2') openProjectModal();
-      if(t.id==='backToDashboard') openDashboard();
+      if(t.closest('#backToDashboard')) openDashboard();
       if(t.id==='saveProjectBtn'){ closeProjectOverflow(); persistAndRenderProject(); alert('Prosjekt lagret.'); }
       if(t.id==='deleteProjectBtn'){ closeProjectOverflow(); deleteCurrentProject(); }
       if(t.id==='settingsBtn'||t.closest('#settingsBtn')) openSettings();
       if(t.id==='saveSettingsBtn') saveSettings();
-      if(t.id==='backToOverviewBtn'){
-        $('#settingsView').classList.add('hidden');
-        if(currentProjectId&&getProject(currentProjectId)){ $('#projectView').classList.remove('hidden'); renderProjectView(); }
-        else { $('#dashboardView').classList.remove('hidden'); renderDashboard(); }
-      }
+      if(t.id==='backToOverviewBtn') closeSettings();
       if(t.id==='backupBtn') exportData();
       if(t.id==='importBtn') $('#importFile').click();
       if(t.id==='toggleEx'){ const p=getProject(currentProjectId); if(p){ p.settings.vatMode='ex'; persistAndRenderProject(); } }
       if(t.id==='toggleInc'){ const p=getProject(currentProjectId); if(p){ p.settings.vatMode='inc'; persistAndRenderProject(); } }
     });
     $('#importFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) importData(f); e.target.value=''; });
-    $('#customerSearch').addEventListener('input',renderDashboard);
-    $('#projectSearch').addEventListener('input',renderDashboard);
-    $('#projectStatusFilter').addEventListener('change',renderDashboard);
+    $('#dashSearch').addEventListener('input',renderDashboardLists);
+    $('#projectStatusFilter').addEventListener('change',renderDashboardLists);
 
-    window.deleteProjectFromDashboard=function(id){ if(!confirm('Slette dette prosjektet?')) return; state.projects=state.projects.filter(p=>p.id!==id); saveState(); renderDashboard(); };
     window.editCustomer=editCustomer; window.deleteCustomer=deleteCustomer; window.openProject=openProject;
     window.toggleStep=toggleStep; window.updMaterial=updMaterial; window.removeMaterial=removeMaterial;
     window.addMaterial=addMaterial; window.addPackage=addPackage; window.setAllMarkup=setAllMarkup;
@@ -3052,62 +2903,26 @@ window.deleteCalcMaterial=function(matId){
   recalcCalcMaterials();
 };
 
-window.updateCalcSendButtonUI=function(){
-  // gjør ingenting foreløpig – bare unngår crash
-};
-
 // ── MOBIL: Bunnmeny + Mer-sheet ─────────────────────────────────────────────
 
-window._isMobile=function(){ return window.innerWidth<=900; };
-
-// bottomNav(tab) — 5-delt hovednavigasjon (Hjem/Kalkyle/Dokumentasjon/
-// Makker/Mer, se index.html #bottomBar). "Hjem" og "Kalkyle" er midlertidige
-// bruer til dagens Oversikt-visning til egne skjermer bygges (senere steg i
-// mobil-redesignet) — ruting er lagt til nå, kontrollert ved siden av det
-// gamle, uten å fjerne noe eksisterende ennå.
-window.bottomNav=function(tab){
-  // Oppdater active-state
-  document.querySelectorAll('.bottom-bar-tab').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.tab===tab);
-  });
-
-  if(tab==='mer'){
-    openMerSheet();
-    return;
-  }
+// bottomNav(view) — hoveddokken (Oversikt/Dokumentasjon/Makker/Mer, se
+// index.html #bottomBar). «Mer» åpner et kort over dokken.
+window.bottomNav=function(view){
+  if(view==='mer'){ openMerSheet(); return; }
   closeMerSheet();
-
-  if(tab==='hjem'){
-    sidebarNav('kalkyle');
-    window.scrollTo({top:0,behavior:'smooth'});
-  } else if(tab==='kalkyle'){
-    sidebarNav('kalkyle');
-    var el=document.getElementById('projectList');
-    if(el) el.scrollIntoView({behavior:'smooth'});
-  } else if(tab==='dokumentasjon'){
-    sidebarNav('dokumentasjon');
-  } else if(tab==='makker'){
-    sidebarNav('makker');
-  }
+  sidebarNav(view);
+  if(view==='kalkyle') window.scrollTo({top:0,behavior:'smooth'});
 };
 
 window.openMerSheet=function(){
   var backdrop=document.getElementById('merSheetBackdrop');
   var content=document.getElementById('merSheetContent');
   if(!backdrop||!content) return;
-  // Synk status fra sidebar
-  var syncEl=document.getElementById('syncIndicator');
-  var merSync=document.getElementById('merSyncStatus');
-  if(syncEl&&merSync){ merSync.textContent=syncEl.textContent; merSync.style.color=syncEl.style.color; }
   backdrop.style.display='block';
   content.style.display='block';
   requestAnimationFrame(function(){
     backdrop.classList.add('visible');
     content.classList.add('visible');
-  });
-  // Highlight "Mer" tab
-  document.querySelectorAll('.bottom-bar-tab').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.tab==='mer');
   });
 };
 
@@ -3122,11 +2937,10 @@ window.closeMerSheet=function(){
 
 // ── MOBIL: Prosjekt-kontekstmeny + overflow ─────────────────────────────────
 
-// body.in-project styrer navigasjonen via CSS: inne i et prosjekt brukes
-// fanene øverst, ellers hovedmenyen (sidemeny/bunnmeny etter bredde). Klassen
-// følger synligheten til prosjektvisningen automatisk, så den er riktig uansett
-// hvilken kode som bytter visning — og CSS tilpasser seg når vinduet endrer
-// bredde (delt skjerm på iPad).
+// body.in-project styrer navigasjonen via CSS: inne i et prosjekt vises
+// prosjektdokken, ellers hoveddokken. Klassen følger synligheten til
+// prosjektvisningen automatisk, så den er riktig uansett hvilken kode som
+// bytter visning.
 (function(){
   var projectView=document.getElementById('projectView');
   var app=document.querySelector('.app');
